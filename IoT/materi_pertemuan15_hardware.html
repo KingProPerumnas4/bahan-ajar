@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Materi Pertemuan 15 - Dari Simulator ke Perangkat Fisik</title>
+  <link rel="stylesheet" href="assets/materi.css" />
+</head>
+<body>
+  <div class="wrap">
+    <section class="hero">
+      <span class="badge">Pertemuan 15</span>
+      <h1>Dari Simulator ke Perangkat Fisik</h1>
+      <p class="lead">Materi ini membahas apa yang berubah ketika program yang sudah berjalan rapi di simulator dipindahkan ke papan ESP32 yang nyata: nilai sensor yang tidak lagi bersih, sambungan kabel yang bisa longgar, catu daya yang terbatas, serta pin papan yang tidak semuanya bebas dipakai.</p>
+      <div>
+        <span class="pill">Perangkat fisik</span>
+        <span class="pill">Pengkabelan nyata</span>
+        <span class="pill">Derau pembacaan</span>
+        <span class="pill">Catu daya</span>
+        <span class="pill">Pin papan</span>
+        <span class="pill">Perbandingan hasil</span>
+      </div>
+      <p class="notice">Yang perlu siap: program mini project Anda dari Pertemuan 14 tentang implementasi mini project di simulator, satu perangkat lunak pengunggah seperti Arduino IDE beserta dukungan papan ESP32, dan satu kabel USB yang benar-benar kabel data. Papan ESP32 fisik beserta satu sensor, satu LED, dan resistor sekitar 220 ohm bersifat pilihan. Bila Anda belum memilikinya, bagian perbandingan dikerjakan dari data simulator ditambah analisis perbedaan berdasarkan bab-bab di halaman ini; rinciannya disebutkan pada Bab 7.</p>
+    </section>
+
+    <section class="card">
+      <h2>Capaian Pembelajaran Pertemuan 15</h2>
+      <div class="grid two">
+        <div class="mini">
+          <div class="label">Yang dipahami</div>
+          <ul>
+            <li>Alasan program yang berjalan mulus di simulator masih bisa gagal ketika dipindahkan ke papan nyata.</li>
+            <li>Perbedaan sifat nilai sensor pada rangkaian nyata, termasuk derau yang selalu ada dan tidak bisa dihilangkan sepenuhnya.</li>
+            <li>Batas listrik papan ESP32: tegangan kerja 3,3 volt, kemampuan arus tiap pin, dan alasan beban tertentu menuntut catu daya sendiri.</li>
+            <li>Sebab kegagalan unggah yang paling sering terjadi, mulai dari driver USB, pemilihan port, pilihan papan, sampai kecepatan serial.</li>
+          </ul>
+        </div>
+        <div class="mini">
+          <div class="label">Yang dapat dilakukan</div>
+          <ul>
+            <li>Menyiapkan jalur unggah sampai program benar-benar masuk ke papan dan Serial Monitor menampilkan keluaran yang terbaca.</li>
+            <li>Membaca pinout papan Anda sendiri lalu memilih pin yang aman untuk satu sensor dan satu keluaran.</li>
+            <li>Meredam derau pembacaan analog dengan merata-ratakan beberapa sampel.</li>
+            <li>Menyusun catatan perbandingan antara hasil simulator dan hasil perangkat fisik beserta analisis penyebab perbedaannya.</li>
+          </ul>
+        </div>
+      </div>
+      <p>Fokus Pertemuan 15 adalah perbedaan antara simulasi dan perangkat fisik: pengkabelan nyata, derau pembacaan, catu daya, dan pin papan yang sebenarnya. Kegiatan intinya adalah mengunggah program ke ESP32 nyata, menguji satu sensor dan satu keluaran, lalu membandingkan hasilnya dengan hasil di simulator. Simulator tidak dibuang setelah pertemuan ini; ia tetap menjadi tempat termurah untuk menguji logika, sedangkan papan nyata menjadi tempat menguji apakah asumsi listrik Anda benar.</p>
+    </section>
+    <section class="card">
+      <h2>1. Mengapa Program yang Benar di Simulator Bisa Gagal di Papan Nyata</h2>
+      <p>Simulator menjalankan program Anda di dalam dunia yang sudah disederhanakan. Sensor virtual mengembalikan angka yang persis Anda atur, kabel pada diagram selalu tersambung sempurna, tegangan selalu pas, dan papan tidak pernah kehabisan arus. Semua penyederhanaan itu berguna karena membuat Anda bisa berkonsentrasi pada logika program. Papan ESP32 yang nyata menambahkan satu lapisan yang tidak ada di simulator, yaitu lapisan fisik: konduktor yang punya hambatan, sambungan yang bisa longgar, catu daya yang bisa turun, dan sensor yang mengeluarkan angka sedikit berbeda pada setiap pembacaan.</p>
+      <p>Konsekuensi praktisnya penting untuk dipegang sejak awal. Ketika program yang sama memberi hasil berbeda di papan nyata, kecurigaan pertama sebaiknya diarahkan ke lapisan fisik, bukan ke logika program. Logika itu sudah terbukti berjalan di simulator, sedangkan lapisan fisik belum pernah diuji sama sekali. Membongkar ulang kode di saat yang sebenarnya bermasalah adalah satu kabel yang tertukar hanya akan menghabiskan waktu.</p>
+      <div class="analogy">
+        <strong>Analogi:</strong> berlatih di simulator kemudi mirip berlatih menyetir di ruangan. Anda benar-benar belajar kapan menekan pedal dan ke arah mana memutar roda, dan itu bukan latihan palsu. Namun di jalan sebenarnya muncul hal yang tidak pernah ada di ruangan: aspal yang licin, angin dari samping, dan kendaraan lain yang tidak mengikuti aturan. Keterampilan dari ruangan tetap terpakai; yang perlu ditambahkan adalah kesiagaan terhadap hal-hal fisik itu.
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>2. Perbandingan Simulator dan Perangkat Fisik</h2>
+      <p>Tabel berikut merangkum perbedaan yang paling sering Anda rasakan. Kolom kedua dan ketiga sengaja disandingkan agar Anda tahu ekspektasi mana yang perlu diubah ketika berpindah, bukan agar salah satunya dianggap lebih rendah.</p>
+      <div class="table-scroll" tabindex="0">
+        <table>
+        <tr><th>Aspek</th><th>Di simulator</th><th>Di perangkat fisik</th></tr>
+        <tr><td>Kestabilan nilai sensor</td><td>Nilai tepat seperti yang diatur dan tidak berubah sendiri; pembacaan berulang memberi angka identik.</td><td>Nilai bergoyang beberapa satuan meski keadaan tampak sama; pembacaan berulang hampir tidak pernah identik.</td></tr>
+        <tr><td>Kabel dan sambungan</td><td>Garis pada diagram tersambung sempurna selama diagram benar; tidak ada sambungan longgar.</td><td>Kabel dapat longgar, pin dapat bergeser, dan sambungan yang tampak masuk belum tentu bersentuhan.</td></tr>
+        <tr><td>Catu daya dan arus</td><td>Tidak ada batas arus yang terasa; menyalakan banyak keluaran sekaligus tidak berpengaruh.</td><td>Arus dari pin dan dari jalur USB terbatas; beban besar dapat membuat papan mati sendiri atau melakukan reset.</td></tr>
+        <tr><td>Waktu boot dan reset</td><td>Program mulai berjalan segera setelah simulasi dijalankan.</td><td>Ada jeda boot, ada pesan awal dari sistem papan, dan reset dapat terjadi sendiri bila daya terganggu.</td></tr>
+        <tr><td>Penanganan kesalahan unggah</td><td>Hampir tidak ada; kesalahan yang muncul umumnya kesalahan penulisan program.</td><td>Ada lapisan tambahan: driver USB, pemilihan port, pilihan papan, dan kadang papan perlu dibantu masuk mode unggah.</td></tr>
+        <tr><td>Biaya kesalahan</td><td>Nol. Salah sambung paling jauh membuat simulasi tidak berjalan.</td><td>Nyata. Tegangan berlebih atau hubungan singkat dapat merusak sensor atau papan secara permanen.</td></tr>
+        </table>
+      </div>
+      <div class="tip">
+        <strong>Pakai tabel ini sebagai daftar periksa, bukan bacaan sekali lewat.</strong> Ketika ada sesuatu yang berperilaku lain di papan nyata, tentukan dahulu baris mana yang paling mungkin menjelaskannya, lalu periksa baris itu sebelum menyentuh program. Nilai yang bergoyang mengarah ke baris pertama, keluaran yang mati sama sekali mengarah ke baris kabel, dan papan yang seperti mulai dari awal mengarah ke baris catu daya. Kebiasaan ini memotong waktu penelusuran karena Anda memeriksa satu dugaan yang beralasan, bukan mencoba banyak perubahan sekaligus.
+      </div>
+    </section>
+    <section class="card">
+      <h2>3. Menyiapkan Jalur Unggah: Kabel, Driver, Port, Papan, dan Kecepatan Serial</h2>
+      <p>Mengunggah program ke papan nyata adalah rantai yang terdiri dari beberapa mata. Kabel USB harus benar-benar kabel data, bukan kabel yang hanya mengalirkan daya. Di dalam papan ada chip penerjemah USB ke serial, umumnya seri CP2102 atau CH340, dan komputer perlu mengenali chip itu. Setelah dikenali, sistem operasi memunculkan satu port baru. Perangkat lunak pengunggah kemudian perlu diberi tahu dua hal: papan apa yang dipakai dan port mana yang menuju papan itu. Bila salah satu mata rantai belum benar, pesan galat yang muncul biasanya terasa tidak berhubungan dengan penyebab sebenarnya, sehingga memeriksa rantai secara berurutan lebih cepat daripada menebak.</p>
+      <div class="tip">
+        <strong>Cara mengenali port yang benar tanpa menebak:</strong> buka daftar port sebelum kabel dipasang dan catat isinya. Pasang kabel papan, lalu buka daftar itu kembali. Nama yang baru muncul adalah port papan Anda. Cara ini bekerja pada semua versi perangkat lunak pengunggah karena tidak bergantung pada nama menu.
+      </div>
+      <p>Penamaan menu berbeda antarversi perangkat lunak pengunggah, jadi yang perlu Anda kenali adalah fungsinya, bukan jalur menunya. Ada satu tempat untuk memilih jenis papan; entrinya berisi kata ESP32 dan sering bernama seperti modul pengembangan ESP32 generik, dan entri generik itulah pilihan pertama yang paling aman bila merek papan Anda tidak terdaftar. Ada satu tempat untuk memilih port. Ada satu tombol untuk mengunggah dan satu tombol untuk membuka jendela pemantau serial. Terakhir, jendela pemantau serial memiliki pilihan kecepatan yang harus sama dengan angka pada <code>Serial.begin</code> di program Anda. Bila program memakai 115200 sedangkan jendela pemantau diatur pada angka lain, keluaran tetap muncul tetapi berupa karakter acak yang tidak terbaca. Gejala itu sering disalahartikan sebagai program rusak, padahal hanya kecepatan yang tidak cocok.</p>
+      <p>Sebagian papan tidak masuk mode unggah dengan sendirinya. Tandanya adalah pesan yang menampilkan titik-titik atau garis putus-putus berulang saat mencoba menyambung, lalu berhenti dengan galat. Pada papan seperti itu, tekan dan tahan tombol yang bertuliskan BOOT atau IO0 tepat ketika proses unggah mulai mencari papan, lalu lepaskan setelah proses unggah berjalan. Tidak semua papan memerlukan langkah ini, jadi lakukan hanya bila gejala tersebut muncul.</p>
+    </section>
+
+    <section class="card">
+      <h2>4. Pin Papan yang Tidak Bebas Dipakai</h2>
+      <p>Di simulator, hampir semua pin dapat dipakai untuk apa saja dan diagram tetap berjalan. Pada papan nyata, sebagian pin sudah memiliki tugas sendiri sejak papan dinyalakan, dan memakainya untuk keperluan lain menimbulkan gejala yang membingungkan: papan gagal boot, proses unggah gagal, atau pembacaan analog selalu bernilai nol. Tabel berikut merangkum kelompok pin yang perlu Anda perlakukan dengan hati-hati pada ESP32.</p>
+      <div class="table-scroll" tabindex="0">
+        <table>
+        <tr><th>Kelompok pin</th><th>Sifatnya</th><th>Gejala bila dipakai sembarangan</th></tr>
+        <tr><td>GPIO 34 sampai 39</td><td>Hanya dapat menjadi masukan dan tidak memiliki resistor pull-up internal.</td><td>Perintah keluaran tidak berpengaruh sama sekali; LED atau relai yang disambung ke pin ini tidak pernah menyala.</td></tr>
+        <tr><td>Pin yang terhubung ke memori program, pada banyak modul di sekitar GPIO 6 sampai 11</td><td>Dipakai papan untuk membaca program yang tersimpan.</td><td>Papan gagal boot atau melakukan reset berulang segera setelah dinyalakan.</td></tr>
+        <tr><td>Pin penentu mode saat boot, antara lain GPIO 0, 2, 12, dan 15</td><td>Keadaan pin ini pada saat papan menyala menentukan apakah papan masuk mode jalan atau mode unggah.</td><td>Proses unggah gagal, atau papan justru masuk mode unggah dan program tidak pernah berjalan.</td></tr>
+        <tr><td>Kelompok pin analog kedua, pada banyak papan mencakup GPIO 0, 2, 4, 12 sampai 15, dan 25 sampai 27</td><td>Berbagi sumber daya dengan radio Wi-Fi.</td><td>Pembacaan analog berhenti bekerja atau selalu memberi angka tetap ketika Wi-Fi aktif.</td></tr>
+        <tr><td>Pin yang tersambung ke LED bawaan papan, sering GPIO 2</td><td>Sudah memiliki beban terpasang di papan.</td><td>Pin tetap bekerja, tetapi LED bawaan menyala mengikuti sinyal Anda sehingga pengamatan bisa menyesatkan.</td></tr>
+        </table>
+      </div>
+      <p>Setelah semua kelompok itu dikeluarkan, masih tersisa cukup banyak pin yang bebas dipakai, sehingga tidak ada alasan memaksakan pin yang bermasalah. Untuk keluaran biasa seperti LED, relai, atau servo, pin di sekitar GPIO 4, 5, 13, 16 sampai 19, dan 21 sampai 23 umumnya aman. Untuk pembacaan analog yang harus tetap bekerja ketika Wi-Fi aktif, pilih dari kelompok GPIO 32 sampai 39, dan ingat bahwa GPIO 34 sampai 39 hanya dapat menjadi masukan sedangkan GPIO 32 dan 33 masih dapat menjadi keluaran. Satu pengecualian yang perlu Anda ketahui: pada modul yang dilengkapi memori tambahan, GPIO 16 dan 17 dapat sudah terpakai oleh memori itu, dan gejalanya adalah papan gagal boot ketika kedua pin tersebut dibebani.</p>
+      <p>Cara memastikan satu pilihan pin cukup memerlukan tiga pertanyaan berurutan. Pertama, apakah pin itu perlu menjadi keluaran? Bila ya, kelompok GPIO 34 sampai 39 langsung tersisih. Kedua, apakah pin itu perlu membaca nilai analog sementara Wi-Fi menyala? Bila ya, hanya kelompok GPIO 32 sampai 39 yang dapat dipakai. Ketiga, apakah nomor pin itu tercetak di tepi papan Anda dan bukan hanya ada di gambar dari papan lain? Bila salah satu jawabannya tidak sesuai, ganti nomor pinnya sekarang, sebelum ada kabel yang terpasang, karena mengubah satu angka di dalam program jauh lebih murah daripada mencari penyebab papan yang tidak mau boot.</p>
+      <div class="warn">
+        <strong>Nomor pin berbeda antarvarian papan.</strong> Modul ESP32 dijual dalam banyak versi dengan jumlah pin dan tata letak yang tidak sama, sehingga tidak ada satu daftar yang berlaku untuk semuanya. Sebelum menyambung apa pun, cari gambar pinout untuk papan yang benar-benar ada di tangan Anda, lalu cocokkan tulisan yang tercetak di tepi papan dengan gambar itu. Menyambung berdasarkan ingatan dari papan lain adalah penyebab kerusakan yang paling mudah dihindari.
+      </div>
+    </section>
+    <section class="card">
+      <h2>5. Batas Listrik: Tegangan 3,3 Volt, Resistor untuk LED, dan Catu Daya Terpisah</h2>
+      <p>ESP32 bekerja pada tegangan logika 3,3 volt. Angka itu bukan anjuran, melainkan batas. Memberi 5 volt pada pin masukan berarti memberi tegangan di luar rancangan, dan akibatnya bisa langsung merusak pin atau merusak papan secara diam-diam sehingga papan masih hidup tetapi pembacaannya tidak lagi benar. Banyak papan memang memiliki pin bertanda 5V atau VIN, tetapi pin itu adalah jalur masuk daya untuk papan, bukan izin untuk memberi 5 volt pada pin data. Bila sebuah sensor atau modul hanya tersedia dalam versi 5 volt, keluarannya perlu diturunkan lebih dahulu, misalnya dengan pembagi tegangan menggunakan dua resistor atau dengan modul penurun taraf tegangan. Karena itu, sebelum membeli atau menyambung modul, kebiasaan yang menghemat banyak masalah adalah memastikan modul tersebut memang bekerja pada 3,3 volt.</p>
+      <p>Untuk keluaran, LED tidak boleh disambung langsung dari pin ke ground. Di atas tegangan nyalanya, LED hampir tidak menahan arus, sehingga arus yang mengalir ditentukan oleh apa saja yang membatasinya di jalur itu. Bila tidak ada pembatas, arus dapat melampaui kemampuan pin dan merusak LED maupun pin. Resistor sekitar 220 ohm yang dipasang seri dengan LED menjalankan tugas pembatas itu, dan nyala LED tetap terang. Simulator tidak menghukum kelalaian ini karena tidak ada komponen yang bisa terbakar, sehingga kebiasaan memasang resistor justru harus dibangun sekarang, saat berpindah ke papan nyata.</p>
+      <p>Beban yang menarik arus besar, terutama servo, motor, relai, dan deretan lampu, sebaiknya mendapat catu daya sendiri. Alasannya adalah lonjakan arus pada saat beban mulai bergerak. Lonjakan itu membuat tegangan pada jalur papan turun sesaat, dan penurunan tersebut cukup untuk membuat papan melakukan reset di tengah program. Gejalanya khas dan mudah dikenali: papan seperti mulai dari awal setiap kali beban aktif, dan pesan pembuka pada Serial Monitor tercetak berulang. Dua hal yang perlu diperhatikan saat memakai catu daya terpisah. Pertama, ground catu daya beban harus disambungkan ke ground papan, sebab tanpa acuan bersama sinyal kendali tidak punya arti. Kedua, jalur data tetap berasal dari pin papan dengan tegangan 3,3 volt; catu daya terpisah hanya memasok daya untuk bebannya, bukan untuk jalur sinyal.</p>
+      <div class="analogy">
+        <strong>Analogi dunia nyata:</strong> lampu di rumah meredup sesaat ketika pompa air menyala. Pompa menarik arus besar pada saat mulai berputar, tegangan pada jalur bersama turun sebentar, dan lampu ikut merasakannya. Papan ESP32 berada pada posisi lampu itu, hanya saja papan tidak sekadar meredup; begitu tegangannya turun melewati batas kerja, papan langsung memulai dirinya dari awal. Memberi pompa jalurnya sendiri adalah cara rumah mengatasinya, dan memberi servo atau relai catu dayanya sendiri adalah cara yang sama pada rangkaian Anda.
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>6. Derau Pembacaan Analog dan Cara Meredamnya</h2>
+      <p>Pembacaan analog pada ESP32 mengubah tegangan pada pin menjadi angka bulat, dengan rentang bawaan 0 sampai 4095. Di simulator, memutar potensiometer virtual ke satu posisi menghasilkan satu angka yang tetap. Di papan nyata, angka itu bergoyang beberapa satuan atau bahkan beberapa puluh satuan meski tidak ada yang disentuh. Goyangan tersebut disebut derau, dan penyebabnya berlapis: tegangan catu yang tidak sepenuhnya rata, kabel yang menangkap gangguan dari lingkungan, sambungan yang tidak sempurna, serta keterbatasan ketelitian pengubah sinyal itu sendiri. Derau tidak dapat dihilangkan, dan usaha menghilangkannya sepenuhnya bukan tujuan yang realistis. Yang perlu dilakukan adalah membuat program tidak mudah tertipu olehnya.</p>
+      <p>Cara paling sederhana dan paling sering dipakai adalah merata-ratakan beberapa sampel. Alih-alih memakai satu pembacaan, program mengambil misalnya enam belas pembacaan berurutan dengan jeda sangat singkat, menjumlahkannya, lalu membaginya dengan jumlah sampel. Karena derau bergerak naik turun di sekitar nilai sebenarnya, penjumlahan membuat sebagian goyangan itu saling menghapus, dan hasilnya jauh lebih tenang. Harganya adalah waktu: enam belas sampel dengan jeda dua milidetik memakan sekitar tiga puluh dua milidetik untuk setiap pembacaan. Untuk suhu, kelembapan, atau intensitas cahaya, harga itu tidak terasa. Untuk sesuatu yang harus ditangkap seketika, seperti tombol yang ditekan cepat, rata-rata justru merugikan karena memperlambat tanggapan.</p>
+      <p>Perata-rataan bekerja pada angkanya, bukan pada penyebabnya, sehingga ada beberapa hal di sisi rangkaian yang lebih baik diperbaiki lebih dahulu. Perpendek kabel sensor sejauh mungkin, sebab kabel yang panjang bekerja seperti antena bagi gangguan di sekitarnya. Jauhkan kabel sensor dari kabel yang memasok motor, servo, atau relai, karena beban semacam itu memancarkan gangguan paling besar tepat pada saat mulai bergerak. Pastikan pula sambungan ground benar-benar kokoh, sebab acuan yang goyah membuat seluruh pembacaan goyah. Bila setelah semua itu goyangan masih terasa besar, tambahkan jumlah sampel sedikit demi sedikit dan perhatikan apakah lebar goyangannya benar-benar mengecil; menaikkan jumlah sampel sampai ratusan tidak menyelesaikan masalah yang sumbernya ada pada sambungan.</p>
+      <div class="tip">
+        <strong>Kenali lebar goyangan sebelum menentukan ambang.</strong> Jalankan program pembacaan selama sekitar tiga puluh detik dalam keadaan yang sengaja dibuat tidak berubah, lalu catat angka terkecil dan terbesar yang muncul. Selisih keduanya adalah lebar goyangan pada rangkaian Anda. Ambang yang jaraknya lebih kecil daripada lebar goyangan akan tersentuh sendiri oleh derau, dan keluaran akan hidup mati tanpa sebab. Prinsip dua ambang yang berjarak, yang Anda pakai untuk mencegah aktuator bergetar pada Pertemuan 14 tentang implementasi mini project, menjadi semakin penting di papan nyata karena di sinilah goyangan itu benar-benar ada.
+      </div>
+    </section>
+    <section class="card">
+      <h2>7. Implementasi Praktis: Menguji Satu Sensor dan Satu Keluaran</h2>
+      <p>Urutan berikut sengaja dimulai dari simulator dan menunda pemasangan rangkaian sampai program terbukti masuk ke papan. Dengan urutan ini, setiap kegagalan hanya punya satu kemungkinan penyebab baru, sehingga penelusuran tidak bercabang.</p>
+      <ol class="step">
+        <li>Jalankan program uji dari Bab 9 di simulator lebih dahulu. Catat sepuluh baris keluaran pertama beserta nilai mentah dan nilai rata-ratanya. Angka inilah pembanding Anda nanti.</li>
+        <li>Kenali port papan dengan cara membandingkan daftar port sebelum dan sesudah kabel USB dipasang, seperti dijelaskan pada Bab 3. Pilih entri papan yang mengandung kata ESP32, dan pilih entri generik bila merek papan Anda tidak terdaftar.</li>
+        <li>Unggah program uji itu ke papan dalam keadaan belum ada rangkaian apa pun yang tersambung. Buka jendela pemantau serial pada kecepatan 115200 dan pastikan baris keluaran benar-benar muncul. Nilai sensor pada tahap ini boleh bernilai apa saja; yang dibuktikan di sini hanyalah jalur unggah dan jalur serial.</li>
+        <li>Cabut kabel USB sehingga papan tidak bertegangan, baru pasang rangkaian. Sambungkan sensor analog ke GPIO 34, catu sensor ke pin 3V3, dan ground sensor ke pin GND papan. Sambungkan LED melalui resistor 220 ohm ke GPIO 23 dan kaki lainnya ke GND. Memasang rangkaian pada papan yang sedang hidup adalah cara termudah merusak komponen.</li>
+        <li>Periksa ulang setiap sambungan sambil melihat gambar pinout papan Anda sendiri. Pastikan tidak ada kaki komponen yang saling bersentuhan dan tidak ada kabel yang menghubungkan 3V3 langsung ke GND.</li>
+        <li>Pasang kembali kabel USB dan buka jendela pemantau serial. Biarkan rangkaian dalam keadaan tidak diganggu selama tiga puluh detik, lalu catat sepuluh baris keluaran beserta nilai terkecil dan terbesar yang Anda lihat.</li>
+        <li>Ubah keadaan sensor secara nyata, misalnya menutup sensor cahaya dengan tangan atau memutar potensiometer. Pastikan nilai berubah searah dan LED berpindah keadaan ketika nilai melewati ambang. Catat pada nilai berapa perpindahan itu terjadi.</li>
+        <li>Susun tabel perbandingan berisi angka dari simulator dan angka dari papan. Hitung dua hal: selisih nilai rata-rata di antara keduanya, dan lebar goyangan pada papan nyata. Kedua angka itulah bahan utama analisis Anda.</li>
+      </ol>
+      <div class="tip">
+        <strong>Bila Anda belum memiliki papan ESP32.</strong> Langkah 1 tetap dikerjakan penuh, dan hasilnya menjadi data simulator Anda. Langkah 2 sampai 7 diganti dengan pekerjaan tulis: buat rencana pengkabelan lengkap dengan nomor pin, tuliskan pemeriksaan pin berdasarkan Bab 4 untuk membuktikan pilihan pin Anda aman, lalu perkirakan perbedaan yang akan muncul di papan nyata dengan menyebut baris tabel Bab 2 dan alasan fisiknya dari Bab 5 dan Bab 6. Langkah 8 dikerjakan sebagai analisis perbedaan yang diperkirakan, bukan yang diukur, dan itu disebutkan terus terang di dalam catatan Anda. Yang dinilai adalah ketepatan penalarannya.
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>8. Hasil yang Diharapkan</h2>
+      <ul>
+        <li>Program masuk ke papan tanpa galat, dan jendela pemantau serial menampilkan baris yang terbaca, bukan karakter acak.</li>
+        <li>Nilai sensor pada papan nyata bergoyang dalam rentang yang dapat Anda sebut angkanya, sedangkan nilai di simulator tetap.</li>
+        <li>Nilai rata-rata jauh lebih tenang daripada nilai mentah pada baris keluaran yang sama.</li>
+        <li>LED berpindah keadaan ketika nilai melewati ambang, dan perpindahan itu tidak terjadi sendiri ketika sensor dibiarkan diam.</li>
+      </ul>
+      <h3>8.1 Jika hasilnya tidak seperti itu</h3>
+      <div class="table-scroll" tabindex="0">
+        <table>
+        <tr><th>Gejala</th><th>Kemungkinan penyebab</th><th>Yang perlu diperiksa</th></tr>
+        <tr><td>Port papan tidak muncul di daftar</td><td>Kabel hanya mengalirkan daya, chip USB ke serial belum dikenali, atau port ada tetapi tidak dapat dibuka oleh pengguna biasa.</td><td>Bandingkan daftar port sebelum dan sesudah kabel dipasang, lalu coba kabel lain. Bila nama port terlihat tetapi gagal dibuka, masalahnya izin akses, bukan driver. Baca kembali Bab 3.</td></tr>
+        <tr><td>Proses unggah gagal dan pesannya menampilkan titik atau garis putus-putus berulang</td><td>Papan tidak masuk mode unggah dengan sendirinya, atau port papan masih dipegang oleh jendela pemantau serial yang belum ditutup.</td><td>Tutup dahulu semua jendela pemantau serial, sebab port hanya dapat dipakai satu jendela pada satu waktu. Bila pesan itu tetap muncul, tekan dan tahan tombol BOOT atau IO0 tepat saat proses unggah mulai mencari papan, seperti dijelaskan pada akhir Bab 3.</td></tr>
+        <tr><td>Keluaran serial berupa karakter acak</td><td>Kecepatan jendela pemantau tidak sama dengan angka pada <code>Serial.begin</code>.</td><td>Cocokkan kedua angka itu pada 115200. Bila sudah sama tetapi tetap acak, papan mungkin melakukan reset berulang; lihat baris terakhir tabel ini.</td></tr>
+        <tr><td>Nilai analog selalu nol atau selalu maksimum</td><td>Sensor tidak benar-benar tersambung ke pin yang dipakai program, ground belum menjadi acuan bersama, atau pin yang dipakai termasuk kelompok analog kedua sementara Wi-Fi aktif.</td><td>Telusuri satu per satu kabel sensor ke nomor pin di program, pastikan ground tersambung, lalu bandingkan nomor pin dengan tabel pada Bab 4.</td></tr>
+        <tr><td>LED tidak pernah menyala</td><td>Pin keluaran termasuk kelompok hanya-masukan, kaki LED terbalik, atau resistor tidak terpasang seri pada jalur yang benar.</td><td>Periksa nomor pin pada tabel Bab 4, tukar arah LED, dan pastikan resistor berada pada jalur yang sama dengan LED. Baca kembali Bab 5.</td></tr>
+        <tr><td>Papan seperti mulai dari awal berulang kali dan baris judul kolom tercetak lagi dan lagi</td><td>Papan melakukan reset sendiri. Penyebab yang paling sering adalah tegangan yang turun sesaat karena beban menarik arus besar, jalur daya yang tidak cukup kuat, atau ada dua titik yang bersentuhan sehingga terjadi hubungan singkat.</td><td>Cabut beban satu per satu dan perhatikan pada beban mana reset berhenti terjadi. Bila reset berhenti setelah satu beban dicabut, beban itulah yang menuntut catu daya sendiri seperti dibahas pada Bab 5. Bila reset tetap terjadi tanpa beban apa pun, periksa ulang seluruh sambungan untuk mencari titik yang bersentuhan.</td></tr>
+        </table>
+      </div>
+    </section>
+    <section class="card">
+      <h2>9. Contoh Program Uji Perangkat Keras</h2>
+      <p>Program berikut sengaja dibuat sekecil mungkin. Tidak ada Wi-Fi dan tidak ada MQTT, karena yang diuji di sini hanyalah tiga hal: apakah program masuk ke papan, apakah sensor terbaca, dan apakah keluaran bergerak. Keluarannya dicetak sebagai baris bernilai ganda yang dipisahkan titik koma agar mudah disalin ke lembar kerja untuk dibandingkan dengan angka dari simulator.</p>
+      <div class="code"><pre>const int PIN_SENSOR = 34;   // pin ADC hanya-masukan, aman dipakai bersama Wi-Fi
+const int PIN_LED    = 23;   // pin serbaguna untuk keluaran
+
+const int JUMLAH_SAMPEL = 16;
+const int AMBANG_NYALA  = 2100;
+const int AMBANG_MATI   = 1900;
+const unsigned long JEDA_CETAK = 1000;
+
+unsigned long cetakTerakhir = 0;
+bool ledNyala = false;
+int  nilaiMin = 4095;
+int  nilaiMax = 0;
+
+int bacaRataRata(int pin, int n) {
+  long jumlah = 0;
+  for (int i = 0; i &lt; n; i++) {
+    jumlah += analogRead(pin);
+    delay(2);
+  }
+  return (int)(jumlah / n);
+}
+
+void setup() {
+  Serial.begin(115200);
+  pinMode(PIN_LED, OUTPUT);
+  digitalWrite(PIN_LED, LOW);
+  delay(500);
+  Serial.println();
+  Serial.println("detik;mentah;rata;min;max;led");
+}
+void loop() {
+  unsigned long sekarang = millis();
+  if (sekarang - cetakTerakhir &lt; JEDA_CETAK) return;
+  cetakTerakhir = sekarang;
+
+  int mentah = analogRead(PIN_SENSOR);
+  int rata   = bacaRataRata(PIN_SENSOR, JUMLAH_SAMPEL);
+
+  if (rata &lt; nilaiMin) nilaiMin = rata;
+  if (rata &gt; nilaiMax) nilaiMax = rata;
+
+  if (!ledNyala &amp;&amp; rata &gt;= AMBANG_NYALA) {
+    ledNyala = true;
+    digitalWrite(PIN_LED, HIGH);
+  } else if (ledNyala &amp;&amp; rata &lt;= AMBANG_MATI) {
+    ledNyala = false;
+    digitalWrite(PIN_LED, LOW);
+  }
+
+  Serial.print(sekarang / 1000); Serial.print(';');
+  Serial.print(mentah);          Serial.print(';');
+  Serial.print(rata);            Serial.print(';');
+  Serial.print(nilaiMin);        Serial.print(';');
+  Serial.print(nilaiMax);        Serial.print(';');
+  Serial.println(ledNyala ? 1 : 0);
+}</pre></div>
+      <h3>9.1 Penjelasan baris per baris</h3>
+      <ul>
+        <li>Nomor pin ditulis sebagai konstanta bernama, sehingga ketika pinout papan Anda ternyata berbeda hanya ada satu tempat yang perlu diubah. GPIO 34 dipilih karena termasuk kelompok hanya-masukan dan pembacaan analognya tetap bekerja meski Wi-Fi dinyalakan.</li>
+        <li><code>AMBANG_NYALA</code> dan <code>AMBANG_MATI</code> diberi jarak 200 satuan. Jarak itu harus lebih lebar daripada goyangan pada rangkaian Anda, jadi sesuaikan angkanya setelah Anda mengukur lebar goyangan sendiri pada Bab 7.</li>
+        <li>Pada <code>bacaRataRata</code>, penjumlah bertipe <code>long</code> karena enam belas pembacaan bernilai maksimum menghasilkan angka yang melampaui batas aman tipe bilangan pendek. <code>delay(2)</code> memberi jarak antarsampel supaya keenam belas sampel tidak diambil pada satu titik gangguan yang sama.</li>
+        <li>Pada <code>setup</code>, angka 115200 harus sama dengan kecepatan yang dipilih di jendela pemantau serial. <code>delay(500)</code> memberi jeda agar baris judul kolom tidak tercampur dengan pesan pembuka dari sistem papan, dan <code>digitalWrite</code> bernilai LOW memastikan keluaran dimulai dari keadaan mati alih-alih bergantung pada keadaan pin setelah reset.</li>
+        <li>Baris pertama <code>loop</code> membandingkan <code>millis()</code> dengan waktu cetak terakhir lalu keluar lebih awal memakai <code>return</code> bila belum satu detik. Pola ini menggantikan <code>delay(1000)</code>: papan tetap bebas mengerjakan hal lain di antara dua pencetakan, sehingga program ini dapat Anda kembangkan menjadi program bersambungan Wi-Fi tanpa mengubah cara penjadwalannya. <code>millis()</code> menghitung milidetik sejak papan menyala, dan variabelnya bertipe <code>unsigned long</code> karena tipe yang lebih pendek akan penuh dalam waktu sekitar satu menit saja.</li>
+        <li><code>nilaiMin</code> dan <code>nilaiMax</code> dimulai dari nilai yang sengaja dibalik, yaitu 4095 untuk yang terkecil dan 0 untuk yang terbesar, supaya pembacaan pertama apa pun langsung menggantikan keduanya. Dua variabel inilah yang mengukur lebar goyangan pada rangkaian Anda: biarkan program berjalan tanpa diganggu, lalu selisih kedua angka pada baris terakhir adalah lebar goyangan yang Anda pakai untuk menentukan jarak ambang pada Bab 6.</li>
+        <li>Logika keluaran ditulis dalam dua cabang yang keduanya memeriksa keadaan LED saat ini, bukan satu perbandingan tunggal. Cabang pertama hanya bekerja bila LED masih mati dan nilai sudah melewati ambang atas; cabang kedua hanya bekerja bila LED sedang menyala dan nilai sudah turun di bawah ambang bawah. Di antara kedua ambang, tidak ada cabang yang aktif dan keadaan LED dibiarkan seperti apa adanya. Justru daerah diam itulah yang membuat derau tidak sanggup menggerakkan keluaran.</li>
+        <li>Baris keluaran dicetak dengan pemisah titik koma dan tanpa satu pun kata, karena bentuk seperti itu dapat langsung ditempelkan ke lembar kerja lalu dipecah menjadi kolom. Urutan kolomnya sama dengan baris judul yang dicetak sekali di <code>setup</code>, sehingga catatan Anda tetap terbaca berhari-hari kemudian. Keadaan LED dicetak sebagai 1 atau 0 memakai bentuk pemilihan singkat <code>ledNyala ? 1 : 0</code> supaya kolomnya tetap berupa angka dan mudah digambarkan sebagai grafik bersama kolom lainnya.</li>
+      </ul>
+    </section>
+
+    <section class="card">
+      <h2>10. Ringkasan Materi</h2>
+      <ol>
+        <li>Simulator menyederhanakan dunia fisik; papan nyata menambahkan lapisan listrik yang belum pernah diuji, sehingga kecurigaan pertama saat hasil berbeda diarahkan ke lapisan itu, bukan ke logika program.</li>
+        <li>Jalur unggah adalah rantai kabel, pengenalan chip USB ke serial, port, pilihan papan, dan kecepatan serial. Memeriksanya berurutan lebih cepat daripada menebak.</li>
+        <li>Tegangan kerja 3,3 volt adalah batas, LED menuntut resistor pembatas, dan beban berarus besar menuntut catu daya sendiri dengan ground bersama.</li>
+        <li>Derau selalu ada. Merata-ratakan beberapa sampel dan memberi jarak antara dua ambang membuat program tidak tertipu goyangan.</li>
+        <li>Sebagian pin ESP32 sudah memiliki tugas sendiri, dan nomornya berbeda antarvarian papan. Karena itu pilihan pin dibuktikan lebih dahulu terhadap gambar pinout papan yang benar-benar Anda pegang, bukan diambil dari ingatan atau dari contoh papan lain.</li>
+        <li>Urutan pengujian yang menghemat waktu adalah menjalankan program di simulator, membuktikan jalur unggah dan jalur serial pada papan yang masih kosong, baru memasang rangkaian dalam keadaan papan tidak bertegangan. Dengan urutan itu setiap kegagalan hanya punya satu penyebab baru.</li>
+      </ol>
+    </section>
+    <section class="card">
+      <h2>11. Latihan Pemahaman</h2>
+      <p>Kerjakan cek cepat berikut tanpa membuka bab sebelumnya, lalu bandingkan dengan kunci jawaban.</p>
+      <ol>
+        <li>Jendela pemantau serial menampilkan karakter acak. Penyebab yang paling mungkin adalah (a) program rusak, (b) kecepatan jendela pemantau tidak sama dengan angka pada <code>Serial.begin</code>, atau (c) sensor belum tersambung.</li>
+        <li>GPIO 34 tidak dapat dipakai untuk ... karena pin itu bersifat ...</li>
+        <li>Sebutkan satu gejala khas yang menunjukkan beban menarik arus terlalu besar dari papan.</li>
+      </ol>
+      <details>
+        <summary>Kunci jawaban</summary>
+        <p>1. (b); nilai yang dicetak sebenarnya benar, hanya penerjemahannya yang salah. 2. keluaran, karena pin itu bersifat hanya-masukan dan tidak memiliki penggerak keluaran. 3. Papan seperti mulai dari awal dan pesan pembuka tercetak berulang setiap kali beban aktif.</p>
+      </details>
+      <p>Pertanyaan reflektif berikut tidak memiliki kunci jawaban tunggal. Tuliskan jawabannya dengan kalimat sendiri.</p>
+      <ol>
+        <li>Bagian mana dari rangkaian Anda yang paling sulit dipastikan benar, dan cara apa yang Anda pakai untuk memastikannya?</li>
+        <li>Berapa lebar goyangan nilai sensor pada rangkaian Anda, dan apakah jarak antara dua ambang pada program Anda sudah lebih lebar daripada goyangan itu?</li>
+        <li>Perbedaan mana antara simulator dan papan nyata yang paling mengubah cara Anda menulis program, dan mengapa?</li>
+        <li>Jika Anda harus menyerahkan rangkaian ini kepada orang lain, informasi apa yang wajib Anda tuliskan agar orang itu tidak merusak papan?</li>
+        <li>Setelah mencoba papan nyata, bagian pengujian mana yang menurut Anda tetap lebih baik dikerjakan di simulator?</li>
+      </ol>
+    </section>
+
+    <section class="card">
+      <h2>12. Tugas Latihan Pertemuan 15</h2>
+      <p>Susun satu catatan perbandingan antara hasil simulator dan hasil perangkat fisik untuk satu sensor dan satu keluaran. Catatan itu harus memuat angka dari kedua sisi, selisihnya, dan analisis penyebab selisih tersebut. Bila Anda belum memiliki papan, kerjakan versi tanpa papan seperti dijelaskan pada Bab 7 dan sebutkan hal itu secara terbuka di bagian awal catatan.</p>
+      <ul>
+        <li>Tabel perbandingan berisi minimal sepuluh baris pembacaan dari simulator dan sepuluh baris dari papan nyata, lengkap dengan nilai mentah dan nilai rata-rata.</li>
+        <li>Nilai terkecil, nilai terbesar, dan lebar goyangan pada papan nyata, serta nilai ambang tempat keluaran benar-benar berpindah keadaan.</li>
+        <li>Analisis perbedaan sepanjang beberapa paragraf yang menyebut sebab fisiknya, bukan hanya menyatakan bahwa hasilnya berbeda.</li>
+      </ul>
+      <div class="table-scroll" tabindex="0">
+        <table>
+        <tr><th>Aspek</th><th>Bobot</th><th>Kriteria nilai penuh</th></tr>
+        <tr><td>Kelengkapan data pembanding</td><td>25%</td><td>Kedua kumpulan angka ada, jumlah barisnya cukup, dan keadaan saat pengambilan disebutkan.</td></tr>
+        <tr><td>Ketepatan penyajian angka</td><td>20%</td><td>Nilai mentah dan rata-rata dibedakan, satuan jelas, dan lebar goyangan dihitung benar.</td></tr>
+        <tr><td>Analisis penyebab perbedaan</td><td>30%</td><td>Setiap perbedaan dikaitkan dengan sebab fisik yang tepat, bukan dugaan umum tentang kesalahan program.</td></tr>
+        <tr><td>Pemeriksaan pin dan keselamatan listrik</td><td>15%</td><td>Pilihan pin dibuktikan aman, resistor LED disebut, dan kebutuhan catu daya beban dipertimbangkan.</td></tr>
+        <tr><td>Kerapian penulisan</td><td>10%</td><td>Catatan dapat dibaca orang lain tanpa penjelasan tambahan dan bebas keterangan yang saling bertentangan.</td></tr>
+        </table>
+      </div>
+    </section>
+    <section class="card">
+      <h2>13. Checkpoint Evaluasi Pertemuan 15</h2>
+      <p>Pertemuan ini dianggap tuntas bila butir-butir berikut dapat Anda lakukan sendiri. Daftar ini sekaligus dipakai sebagai pemeriksaan diri sebelum Anda melanjutkan ke pertemuan penutup, sehingga tidak ada kekurangan yang baru ditemukan pada saat demo akhir.</p>
+      <div class="mini">
+        <div class="label">Target minimal pertemuan ini</div>
+        <p>Papan fisik dapat diprogram, ada pembacaan data nyata yang tercatat angkanya, dan ada analisis perbedaan terhadap hasil simulator. Bila papan belum tersedia, target minimalnya adalah rencana pengkabelan yang terbukti aman menurut Bab 4 disertai analisis perbedaan yang diperkirakan berdasarkan Bab 2, Bab 5, dan Bab 6.</p>
+      </div>
+      <div class="table-scroll" tabindex="0">
+        <table>
+        <tr><th>Yang diperiksa</th><th>Cara memastikan sendiri</th><th>Bila belum tercapai</th></tr>
+        <tr><td>Program berhasil diunggah ke papan dan keluaran serial terbaca</td><td>Ikuti langkah 2 dan 3 pada Bab 7, lalu pastikan baris keluaran muncul sebagai teks, bukan karakter acak.</td><td>Baca kembali Bab 3 dan tiga baris pertama tabel pada Bab 8.1.</td></tr>
+        <tr><td>Pilihan pin terbukti aman untuk papan yang Anda pakai</td><td>Cocokkan nomor pin yang Anda pilih dengan tabel kelompok pin pada Bab 4 dan dengan gambar pinout papan Anda sendiri.</td><td>Baca kembali Bab 4, terutama peringatan tentang perbedaan antarvarian papan.</td></tr>
+        <tr><td>Derau dikenali dan diredam, bukan diabaikan</td><td>Bandingkan kolom nilai mentah dan kolom nilai rata-rata pada keluaran program Bab 9, lalu hitung lebar goyangan seperti pada Bab 6.</td><td>Baca kembali Bab 6 beserta penjelasan fungsi perata-rataan pada Bab 9.1.</td></tr>
+        <tr><td>Batas listrik dipahami dan diterapkan</td><td>Tunjukkan resistor seri pada LED, pastikan tidak ada 5 volt yang masuk ke pin data, dan sebutkan beban mana yang menuntut catu daya sendiri.</td><td>Baca kembali Bab 5.</td></tr>
+        <tr><td>Catatan perbandingan tersusun beserta analisisnya</td><td>Periksa catatan Anda terhadap daftar yang dikumpulkan pada Bab 12; setiap perbedaan harus punya sebab yang disebutkan.</td><td>Baca kembali Bab 2 sebagai kerangka perbandingan, lalu susun ulang analisis Anda.</td></tr>
+        </table>
+      </div>
+      <p class="footer-note">Empat checkpoint besar mata kuliah ini berada pada Pertemuan 4 sebagai CP-1, Pertemuan 8 sebagai CP-2, Pertemuan 12 sebagai CP-3, dan Pertemuan 16 sebagai CP-4. Pertemuan 15 adalah pemeriksaan mingguan yang menyiapkan Anda menuju CP-4, dan tugas latihan mingguan seperti tugas pada Bab 12 berbobot 20 persen dari nilai akhir.</p>
+    </section>
+
+    <section class="card">
+      <h2>14. Referensi Praktis</h2>
+      <dl class="gloss">
+        <dt>Dokumentasi resmi ESP32 dari pembuat cip — <code>docs.espressif.com</code></dt>
+        <dd>Sumber paling tepat untuk memastikan batas listrik dan sifat pin yang dibahas pada Bab 4 dan Bab 5, termasuk pin mana yang hanya dapat menjadi masukan dan kelompok pin analog mana yang berbagi sumber daya dengan radio Wi-Fi.</dd>
+        <dt>Panduan penyiapan perangkat keras Random Nerd Tutorials — <code>randomnerdtutorials.com</code></dt>
+        <dd>Berisi penjelasan langkah unggah, pemilihan papan, dan penanganan galat unggah yang sejalan dengan Bab 3, dengan gambar untuk banyak varian papan ESP32.</dd>
+        <dt>Contoh diagram pengkabelan untuk papan Anda — <code>kata kunci: esp32 pinout diagram, esp32 wiring sensor</code></dt>
+        <dd>Untuk kebutuhan ini tidak ada satu sumber baku yang ditunjuk. Pakai kata kunci tersebut untuk mencari gambar yang sesuai dengan varian papan Anda, lalu bandingkan dengan tulisan yang tercetak di tepi papan sebelum menyambung, seperti diminta pada langkah 5 di Bab 7.</dd>
+      </dl>
+      <p class="footer-note">Alamat sumber ditulis sebagai nama domain karena struktur halaman sebuah situs berubah dari waktu ke waktu, sehingga jalur halaman yang dicantumkan hari ini belum tentu masih berlaku ketika Anda membacanya.</p>
+    </section>
+    <footer class="pagenum">
+      <span class="pagenum-seri">Materi Pertemuan 15</span>
+      <span class="pagenum-no">Halaman 15 dari 16</span>
+    </footer>
+  </div>
+</body>
+</html>

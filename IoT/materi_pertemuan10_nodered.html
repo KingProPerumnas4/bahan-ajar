@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Materi Pertemuan 10 - Dashboard IoT dengan Node-RED</title>
+  <link rel="stylesheet" href="assets/materi.css" />
+</head>
+<body>
+<div class="wrap">
+  <header class="hero">
+    <span class="badge">Pertemuan 10</span>
+    <h1>Dashboard IoT dengan Node-RED</h1>
+    <p class="lead">Sampai Pertemuan 9 data Anda hanya terlihat di log serial dan di klien MQTT yang penuh teks. Pertemuan ini memberi data itu wajah: sebuah dasbor berisi angka, grafik, dan lampu status yang dapat dibuka di peramban, sekaligus satu tombol yang mengirim perintah balik ke perangkat.</p>
+    <p>
+      <span class="pill">flow Node-RED</span>
+      <span class="pill">node MQTT in</span>
+      <span class="pill">gauge dan chart</span>
+      <span class="pill">switch dan indikator</span>
+      <span class="pill">kendali dua arah</span>
+    </p>
+    <p class="notice">Yang perlu siap: proyek simulator hasil Pertemuan 9 yang sudah mengirim payload JSON, dan Node-RED terpasang di komputer Anda beserta paket dasbor. Node-RED adalah perangkat lunak baru pada mata kuliah ini, jadi sisihkan waktu untuk pemasangannya sebelum mengerjakan bab praktik.</p>
+  </header>
+  <section class="card">
+    <h2>Capaian Pembelajaran Pertemuan 10</h2>
+    <div class="grid two">
+      <div class="mini">
+        <div class="label">Yang dipahami</div>
+        <ul>
+          <li>Kedudukan Node-RED sebagai penerima dan pengolah data di sisi komputer.</li>
+          <li>Arti node, wire, dan <code>msg.payload</code> dalam sebuah flow.</li>
+          <li>Fungsi tiap widget dasbor: gauge, chart, indikator status, dan switch.</li>
+          <li>Sebab kendali dari dasbor memerlukan topik perintah yang terpisah dari topik data.</li>
+        </ul>
+      </div>
+      <div class="mini">
+        <div class="label">Yang dapat dilakukan</div>
+        <ul>
+          <li>Menyusun flow yang berlangganan topik data dan menampilkannya di dasbor.</li>
+          <li>Memasang paket dasbor melalui pengelola paket dan membuka halaman dasbor.</li>
+          <li>Membuat switch yang menerbitkan perintah ke topik yang disimak perangkat.</li>
+          <li>Menjelaskan perjalanan satu nilai dari sensor sampai muncul di layar.</li>
+        </ul>
+      </div>
+    </div>
+    <p>Fokus pertemuan ini adalah flow Node-RED, node input MQTT, widget gauge, chart, switch, dan indikator status, ditambah kendali balik dari dasbor ke perangkat di simulator. Publish dan subscribe serta broker publik yang dipakai di sini sudah Anda pelajari pada Pertemuan 7.</p>
+  </section>
+  <section class="card">
+    <h2>1. Kedudukan Node-RED dalam Sistem Anda</h2>
+    <p>Sampai sekarang perangkat Anda menerbitkan data ke broker, dan Anda memeriksanya dengan klien MQTT. Klien itu berguna untuk menguji, tetapi bukan alat pemantauan: isinya deretan teks tanpa gambaran perubahan nilai, dan tidak dapat mengubah data sebelum ditampilkan. Node-RED mengisi celah tersebut sebagai perangkat lunak yang berjalan di komputer Anda, berlangganan topik yang sama, lalu mengolah dan menampilkan hasilnya.</p>
+    <p>Kedudukannya di tengah: perangkat di satu sisi, broker sebagai penghubung, Node-RED sebagai penerima yang menyiapkan tampilan, dan peramban sebagai layar. Perangkat tidak perlu tahu ada dasbor, dan dasbor tidak perlu tahu perangkat apa yang mengirim. Keduanya hanya sepakat pada nama topik, sehingga salah satu boleh diganti tanpa mengubah yang lain. Sifat inilah yang membuat sistem IoT dapat tumbuh sedikit-sedikit: Anda boleh menambah dasbor kedua, menukar perangkat dengan yang lebih baik, atau membiarkan dasbor mati sementara tanpa perlu menyentuh program perangkat sama sekali.</p>
+    <div class="analogy">Bayangkan dapur restoran. Perangkat adalah pemasok bahan yang menaruh kiriman di meja penerimaan, broker adalah meja itu, dan Node-RED adalah koki yang mengambil bahan, memotongnya, lalu menatanya di piring. Pengunjung hanya melihat piring yang rapi tanpa perlu tahu bahan datang jam berapa. Pemasok pun tidak menunggu piring selesai; ia menaruh bahan lalu pergi, sama seperti perangkat Anda yang menerbitkan data lalu langsung kembali bekerja.</div>
+  </section>
+  <section class="card">
+    <h2>2. Flow, Node, Wire, dan msg.payload</h2>
+    <p>Program di Node-RED tidak ditulis baris demi baris, melainkan dirangkai dari kotak-kotak. Satu kotak disebut node dan mengerjakan satu tugas kecil: menerima pesan MQTT, mengubah isinya, atau menampilkannya. Node dihubungkan oleh garis yang disebut wire, dan arah wire menentukan urutan pekerjaan. Kumpulan node yang terhubung itulah yang disebut flow.</p>
+    <p>Yang berjalan di sepanjang wire adalah pesan, sebuah objek dengan beberapa bagian. Bagian terpenting adalah <code>msg.payload</code>, yaitu isi utama pesan. Bila node MQTT menerima payload JSON dari perangkat Anda dan disetel membaca JSON, maka <code>msg.payload.suhu_c</code> berisi angka suhu, sedangkan <code>msg.topic</code> berisi nama topik asalnya.</p>
+    <div class="tip">Ingatlah satu kalimat ini: setiap node menerima <code>msg</code>, boleh mengubahnya, lalu meneruskannya. Hampir semua kebingungan pemula hilang begitu Anda membiasakan diri bertanya "apa isi <code>msg.payload</code> di titik ini?" pada tiap sambungan.</div>
+    <p>Karena widget dasbor umumnya menampilkan apa yang ada di <code>msg.payload</code>, sebuah node perantara sering diperlukan untuk memindahkan nilai yang diinginkan ke tempat itu. Node <code>change</code> melakukannya tanpa menulis kode: ia menyetel <code>msg.payload</code> menjadi <code>msg.payload.suhu_c</code>, sehingga gauge menerima angka tunggal, bukan seluruh objek.</p>
+    <p>Cara merangkai seperti ini terasa aneh bagi Anda yang sudah biasa menulis program baris demi baris, tetapi keuntungannya nyata pada pekerjaan pengolahan pesan: urutan kerjanya terlihat sebagai gambar, satu cabang dapat ditambah tanpa membongkar cabang lain, dan isi pesan di setiap titik dapat diperiksa langsung. Kerugiannya, logika yang rumit menjadi lebih sukar dibaca dalam bentuk kotak daripada dalam bentuk teks. Karena itu Node-RED dipakai di sisi penerima, sedangkan program perangkat tetap ditulis sebagai kode di simulator.</p>
+  </section>
+  <section class="card">
+    <h2>3. Mengenali Ruang Kerja Node-RED</h2>
+    <p>Setelah Node-RED berjalan, ruang kerjanya dibuka di peramban. Tampilannya terbagi tiga. Di kiri ada palette, yaitu daftar node yang tersedia dan dikelompokkan menurut jenis. Di tengah ada kanvas tempat node diletakkan dan dihubungkan. Di kanan ada panel samping yang dapat berganti-ganti isi: keterangan node, keluaran <code>debug</code>, dan pengaturan tata letak dasbor.</p>
+    <p>Cara bekerjanya selalu sama. Node ditarik dari palette ke kanvas, diklik dua kali untuk diatur, lalu titik keluaran di sisi kanannya ditarik ke titik masukan node berikutnya. Selama belum ditekan tombol <b>Deploy</b> di kanan atas, semua perubahan hanya tersimpan di layar dan belum dijalankan. Tombol itulah yang memindahkan rancangan Anda menjadi program yang benar-benar berjalan. Kebiasaan ini berbeda dari menulis program di Arduino IDE yang harus diunggah ulang setiap kali; di Node-RED, Deploy hanya memuat ulang bagian yang berubah, sehingga Anda dapat memperbaiki satu node lalu langsung melihat akibatnya.</p>
+    <div class="tip">Biasakan meletakkan satu node <code>debug</code> di ujung setiap cabang yang sedang Anda bangun. Panel debug memperlihatkan isi <code>msg</code> yang sebenarnya sampai di titik itu, dan itu jauh lebih cepat daripada menduga-duga mengapa widget masih kosong.</div>
+    <p>Nama menu dan letak tombol dapat sedikit berbeda antarversi Node-RED. Bila panduan ini menyebut sebuah menu yang tidak Anda temukan dengan nama yang sama, kenali dari fungsinya: menu utama selalu berada di sudut kanan atas dan berlambang tiga garis, dan pengelola paket selalu berisi kotak pencarian dengan daftar hasil yang punya tombol pemasangan di tiap barisnya.</p>
+  </section>
+  <section class="card">
+    <h2>4. Memasang Node-RED dan Paket Dasbor</h2>
+    <p>Node-RED berjalan di komputer Anda sendiri, bukan di dalam simulator. Setelah dijalankan, layanannya menyimak pada porta 1880, sehingga ruang kerjanya dibuka dengan mengunjungi <code>localhost:1880</code> di peramban. Bila alamat itu menolak, hampir selalu penyebabnya satu: layanannya belum berjalan atau sudah berhenti.</p>
+    <p>Pemasangan Node-RED sendiri mengikuti petunjuk resminya untuk sistem operasi Anda; cara yang paling umum memakai pengelola paket Node.js, dan situs resminya menyediakan langkah terpisah untuk Windows, macOS, Linux, serta Raspberry Pi. Karena rinciannya berbeda tiap sistem dan berubah antarversi, ikuti halaman resmi tersebut daripada menyalin perintah dari sumber lama. Perintah lama sering menyebut versi Node.js yang sudah tidak didukung, dan kegagalan pemasangan yang muncul karenanya biasanya berupa pesan panjang yang sulit ditafsirkan pemula.</p>
+    <p>Satu hal yang membedakan Node-RED dari program biasa: ia tidak berhenti ketika jendela peramban ditutup. Yang berjalan adalah layanannya di komputer Anda, sedangkan peramban hanya jendela untuk melihat dan menyunting. Karena itu flow tetap bekerja mengumpulkan data selama layanannya hidup, tetapi ikut berhenti bila komputer dimatikan atau jendela terminal tempat ia dijalankan Anda tutup.</p>
+    <p>Node dasbor tidak termasuk paket bawaan. Ia dipasang dari dalam Node-RED melalui menu utama di sudut kanan atas, pilihan yang mengelola palette, lalu tab pemasangan. Ketikkan kata <code>dashboard</code> pada kotak pencarian dan pasang salah satu paket dasbor. Setelah pemasangan selesai, kelompok node baru muncul di bagian bawah palette.</p>
+    <div class="table-scroll" tabindex="0">
+      <table>
+      <tr><th>Yang perlu diketahui</th><th>Keterangan</th></tr>
+      <tr><td>Dua generasi paket dasbor</td><td>Paket lama menyediakan node bernama <code>ui_gauge</code>, <code>ui_chart</code>, <code>ui_switch</code>, dan <code>ui_text</code>. Paket yang lebih baru memakai nama bertanda hubung seperti <code>ui-gauge</code>. Keduanya sama-sama dapat dipakai, tetapi nama node dan letak pengaturannya berbeda.</td></tr>
+      <tr><td>Alamat halaman dasbor</td><td>Paket lama menampilkan dasbor di <code>localhost:1880/ui</code>, paket baru di <code>localhost:1880/dashboard</code>. Cobalah keduanya bila salah satu memberi halaman kosong.</td></tr>
+      <tr><td>Tab dan grup</td><td>Widget tidak dapat berdiri sendiri. Setiap widget harus ditempatkan pada sebuah grup, dan grup berada di dalam sebuah tab. Keduanya dibuat saat mengatur widget pertama Anda atau melalui panel tata letak dasbor.</td></tr>
+      </table>
+    </div>
+    <div class="warn">Contoh pada Bab 8 memakai nama node paket lama karena bentuk berkasnya paling banyak dijumpai. Bila Anda memasang paket yang lebih baru, susun widget secara manual mengikuti tabel Bab 5; menempelkan berkas contoh akan gagal karena nama nodenya tidak dikenali.</div>
+  </section>
+  <section class="card">
+    <h2>5. Empat Widget yang Dipakai Pertemuan Ini</h2>
+    <p>Widget adalah node yang menghasilkan tampilan di halaman dasbor. Empat jenis berikut sudah cukup untuk memantau sebuah sistem kecil sekaligus mengendalikannya.</p>
+    <div class="table-scroll" tabindex="0">
+      <table>
+      <tr><th>Widget</th><th>Menampilkan apa</th><th>Yang perlu diatur</th></tr>
+      <tr><td>Gauge</td><td>Satu angka terbaru dalam bentuk jarum atau busur, misalnya suhu saat ini.</td><td>Batas bawah dan batas atas skala, satuan, serta nama grup tempat ia diletakkan. Payload yang masuk harus berupa angka tunggal.</td></tr>
+      <tr><td>Chart</td><td>Perubahan nilai sepanjang waktu sebagai garis, sehingga kecenderungan naik atau turun terlihat.</td><td>Rentang waktu yang ditampilkan. Chart mengingat data selama Node-RED berjalan, jadi grafik kembali kosong setelah dijalankan ulang.</td></tr>
+      <tr><td>Indikator status berbasis teks</td><td>Teks singkat keadaan sistem, misalnya AMAN atau BAHAYA.</td><td>Label di sebelah nilai dan tata letaknya. Isi <code>msg.payload</code> ditampilkan apa adanya, jadi kirim teks yang sudah siap dibaca.</td></tr>
+      <tr><td>Switch</td><td>Sakelar yang dapat ditekan pengguna; inilah satu-satunya widget di daftar ini yang menghasilkan pesan, bukan menerimanya.</td><td>Nilai yang dikirim saat hidup dan saat mati. Isilah dengan teks yang dipahami program Anda, misalnya <code>ON</code> dan <code>OFF</code>.</td></tr>
+      </table>
+    </div>
+    <p>Perbedaan arah itu penting. Gauge, chart, dan indikator berada di ujung akhir flow: wire masuk ke sana dan tidak keluar lagi. Switch berada di awal flow: ia tidak menerima data pemantauan, melainkan menghasilkan pesan setiap kali ditekan, dan pesan itulah yang diteruskan ke node keluaran MQTT.</p>
+    <p>Dua sifat chart perlu Anda ketahui lebih dahulu agar tidak salah menduga ada kerusakan. Pertama, riwayatnya disimpan di dalam Node-RED yang sedang berjalan, bukan di berkas, sehingga grafik kembali kosong setiap kali layanannya dijalankan ulang. Kedua, chart hanya punya titik untuk data yang benar-benar dikirim; karena program Pertemuan 9 menyaring kiriman dengan ambang perubahan, jarak antartitik pada grafik Anda tidak akan sama rata. Itu bukan cacat, melainkan gambaran jujur bahwa perangkat memang hanya bicara ketika ada yang perlu dikatakan.</p>
+    <div class="tip">Untuk sistem hasil Pertemuan 9, pasangan yang paling masuk akal adalah gauge untuk <code>suhu_c</code>, chart untuk nilai yang sama agar kecenderungannya terlihat, indikator teks untuk status aman atau bahaya, dan satu switch untuk menyalakan atau mematikan aktuator dari jauh.</div>
+  </section>
+  <section class="card">
+    <h2>6. Alur Dua Arah: Topik Data dan Topik Perintah</h2>
+    <p>Dasbor yang hanya menampilkan angka baru setengah jalan. Bagian yang membuat sebuah dasbor terasa seperti sistem IoT adalah kemampuan menekan sesuatu di layar dan melihat perangkat menanggapinya. Kuncinya bukan teknologi baru, melainkan penggunaan dua topik dengan arah berlawanan.</p>
+    <p>Pada arah pertama perangkat menerbitkan ke topik data, misalnya <code>iot/kelasA/nim12345/suhu</code>, dan Node-RED berlangganan topik itu. Pada arah kedua kedudukan mereka bertukar: Node-RED menerbitkan ke topik perintah, misalnya <code>iot/kelasA/nim12345/perintah</code>, dan perangkatlah yang berlangganan. Publish dan subscribe seperti ini beserta pemakaian broker publik sudah Anda pelajari pada Pertemuan 7; yang baru di sini hanya pihak yang memegang peran.</p>
+    <div class="warn">Jangan memakai satu topik untuk dua arah. Bila perangkat menerbitkan dan berlangganan pada topik yang sama, ia akan menerima kembali pesannya sendiri, dan Node-RED pun ikut membaca perintahnya sendiri. Akibatnya status berkedip-kedip tanpa sebab dan sulit dilacak.</div>
+    <p>Di sisi perangkat, berlangganan berarti dua tambahan pada program: satu fungsi yang dijalankan setiap ada pesan masuk, dan satu panggilan yang mendaftarkan topik perintah setelah sambungan broker terjadi. Fungsi itu menerima isi pesan sebagai deretan byte, sehingga isinya perlu disusun kembali menjadi teks sebelum dibandingkan dengan <code>ON</code> atau <code>OFF</code>. Alasannya, pustaka MQTT tidak berani menebak isi pesan Anda: yang sampai di perangkat hanyalah sejumlah byte beserta panjangnya, dan pustaka menyerahkan penafsirannya kepada program Anda. Contoh potongan programnya ada pada bagian 8.3.</p>
+    <p>Satu hal yang perlu Anda sadari: broker publik tidak membedakan siapa yang mengirim perintah. Siapa pun yang mengetahui nama topik Anda dapat menerbitkan <code>ON</code> ke sana, dan perangkat akan menurutinya. Karena itu pakailah topik yang memuat identitas Anda sendiri, jangan mengirim apa pun yang bersifat pribadi, dan anggap semua lalu lintasnya terbuka.</p>
+  </section>
+  <section class="card">
+    <h2>7. Implementasi Praktis: Membangun Dasbor Pertama</h2>
+    <p>Kerjakan berurutan dan jangan melewati langkah pemeriksaan di tengah. Kesalahan paling umum pada pertemuan ini bukan salah menyusun widget, melainkan data yang sebenarnya belum pernah sampai ke Node-RED.</p>
+    <p>Urutan di bawah disusun dengan alasan tertentu. Jalur data dibangun dan dibuktikan dahulu dengan node <code>debug</code>, baru widget dipasang. Bila urutannya dibalik, Anda akan menatap gauge kosong tanpa tahu apakah penyebabnya data yang tidak datang, payload yang belum diambil per field, atau widget yang belum punya grup. Dengan bukti dari panel debug, tiga kemungkinan itu langsung menyusut menjadi satu. Arah balik dikerjakan paling akhir karena ia memerlukan perubahan pada program perangkat, dan lebih mudah mengubah program yang sudah terbukti mengirim dengan benar.</p>
+
+    <p>Sepanjang bab ini dua alat berjalan berbarengan dan keduanya harus tetap hidup. Yang pertama adalah simulator, tempat perangkat Anda membaca sensor, menerbitkan data, dan menyalakan aktuator ketika perintah masuk. Yang kedua adalah Node-RED di komputer Anda, tempat flow dan halaman dasbor berada. Menutup salah satunya memutus rantai itu: simulator yang dihentikan membuat angka di dasbor berhenti berubah, sedangkan layanan Node-RED yang dimatikan membuat perintah dari layar tidak pernah sampai ke perangkat. Karena itu sisi perangkat disiapkan lebih dahulu di bawah ini, baru flow-nya dirakit.</p>
+    <p><strong>Komponen yang perlu ditambahkan:</strong> tidak ada, bila Anda melanjutkan proyek Pertemuan 9 tentang pengaturan waktu pengiriman data. Di proyek itu sudah terpasang potensiometer sebagai sumber nilai suhu serta satu LED dengan resistor 220 Ω pada GPIO 2, dan LED itulah yang kini berperan sebagai aktuator, yaitu pin yang disebut <code>aktuatorPin</code> pada potongan program bagian 8.3. Yang perlu Anda pastikan hanya bahwa LED tersebut benar-benar ada di panel rangkaian. Bila Anda merakit dari proyek baru, satu LED dan satu resistor 220 Ω sudah cukup untuk melihat perintah dasbor bekerja.</p>
+    <div class="svgbox" tabindex="0">
+      <svg viewBox="0 40 700 190" width="100%" role="img" aria-label="Sisi perangkat: pin GPIO 2 pada ESP32 tersambung ke resistor 220 ohm, lalu ke kaki panjang LED yang menjadi aktuator, dan kaki pendek LED kembali ke pin GND">
+        <rect x="30" y="55" width="170" height="140" rx="14" fill="#dcfce7" stroke="#15803d" stroke-width="2"/>
+        <text x="115" y="100" text-anchor="middle" font-size="22" font-weight="700">ESP32</text>
+        <text x="115" y="124" text-anchor="middle" font-size="14" fill="#374151">board virtual</text>
+        <text x="194" y="150" text-anchor="end" font-size="15" font-weight="700" fill="#15803d">GPIO 2</text>
+        <text x="194" y="190" text-anchor="end" font-size="15" font-weight="700" fill="#111827">GND</text>
+        <line x1="200" y1="145" x2="285" y2="145" stroke="#15803d" stroke-width="4"/>
+        <rect x="285" y="125" width="100" height="40" rx="8" fill="#fef3c7" stroke="#b45309" stroke-width="2"/>
+        <text x="335" y="151" text-anchor="middle" font-size="15" font-weight="700">220 Ω</text>
+        <line x1="385" y1="145" x2="456" y2="145" stroke="#15803d" stroke-width="4"/>
+        <circle cx="492" cy="145" r="36" fill="#fee2e2" stroke="#dc2626" stroke-width="2"/>
+        <text x="492" y="144" text-anchor="middle" font-size="16" font-weight="700">LED</text>
+        <text x="492" y="163" text-anchor="middle" font-size="12" fill="#374151">aktuator</text>
+        <line x1="528" y1="145" x2="620" y2="145" stroke="#111827" stroke-width="4"/>
+        <line x1="620" y1="145" x2="620" y2="185" stroke="#111827" stroke-width="4"/>
+        <line x1="620" y1="185" x2="200" y2="185" stroke="#111827" stroke-width="4"/>
+      </svg>
+    </div>
+    <p>Urutan sambungan sisi aktuator hanya dua: <strong>GPIO 2 → resistor 220 Ω → kaki panjang LED</strong>, lalu <strong>kaki pendek LED → GND</strong>. Angka 2 itu wajib sama dengan <code>aktuatorPin</code> pada bagian 8.3; bila nomor pin di rangkaian Anda ubah, angka di program harus diubah mengikutinya, dan sebaliknya. Kaki panjang LED selalu menghadap sisi resistor, sebab LED yang terpasang terbalik tidak akan menyala walaupun perintah dari dasbor sudah sampai. Sambungan potensiometer dibiarkan seperti pada Pertemuan 9 karena sisi pemantauan memakainya apa adanya.</p>
+    <details>
+      <summary>Rangkaian sisi aktuator dalam bentuk <code>diagram.json</code></summary>
+      <p>Buka tab <code>diagram.json</code> di atas panel rangkaian, hapus seluruh isinya, tempelkan teks di bawah secara utuh, lalu kembali ke panel rangkaian. Hasilnya sama dengan gambar di atas. Tempelan ini memuat sisi aktuator saja, jadi pakailah pada proyek baru bila Anda ingin menguji arah balik lebih dahulu tanpa sensor. Pada proyek Pertemuan 9 yang masih utuh, jangan timpa tabnya, sebab potensiometernya akan ikut terhapus; di sana LED pada GPIO 2 memang sudah terpasang.</p>
+      <div class="code"><pre>{
+  "version": 1,
+  "author": "Materi IoT Pertemuan 10",
+  "editor": "wokwi",
+  "parts": [
+    { "type": "board-esp32-devkit-c-v4", "id": "esp", "top": 0, "left": 0, "attrs": {} },
+    { "type": "wokwi-led", "id": "led1", "top": -60, "left": 140, "attrs": { "color": "red" } },
+    { "type": "wokwi-resistor", "id": "r1", "top": 40, "left": 130, "attrs": { "value": "220" } }
+  ],
+  "connections": [
+    [ "esp:2", "r1:1", "green", [ "v0" ] ],
+    [ "r1:2", "led1:A", "green", [ "v0" ] ],
+    [ "led1:C", "esp:GND.1", "black", [ "v0" ] ]
+  ]
+}</pre></div>
+      <p>Bila panel rangkaian menjadi kosong sesudah tempelan itu, biasanya ada tanda kurung atau koma yang ikut terhapus. Tempelkan ulang seluruh isinya, jangan hanya sebagian.</p>
+    </details>
+    <div class="warn">Periksa lebih dahulu apakah program Pertemuan 9 Anda masih mengedipkan LED pada GPIO 2 sebagai penanda bahwa program tidak membeku. Bila iya, kedipan itu menulis ulang keadaan pin itu setiap beberapa ratus milidetik, sehingga switch di dasbor seolah tidak berpengaruh: LED tetap berkedip apa pun perintah yang masuk. Hentikan pengedipan pada pin tersebut sebelum menguji arah balik, atau pindahkan penanda kedip ke pin lain dan sesuaikan rangkaiannya.</div>
+    <h3>7.1 Langkah pengerjaan</h3>
+    <ol class="step">
+      <li>Jalankan proyek Pertemuan 9 dan pastikan payload JSON-nya masuk ke klien MQTT. Tambahkan satu field status ke teks JSON bila belum ada, berisi <code>AMAN</code> atau <code>BAHAYA</code> sesuai keadaan aktuator, karena indikator dasbor akan membacanya.</li>
+      <li>Pastikan aktuatornya benar-benar terpasang di panel rangkaian proyek itu, yaitu LED dengan resistor 220 Ω pada GPIO 2 seperti gambar di atas. Tanpa aktuator yang terlihat, perintah dari dasbor tetap sampai ke perangkat tetapi tidak ada apa pun yang berubah di layar, sehingga flow yang sudah benar mudah dikira gagal.</li>
+      <li>Jalankan Node-RED di komputer Anda, lalu buka <code>localhost:1880</code> di peramban sampai kanvas kosong terlihat.</li>
+      <li>Pasang paket dasbor melalui menu utama di sudut kanan atas, pilihan pengelola palette, tab pemasangan, dengan kata pencarian <code>dashboard</code>. Tunggu sampai kelompok node baru muncul di bagian bawah palette.</li>
+      <li>Tarik node <code>mqtt in</code> ke kanvas dan klik dua kali. Buat konfigurasi server baru berisi <code>broker.hivemq.com</code> porta <code>1883</code>, isi topiknya dengan topik data Anda, lalu pilih bentuk keluaran berupa objek JSON yang sudah diuraikan. Penamaan pilihan itu berbeda antarversi; kenali dari keterangannya yang menyebut JSON.</li>
+      <li>Tarik satu node <code>debug</code>, hubungkan dari <code>mqtt in</code>, lalu tekan Deploy. Buka panel debug dan tunggu pesan masuk. Anda harus melihat objek dengan field <code>suhu_c</code> dan <code>status</code>; bila yang muncul hanya teks panjang, keluaran node MQTT belum disetel sebagai JSON.</li>
+      <li>Tarik node <code>change</code>, hubungkan dari <code>mqtt in</code>, dan aturlah agar ia menetapkan <code>msg.payload</code> menjadi nilai <code>msg.payload.suhu_c</code>.</li>
+      <li>Tarik widget gauge dan chart, hubungkan keduanya dari node <code>change</code> tadi. Saat mengatur gauge, buatlah tab dan grup baru karena widget tidak dapat berdiri tanpa keduanya. Beri skala 20 sampai 45 agar sesuai rentang nilai program Anda.</li>
+      <li>Tarik node <code>change</code> kedua, hubungkan juga dari <code>mqtt in</code>, aturlah agar <code>msg.payload</code> menjadi <code>msg.payload.status</code>, lalu sambungkan ke widget teks sebagai indikator keadaan.</li>
+      <li>Tarik widget switch dan isi nilai kirimnya dengan <code>ON</code> saat hidup dan <code>OFF</code> saat mati. Hubungkan keluarannya ke node <code>mqtt out</code> yang memakai konfigurasi server yang sama dengan topik perintah Anda.</li>
+      <li>Tambahkan pada program perangkat satu fungsi penerima pesan dan satu pendaftaran langganan topik perintah seperti pada bagian 8.3, lalu jalankan ulang simulatornya.</li>
+      <li>Tekan Deploy, lalu buka halaman dasbor di <code>localhost:1880/ui</code>. Bila halamannya kosong, cobalah <code>localhost:1880/dashboard</code> karena paket dasbor yang lebih baru memakai alamat itu.</li>
+      <li>Putar potensiometer di simulator dan perhatikan gauge, chart, serta indikator status. Setelah itu tekan switch di dasbor dan perhatikan LED perangkat beserta log serialnya.</li>
+    </ol>
+    <h3>7.2 Jalan cepat: mengimpor flow dan mengaktifkannya</h3>
+    <p>Bila susunan flow rakitan Anda sudah terlalu berantakan untuk diperbaiki, flow pada Bab 8.1 dapat dimasukkan sekaligus. Urutan menunya seperti berikut, beserta tanda bahwa tiap langkah benar-benar berhasil; tanpa tanda itu Anda tidak dapat memisahkan kesalahan di flow dari kesalahan di perangkat.</p>
+    <ol class="step">
+      <li>Salin seluruh teks flow pada Bab 8.1, lalu ganti setiap <code>nim12345</code> dengan identitas Anda sendiri, termasuk pada kedua nama topik.</li>
+      <li>Di ruang kerja Node-RED, buka menu utama di sudut kanan atas yang berlambang tiga garis, pilih <b>Import</b>, tempelkan teks itu pada kotak yang tersedia, lalu tekan tombol <b>Import</b> pada kotak tersebut. Tandanya berhasil: node-node baru menempel pada penunjuk tetikus sebagai satu kelompok terpilih, dan sekali klik di kanvas meletakkannya. Bila muncul peringatan tentang jenis node yang tidak dikenali, paket dasbornya belum terpasang; kembalilah ke Bab 4.</li>
+      <li>Tekan tombol <b>Deploy</b> di sudut kanan atas. Tandanya berhasil: pemberitahuan singkat bahwa flow sudah dipasang muncul, tombol Deploy kembali tampak tidak aktif, dan titik biru penanda perubahan di sudut node hilang. Selama titik itu masih ada, flow Anda belum berjalan sama sekali.</li>
+      <li>Perhatikan tulisan kecil tepat di bawah node <code>mqtt in</code> dan <code>mqtt out</code>. Tandanya sambungan ke broker sudah terjadi: tulisan <code>connected</code> beserta bulatan hijau di bawah kedua node itu. Tulisan <code>connecting</code> berarti percobaan masih berlangsung, sedangkan <code>disconnected</code> berarti alamat atau porta brokernya perlu diperiksa seperti pada baris kedua tabel 7.4.</li>
+      <li>Buka halaman dasbor memakai alamat yang tercantum pada tabel Bab 4, atau lewat panel dasbor di sisi kanan yang memuat ikon pembuka halaman sehingga alamatnya tidak perlu diketik. Tandanya berhasil: tab <code>Pemantauan</code> muncul beserta grup <code>Suhu</code> dan <code>Kendali</code>.</li>
+      <li>Jalankan simulatornya, lalu putar potensiometer dan tekan switch untuk memastikan kedua arah bekerja seperti pada bagian 7.3.</li>
+    </ol>
+    <p><strong>Hasil yang harus terlihat:</strong> sesudah Deploy, kanvas memuat sembilan node bernama, kedua node MQTT bertuliskan connected, dan halaman dasbor menampilkan tab Pemantauan berisi gauge, chart, indikator status, serta satu switch. Jarum gauge masih di batas bawah dan chart masih tanpa garis sampai kiriman pertama dari perangkat masuk.</p>
+    <div class="warn">Dasbor yang kosong punya dua sebab dengan tanda yang berbeda. Bila <b>flow belum aktif</b>, halaman dasbor tidak memuat tab maupun grup sama sekali atau bahkan tidak ditemukan, titik biru penanda perubahan masih menempel pada node, dan panel debug diam walaupun klien MQTT Anda masih menerima kiriman; obatnya menekan Deploy. Bila <b>perangkat belum mengirim</b>, kerangkanya justru sudah lengkap: tab, grup, judul widget, dan sumbu chart terlihat, hanya angkanya yang belum ada, jarum gauge berhenti di batas bawah, dan node <code>mqtt in</code> tetap bertuliskan connected; yang perlu diperiksa simulatornya, bukan flow-nya.</div>
+
+    <h3>7.3 Hasil yang diharapkan</h3>
+    <ul>
+      <li>Jarum gauge berpindah beberapa saat setelah nilai sensor diubah, dan chart menumbuhkan garis dari kiri ke kanan.</li>
+      <li>Indikator teks berganti antara AMAN dan BAHAYA mengikuti keadaan aktuator perangkat.</li>
+      <li>Menekan switch membuat LED di simulator berubah dalam hitungan detik, dan log serial mencatat perintah yang diterima.</li>
+      <li>Menutup lalu membuka kembali halaman dasbor tidak mematikan flow; angka terbaru muncul lagi begitu ada kiriman baru. Ini terjadi karena flow berjalan di layanan Node-RED, bukan di dalam halaman peramban.</li>
+    </ul>
+
+    <h3>7.4 Jika hasilnya tidak seperti itu</h3>
+    <div class="table-scroll" tabindex="0">
+      <table>
+      <tr><th>Gejala</th><th>Kemungkinan penyebab</th><th>Yang perlu diperiksa</th></tr>
+      <tr><td>Panel debug tidak pernah menampilkan apa pun</td><td>Topik salah tulis, atau perangkat tidak sedang mengirim.</td><td>Bandingkan topik di node <code>mqtt in</code> dengan topik di program huruf demi huruf, dan pastikan klien MQTT Anda masih menerima kiriman.</td></tr>
+      <tr><td>Node MQTT berlabel terputus</td><td>Alamat atau porta broker salah, atau sambungan internet komputer terhalang.</td><td>Periksa <code>broker.hivemq.com</code> dan porta <code>1883</code> pada konfigurasi server, lalu tekan Deploy ulang agar sambungan dicoba lagi.</td></tr>
+      <tr><td>Gauge tetap nol padahal debug menampilkan data</td><td>Payload yang masuk masih berupa objek utuh, bukan angka tunggal.</td><td>Periksa node <code>change</code>: sasarannya <code>msg.payload</code> dan nilainya harus diambil dari <code>msg.payload.suhu_c</code>.</td></tr>
+      <tr><td>Halaman dasbor kosong atau tidak ditemukan</td><td>Alamat halaman berbeda antarpaket, atau widget belum punya grup dan tab.</td><td>Cobalah kedua alamat pada langkah kedua belas, lalu pastikan setiap widget sudah menunjuk sebuah grup pada panel tata letak dasbor.</td></tr>
+      <tr><td>Switch ditekan tetapi perangkat diam</td><td>Perangkat belum berlangganan topik perintah, atau teks yang dibandingkan tidak sama.</td><td>Pastikan pendaftaran langganan dijalankan setelah sambungan broker berhasil, dan bandingkan huruf besar kecil antara nilai switch dengan pembanding di program.</td></tr>
+      <tr><td>Status berkedip sendiri tanpa ditekan</td><td>Topik data dan topik perintah memakai nama yang sama.</td><td>Pisahkan keduanya seperti pada Bab 6, lalu Deploy ulang.</td></tr>
+      </table>
+    </div>
+    <p>Bila satu langkah tidak berhasil, hapus node terakhir yang Anda tambahkan dan pastikan flow sebelumnya masih bekerja, karena mencari satu kesalahan lebih mudah daripada mencari tiga. Anda juga boleh meminta bantuan; sebutkan langkah keberapa yang macet dan apa isi panel debug saat itu, sebab dua keterangan itu biasanya sudah cukup untuk menemukan penyebabnya tanpa membaca seluruh flow.</p>
+  </section>
+  <section class="card">
+    <h2>8. Contoh Flow Lengkap dan Potongan Program Perangkat</h2>
+    <p>Berkas di bawah adalah flow yang sama dengan hasil Bab 7, ditulis dalam bentuk JSON yang dapat diimpor. Impor dilakukan melalui menu utama, pilihan Import, lalu tempelkan seluruh teksnya. Ganti setiap <code>nim12345</code> dengan identitas Anda sendiri sebelum menekan Deploy.</p>
+
+    <h3>8.1 Flow yang dapat diimpor</h3>
+    <div class="code"><pre>[
+  {"id":"tab1","type":"tab","label":"Dasbor IoT"},
+  {"id":"brk1","type":"mqtt-broker","name":"hivemq",
+   "broker":"broker.hivemq.com","port":"1883","clientid":"nodered-nim12345"},
+  {"id":"tabui1","type":"ui_tab","name":"Pemantauan","order":1},
+  {"id":"grp1","type":"ui_group","name":"Suhu","tab":"tabui1","width":"6"},
+  {"id":"grp2","type":"ui_group","name":"Kendali","tab":"tabui1","width":"6"},
+  {"id":"in1","type":"mqtt in","z":"tab1","name":"data suhu",
+   "topic":"iot/kelasA/nim12345/suhu","datatype":"json","broker":"brk1",
+   "x":140,"y":100,"wires":[["ch1","ch2","dbg1"]]},
+  {"id":"dbg1","type":"debug","z":"tab1","name":"lihat msg",
+   "x":360,"y":40,"wires":[]},
+  {"id":"ch1","type":"change","z":"tab1","name":"ambil suhu_c",
+   "rules":[{"t":"set","p":"payload","pt":"msg","to":"payload.suhu_c","tot":"msg"}],
+   "x":360,"y":100,"wires":[["gau1","cht1"]]},
+  {"id":"ch2","type":"change","z":"tab1","name":"ambil status",
+   "rules":[{"t":"set","p":"payload","pt":"msg","to":"payload.status","tot":"msg"}],
+   "x":360,"y":180,"wires":[["txt1"]]},
+  {"id":"gau1","type":"ui_gauge","z":"tab1","name":"gauge suhu","group":"grp1",
+   "label":"Suhu","format":"{{value}}","units":"C","min":"20","max":"45",
+   "x":580,"y":60,"wires":[]},
+  {"id":"cht1","type":"ui_chart","z":"tab1","name":"grafik suhu","group":"grp1",
+   "label":"Riwayat","removeOlder":"1","removeOlderUnit":"3600",
+   "x":580,"y":120,"wires":[[]]},
+  {"id":"txt1","type":"ui_text","z":"tab1","name":"status","group":"grp1",
+   "label":"Status","format":"{{msg.payload}}","x":580,"y":180,"wires":[]},
+  {"id":"sw1","type":"ui_switch","z":"tab1","name":"kendali aktuator",
+   "group":"grp2","label":"Aktuator","onvalue":"ON","offvalue":"OFF",
+   "x":150,"y":280,"wires":[["out1"]]},
+  {"id":"out1","type":"mqtt out","z":"tab1","name":"kirim perintah",
+   "topic":"iot/kelasA/nim12345/perintah","broker":"brk1",
+   "x":420,"y":280,"wires":[]}
+]</pre></div>
+    <h3>8.2 Penjelasan node demi node</h3>
+    <div class="table-scroll" tabindex="0">
+      <table>
+      <tr><th>Bagian</th><th>Perannya</th></tr>
+      <tr><td><code>tab</code> dan <code>mqtt-broker</code></td><td>Yang pertama adalah lembar kerja tempat node diletakkan. Yang kedua bukan node yang tampak di kanvas, melainkan pengaturan sambungan yang dipakai bersama oleh node masuk dan node keluar, berisi alamat broker, porta, dan nama klien. Karena keduanya berbagi satu pengaturan, perangkat lunak hanya membuka satu sambungan ke broker untuk seluruh flow, dan mengganti alamat broker cukup dilakukan sekali.</td></tr>
+      <tr><td><code>ui_tab</code> dan dua <code>ui_group</code></td><td>Kerangka tampilan dasbor. Satu tab menampung dua grup, satu grup untuk pemantauan suhu dan satu untuk kendali. Setiap widget wajib menunjuk salah satu grup, jika tidak ia tidak akan muncul di halaman. Pemisahan grup bukan sekadar hiasan: ia memberi tahu pembaca dasbor mana bagian yang hanya memberi informasi dan mana bagian yang mengubah keadaan perangkat.</td></tr>
+      <tr><td><code>mqtt in</code></td><td>Berlangganan topik data. Isi <code>datatype</code> bernilai <code>json</code> inilah yang membuat teks kiriman langsung diuraikan menjadi objek, sehingga <code>msg.payload.suhu_c</code> dapat diambil. Tanpa setelan itu payload tetap berupa satu teks panjang dan setiap upaya mengambil field akan menghasilkan nilai kosong. Bagian <code>wires</code> menunjukkan pesannya dikirim ke tiga tujuan sekaligus: dua node <code>change</code> dan satu <code>debug</code>. Satu pesan disalin ke setiap cabang, jadi cabang yang satu tidak merusak isi cabang yang lain.</td></tr>
+      <tr><td>Dua node <code>change</code></td><td>Masing-masing menetapkan <code>msg.payload</code> menjadi satu field saja, yaitu <code>payload.suhu_c</code> untuk angka dan <code>payload.status</code> untuk teks keadaan. Tanpa keduanya widget menerima objek utuh dan tidak tahu bagian mana yang harus ditampilkan; gauge akan tetap nol dan indikator teks menampilkan tulisan yang tidak dapat dibaca. Dibutuhkan dua node karena satu pesan hanya punya satu <code>msg.payload</code>, sehingga tiap tujuan perlu salinan dengan isi yang berbeda.</td></tr>
+      <tr><td><code>ui_gauge</code>, <code>ui_chart</code>, <code>ui_text</code></td><td>Tiga widget penampil. Gauge memakai batas 20 sampai 45 dengan satuan C, sesuai rentang nilai yang dihasilkan program Pertemuan 9, sebab skala yang jauh lebih lebar membuat pergerakan jarum hampir tidak terlihat. Chart menyimpan riwayat satu jam terakhir. Widget teks menampilkan <code>msg.payload</code> apa adanya, sehingga tulisan AMAN atau BAHAYA muncul persis seperti yang dikirim perangkat.</td></tr>
+      <tr><td><code>ui_switch</code> dan <code>mqtt out</code></td><td>Jalur arah balik. Switch menghasilkan pesan berisi <code>ON</code> atau <code>OFF</code>, dan node keluar menerbitkannya ke topik perintah memakai sambungan broker yang sama. Perhatikan topiknya berbeda dari topik data, sesuai aturan pada Bab 6. Perhatikan juga bahwa jalur ini tidak menyentuh node <code>change</code> mana pun, karena isi pesannya sudah berbentuk teks siap kirim sejak dari widget.</td></tr>
+      </table>
+    </div>
+    <p>Contoh ini sengaja tidak memuat pengaturan tata letak dasbor secara menyeluruh, karena Node-RED melengkapinya sendiri saat flow dijalankan. Bila setelah impor muncul peringatan tentang jenis node yang tidak dikenali, berarti paket dasbor belum terpasang atau Anda memasang paket generasi yang lain; kembalilah ke Bab 4. Angka <code>x</code> dan <code>y</code> pada setiap node hanya menentukan posisinya di kanvas dan tidak memengaruhi jalannya program, jadi Anda bebas menggeser node agar flow lebih mudah dibaca.</p>
+    <p>Perhatikan pula bentuk <code>wires</code> pada node <code>ui_chart</code>, yaitu <code>[[]]</code>, yang berarti node itu punya satu keluaran yang tidak tersambung ke mana pun. Bentuk seperti ini sah dan sering dijumpai pada widget yang sebenarnya hanya menampilkan. Membaca <code>wires</code> adalah cara tercepat memahami sebuah flow orang lain tanpa membukanya: isinya adalah daftar tujuan untuk setiap keluaran node.</p>
+
+    <h3>8.3 Tambahan pada program perangkat</h3>
+    <p>Potongan berikut ditambahkan ke program Pertemuan 9 agar perangkat menyimak topik perintah. Letaknya di luar <code>loop()</code>, dan dua baris terakhir dipasang di tempat yang disebutkan pada komentarnya.</p>
+    <div class="code"><pre>const char* topikPerintah = "iot/kelasA/nim12345/perintah";
+const int aktuatorPin = 2;
+
+void pesanMasuk(char* topic, byte* payload, unsigned int length) {
+  String isi = "";
+  for (unsigned int i = 0; i &lt; length; i++) isi += (char)payload[i];
+  isi.trim();
+  Serial.print("perintah masuk: "); Serial.println(isi);
+  if (isi == "ON")  digitalWrite(aktuatorPin, HIGH);
+  if (isi == "OFF") digitalWrite(aktuatorPin, LOW);
+}
+
+// di dalam setup(), tepat sesudah mqtt.setServer(...)
+mqtt.setCallback(pesanMasuk);
+
+// di dalam fungsi penyambung broker, sesudah mqtt.connect(...) berhasil
+mqtt.subscribe(topikPerintah);</pre></div>
+    <ul>
+      <li><code>pesanMasuk()</code> adalah fungsi yang dijalankan pustaka MQTT setiap ada pesan di topik yang dilanggan. Ia menerima nama topik dan isi pesan sebagai deretan byte beserta panjangnya.</li>
+      <li>Perulangan di dalamnya menyusun byte itu menjadi teks, karena isi pesan tidak datang sebagai kalimat siap pakai. <code>isi.trim()</code> membuang spasi atau baris baru yang mungkin terbawa.</li>
+      <li>Dua baris <code>if</code> membandingkan teks itu dengan <code>ON</code> dan <code>OFF</code>. Perbandingannya peka huruf besar kecil, jadi nilai pada widget switch harus ditulis sama benar.</li>
+      <li><code>mqtt.setCallback()</code> mendaftarkan fungsi tadi, sedangkan <code>mqtt.subscribe()</code> harus dipanggil setiap kali sambungan broker baru terbentuk. Bila diletakkan di <code>setup()</code> saja, langganan hilang begitu sambungan pernah terputus dan disambung ulang.</li>
+      <li><code>mqtt.loop()</code> yang sudah ada di <code>loop()</code> tetap wajib dipanggil setiap putaran, karena fungsi penerima hanya dijalankan dari dalamnya. Di sini terlihat sekali lagi mengapa <code>delay()</code> panjang merugikan: selama program membeku, perintah dari dasbor menumpuk di sisi pustaka dan baru diproses setelah pembekuan berakhir, sehingga sakelar di layar terasa lambat menanggapi.</li>
+    </ul>
+  </section>
+  <section class="card">
+    <h2>9. Ringkasan Materi</h2>
+    <ul>
+      <li>Node-RED duduk di sisi penerima, sesudah broker. Ia tidak menggantikan perangkat atau broker, melainkan mengubah pesan yang sudah beredar menjadi tampilan dan perintah.</li>
+      <li>Satu flow tersusun dari node yang dihubungkan wire. Yang mengalir di antaranya adalah objek pesan, dan bagian yang paling sering dipakai adalah <code>msg.payload</code>.</li>
+      <li>Perubahan pada kanvas belum berlaku sebelum Deploy ditekan. Node <code>debug</code> adalah alat pemeriksa pertama ketika hasil tidak sesuai dugaan.</li>
+      <li>Widget dasbor berasal dari paket tambahan yang dipasang melalui manage palette, dan setiap widget harus ditempatkan dalam grup di dalam tab agar muncul di halaman dasbor.</li>
+      <li>Nama node dan alamat halaman berbeda antar generasi paket dasbor. Kenali dari bentuknya, bukan dari hafalan nama menu.</li>
+      <li>Alur dua arah memakai dua topik: perangkat menerbitkan ke topik data yang dilanggan dasbor, dan dasbor menerbitkan ke topik perintah yang dilanggan perangkat.</li>
+      <li>Di sisi perangkat, arah balik memerlukan satu fungsi penerima yang didaftarkan dengan <code>mqtt.setCallback()</code> dan satu langganan yang diperbarui setiap kali sambungan broker terbentuk.</li>
+    </ul>
+  </section>
+  <section class="card">
+    <h2>10. Latihan Pemahaman</h2>
+
+    <h3>10.1 Cek cepat</h3>
+    <p>Jawab lebih dahulu tanpa membuka bab sebelumnya, lalu buka kuncinya.</p>
+    <ol>
+      <li>Node <code>mqtt in</code> sudah menerima pesan, terlihat di <code>debug</code>, tetapi gauge tetap kosong. Apa dua kemungkinan penyebab yang paling sering?
+        <details><summary>Kunci jawaban</summary><p>Pertama, pesan masih berbentuk objek utuh sehingga gauge tidak menemukan angka; perlu node <code>change</code> yang menetapkan <code>msg.payload</code> menjadi satu field angka. Kedua, gauge belum ditempatkan pada grup dan tab mana pun, sehingga widgetnya tidak pernah tampil.</p></details>
+      </li>
+      <li>Mengapa topik data dan topik perintah sebaiknya tidak disatukan?
+        <details><summary>Kunci jawaban</summary><p>Karena keduanya akan saling mendengar. Dasbor akan menganggap data sensor sebagai perintah, dan perangkat akan menerima kembali kiriman yang ia sendiri terbitkan. Pemisahan topik membuat arah pesan tidak dapat tertukar.</p></details>
+      </li>
+      <li>Switch dasbor digeser, log serial perangkat tidak menampilkan apa pun. Apa yang Anda periksa lebih dahulu?
+        <details><summary>Kunci jawaban</summary><p>Kesamaan tulisan topik pada node <code>mqtt out</code> dan pada <code>mqtt.subscribe()</code> di perangkat, lalu apakah langganan benar-benar dipanggil sesudah sambungan broker berhasil. Sesudah itu baru periksa <code>mqtt.loop()</code>, karena fungsi penerima hanya berjalan dari dalamnya.</p></details>
+      </li>
+    </ol>
+
+    <h3>10.2 Pertanyaan reflektif</h3>
+    <ol>
+      <li>Jika broker mati sebentar, apa yang terlihat di gauge dan di chart? Bedakan antara nilai yang salah dan nilai yang berhenti diperbarui.</li>
+      <li>Dengan ambang perubahan dari Pertemuan 9, grafik Anda akan berisi titik yang jaraknya tidak sama. Apakah itu masalah bagi pembaca dasbor, dan bagaimana Anda menjelaskannya?</li>
+      <li>Siapa saja yang dapat menggeser aktuator Anda selama topik perintah berada di broker publik, dan langkah paling sederhana apa yang mengurangi risikonya?</li>
+      <li>Indikator status Anda menampilkan teks dari perangkat. Apa untung dan ruginya bila keputusan AMAN atau BAHAYA dipindahkan ke Node-RED?</li>
+      <li>Sebutkan satu widget di luar empat yang dipakai bab ini yang akan berguna bagi kasus Anda, dan data apa yang harus disiapkan perangkat untuk mengisinya.</li>
+    </ol>
+  </section>
+  <section class="card">
+    <h2>11. Tugas Latihan Pertemuan 10</h2>
+    <p>Bangun satu dasbor mini untuk kasus yang Anda pilih sejak Pertemuan 8, memakai perangkat di simulator yang sudah mengirim data secara hemat sejak Pertemuan 9.</p>
+    <p>Ketentuan wajib: dasbor memuat sekurangnya satu indikator angka, satu indikator status nyala atau mati, dan satu kendali yang mengirim perintah ke perangkat; perangkat benar-benar menanggapi perintah itu; topik data dan topik perintah terpisah dan memuat nomor induk Anda.</p>
+    <p>Yang dikumpulkan:</p>
+    <ul>
+      <li>Berkas flow hasil ekspor dari Node-RED, atau salinan teks JSON-nya.</li>
+      <li>Tangkapan layar halaman dasbor yang menampilkan ketiga bagian wajib dengan nilai yang terisi.</li>
+      <li>Kutipan log serial perangkat yang memuat baris pengiriman data dan baris perintah masuk.</li>
+      <li>Catatan satu halaman berisi gambar alur dari sensor sampai layar, nama kedua topik, dan satu paragraf tentang kendala yang Anda temui beserta cara mengatasinya.</li>
+    </ul>
+    <div class="table-scroll" tabindex="0">
+      <table>
+      <tr><th>Aspek</th><th>Bobot</th><th>Kriteria nilai penuh</th></tr>
+      <tr><td>Data perangkat tampil di dasbor</td><td>25%</td><td>Indikator angka berubah mengikuti nilai sensor tanpa perlu memuat ulang halaman, dan satuannya jelas.</td></tr>
+      <tr><td>Kendali arah balik bekerja</td><td>25%</td><td>Kendali di dasbor mengubah keadaan aktuator di simulator, dan pengaruhnya terlihat di log serial.</td></tr>
+      <tr><td>Kelengkapan bagian wajib</td><td>20%</td><td>Ketiga bagian wajib ada, tertata dalam grup yang masuk akal, dan terbaca tanpa penjelasan tambahan.</td></tr>
+      <tr><td>Kerapian flow</td><td>15%</td><td>Node diberi nama yang bermakna, tidak ada wire menggantung, dan pengolahan pesan dilakukan di tempat yang tepat.</td></tr>
+      <tr><td>Penjelasan alur</td><td>15%</td><td>Gambar dan paragraf menjelaskan perjalanan pesan dua arah dengan istilah sendiri, bukan menyalin bab ini.</td></tr>
+      </table>
+    </div>
+  </section>
+  <section class="card">
+    <h2>12. Checkpoint Evaluasi Pertemuan 10</h2>
+    <p>Pertemuan ini dianggap tuntas bila butir berikut dapat Anda lakukan sendiri, dan daftarnya dipakai sebagai pemeriksaan diri sebelum tugas dikumpulkan.</p>
+    <div class="mini">
+      <div class="label">Target minimal pertemuan ini</div>
+      <p>Data dari perangkat tampil di dasbor, dan perintah dari dasbor sampai ke perangkat.</p>
+    </div>
+    <div class="table-scroll" tabindex="0">
+      <table>
+      <tr><th>Yang diperiksa</th><th>Cara memastikan sendiri</th><th>Bila belum tercapai</th></tr>
+      <tr><td>Data tampil di dasbor</td><td>Buka halaman dasbor, putar potensiometer di simulator, dan pastikan angkanya bergerak seperti pada bagian 7.3.</td><td>Periksa node <code>debug</code> lebih dahulu, lalu tiga baris pertama tabel 7.4.</td></tr>
+      <tr><td>Alur kendali arah balik ada</td><td>Geser kendali di dasbor dan cari baris perintah masuk di log serial perangkat.</td><td>Baca ulang Bab 6 dan bagian 8.3, lalu dua baris terakhir tabel 7.4.</td></tr>
+      <tr><td>Dapat menjelaskan alur sensor sampai layar</td><td>Tunjuk berurutan sensor, program perangkat, broker, node masuk, node pengolah, dan widget, lalu jelaskan arah baliknya dengan kalimat sendiri.</td><td>Baca ulang Bab 1 dan Bab 2, lalu tabel 8.2.</td></tr>
+      </table>
+    </div>
+    <p class="footer-note">Checkpoint besar mata kuliah ini berada di Pertemuan 4 sebagai CP-1, Pertemuan 8 sebagai CP-2, Pertemuan 12 sebagai CP-3, dan Pertemuan 16 sebagai CP-4. Pertemuan 10 bukan checkpoint besar, dan tugas latihan mingguan berbobot 20 persen dari nilai akhir.</p>
+  </section>
+  <section class="card">
+    <h2>13. Referensi Praktis</h2>
+    <dl class="gloss">
+      <dt>Dokumentasi Node-RED — <code>nodered.org</code></dt>
+      <dd>Petunjuk pemasangan untuk tiap sistem operasi, pengenalan ruang kerja, dan keterangan node bawaan. Pendamping Bab 3 dan Bab 4.</dd>
+      <dt>Panduan paket dasbor dan daftar node — <code>flows.nodered.org</code></dt>
+      <dd>Tempat memastikan nama paket dasbor yang Anda pasang serta membaca pilihan pengaturan tiap widget. Berguna saat nama menu di layar Anda berbeda dari Bab 5.</dd>
+      <dt>Contoh integrasi MQTT dengan Node-RED — topik</dt>
+      <dd>Cari dengan kata kunci <code>node-red mqtt dashboard</code> dan <code>node-red mqtt two way control</code> untuk membandingkan flow Anda dengan contoh lain, termasuk susunan topik data dan topik perintah seperti pada Bab 6.</dd>
+    </dl>
+    <p class="footer-note">Alamat sumber ditulis sebagai nama domain saja karena struktur halaman situs berubah dari waktu ke waktu; menelusuri dari halaman utama atau kotak pencarian situs lebih dapat diandalkan daripada menyalin alamat halaman dalam.</p>
+  </section>
+  <footer class="pagenum">
+    <span class="pagenum-seri">Materi Pertemuan 10</span>
+    <span class="pagenum-no">Halaman 10 dari 16</span>
+  </footer>
+</div>
+</body>
+</html>

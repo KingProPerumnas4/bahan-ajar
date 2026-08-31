@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Materi Pertemuan 6 - HTTP pada IoT</title>
+  <link rel="stylesheet" href="assets/materi.css" />
+</head>
+<body>
+  <div class="wrap">
+    <section class="hero">
+      <span class="badge">Pertemuan 6</span>
+      <h1>Dasar Komunikasi Data IoT: HTTP</h1>
+      <p class="lead">Materi ini membahas konsep request-response, client-server, HTTP GET dan POST, pengiriman data sederhana dalam format teks dan JSON, serta praktik simulasi device yang mengirim data suhu virtual secara periodik.</p>
+      <div>
+        <span class="pill">Request-Response</span>
+        <span class="pill">Client-Server</span>
+        <span class="pill">HTTP GET/POST</span>
+        <span class="pill">Teks & JSON</span>
+        <span class="pill">ESP32 HTTP Client</span>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Capaian Pembelajaran Pertemuan 6</h2>
+      <div class="grid two">
+        <div class="mini">
+          <div class="label">Yang dipahami</div>
+          <ul>
+            <li>Konsep komunikasi data pada sistem IoT menggunakan pola request-response.</li>
+            <li>Perbedaan peran client dan server dalam komunikasi HTTP.</li>
+            <li>Fungsi dasar metode HTTP GET dan POST.</li>
+            <li>Perbedaan data teks biasa dan JSON dalam pertukaran data.</li>
+            <li>Kapan HTTP cocok dipakai, dan kapan ia kurang efisien untuk kebutuhan real-time ringan.</li>
+          </ul>
+        </div>
+        <div class="mini">
+          <div class="label">Yang dapat dilakukan</div>
+          <ul>
+            <li>Menjelaskan alur request dan response dengan bahasa yang runtut.</li>
+            <li>Membaca contoh response sederhana dari layanan HTTP.</li>
+            <li>Membuat simulasi device yang mengirim data suhu virtual secara periodik melalui HTTP.</li>
+            <li>Menghubungkan contoh kode HTTP client dengan konsep komunikasi data pada IoT.</li>
+          </ul>
+        </div>
+      </div>
+      <p>Fokus Pertemuan 6 adalah konsep request-response, client-server, HTTP GET/POST, dan data sederhana dalam format teks/JSON. Aktivitas utamanya adalah simulasi HTTP request dari device, menjelaskan kapan HTTP cocok digunakan, serta membaca response sederhana. Target minimumnya adalah Anda memahami bahwa device IoT dapat berkomunikasi dengan layanan luar, mampu mengirim data, dan dapat menjelaskan alur request-response beserta keterbatasan HTTP untuk real-time ringan.</p>
+    </section>
+
+    <section class="card">
+      <h2>1. Pengantar: Mengapa Device IoT Perlu Berkomunikasi?</h2>
+      <p>Pada pertemuan-pertemuan sebelumnya, device seperti ESP32 sudah digunakan untuk membaca input dan mengendalikan output. Namun, jika data hanya tinggal di dalam device, nilainya menjadi terbatas. Sistem IoT mulai terasa “terhubung” ketika device dapat mengirim data ke layanan lain, menerima informasi balasan, lalu bertindak berdasarkan hasil komunikasi itu. Di sinilah komunikasi data menjadi inti penting.</p>
+      <p>HTTP adalah salah satu cara paling mudah untuk memperkenalkan komunikasi data pada IoT karena konsepnya dekat dengan aktivitas sehari-hari di web: meminta halaman, menerima jawaban, mengirim formulir, lalu mendapatkan respons dari server.</p>
+      <div class="analogy">
+        <strong>Analogi dunia nyata:</strong> bayangkan sebuah kantor administrasi. Anda datang ke loket untuk meminta surat keterangan. Anda membawa permintaan, petugas memeriksa, lalu petugas memberikan hasil. Pola ini sama dengan HTTP: ada pihak yang meminta, ada pihak yang melayani, dan ada balasan yang dikirim kembali.
+      </div>
+
+      <h3>1.1 Posisi HTTP dalam arsitektur IoT</h3>
+      <p>Dalam alur IoT, HTTP biasanya muncul saat device perlu mengirim data ke server web, API, dashboard, atau layanan cloud. Misalnya, sensor suhu virtual membaca nilai, lalu device mengirim nilai itu ke server setiap beberapa detik. Server menerima data, menyimpannya, dan mungkin mengirim respons seperti “data diterima” atau “nilai tidak valid”.</p>
+      <div class="svgbox" tabindex="0">
+        <svg viewBox="0 0 1040 250" width="100%" role="img" aria-label="Posisi HTTP dalam alur IoT">
+          <rect x="20" y="80" width="160" height="90" rx="16" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+          <rect x="230" y="80" width="170" height="90" rx="16" fill="#dcfce7" stroke="#15803d" stroke-width="2"/>
+          <rect x="450" y="80" width="160" height="90" rx="16" fill="#ede9fe" stroke="#6d28d9" stroke-width="2"/>
+          <rect x="660" y="80" width="170" height="90" rx="16" fill="#fef3c7" stroke="#b45309" stroke-width="2"/>
+          <rect x="880" y="80" width="140" height="90" rx="16" fill="#fee2e2" stroke="#dc2626" stroke-width="2"/>
+          <text x="100" y="115" text-anchor="middle" font-size="24" font-weight="700">Sensor</text>
+          <text x="100" y="142" text-anchor="middle" font-size="16">membaca suhu</text>
+          <text x="315" y="115" text-anchor="middle" font-size="24" font-weight="700">ESP32</text>
+          <text x="315" y="142" text-anchor="middle" font-size="16">membuat request</text>
+          <text x="530" y="115" text-anchor="middle" font-size="24" font-weight="700">HTTP</text>
+          <text x="530" y="142" text-anchor="middle" font-size="16">jalur komunikasi</text>
+          <text x="745" y="115" text-anchor="middle" font-size="24" font-weight="700">Server/API</text>
+          <text x="745" y="142" text-anchor="middle" font-size="16">menerima & merespons</text>
+          <text x="950" y="115" text-anchor="middle" font-size="24" font-weight="700">User</text>
+          <text x="950" y="142" text-anchor="middle" font-size="16">melihat hasil</text>
+          <line x1="180" y1="125" x2="230" y2="125" stroke="#2563eb" stroke-width="4"/>
+          <polygon points="230,125 216,117 216,133" fill="#2563eb"/>
+          <line x1="400" y1="125" x2="450" y2="125" stroke="#2563eb" stroke-width="4"/>
+          <polygon points="450,125 436,117 436,133" fill="#2563eb"/>
+          <line x1="610" y1="125" x2="660" y2="125" stroke="#2563eb" stroke-width="4"/>
+          <polygon points="660,125 646,117 646,133" fill="#2563eb"/>
+          <line x1="830" y1="125" x2="880" y2="125" stroke="#2563eb" stroke-width="4"/>
+          <polygon points="880,125 866,117 866,133" fill="#2563eb"/>
+        </svg>
+      </div>
+
+      <h3>1.2 Apa itu HTTP?</h3>
+      <p>HTTP adalah singkatan dari <em>Hypertext Transfer Protocol</em>. Secara sederhana, HTTP adalah aturan komunikasi yang digunakan ketika satu pihak meminta sesuatu dan pihak lain memberikan jawaban. Di web, browser memakai HTTP untuk meminta halaman. Dalam IoT, device dapat memakai HTTP untuk meminta data, mengirim data sensor, atau berkomunikasi dengan API.</p>
+      <p>Hal penting yang perlu dipahami adalah HTTP bekerja dengan pola <strong>request-response</strong>. Artinya, komunikasi dimulai dengan permintaan dari client. Setelah itu server memproses permintaan dan mengirim response. Jadi, dalam model HTTP, device biasanya aktif memulai komunikasi.</p>
+    </section>
+
+    <section class="card">
+      <h2>2. Konsep Dasar HTTP: Request-Response dan Client-Server</h2>
+      <h3>2.1 Model client-server</h3>
+      <p>Pada komunikasi HTTP, ada dua peran utama. <strong>Client</strong> adalah pihak yang mengirim permintaan. <strong>Server</strong> adalah pihak yang menerima permintaan, memprosesnya, lalu mengirim jawaban. Dalam konteks IoT, ESP32 sering berperan sebagai client ketika mengirim data ke server. Server bisa berupa API, platform IoT, atau aplikasi web.</p>
+      <div class="analogy">
+        <strong>Analogi dunia nyata:</strong> client-server dapat dibayangkan seperti pelanggan dan restoran. Pelanggan memesan makanan, restoran menerima pesanan, menyiapkan makanan, lalu mengirimkan hasilnya. Pelanggan tidak masuk ke dapur untuk memasak sendiri; ia cukup mengirim permintaan sesuai menu yang tersedia.
+      </div>
+
+      <h3>2.2 Struktur request</h3>
+      <p>Sebuah request HTTP umumnya memuat metode, alamat tujuan, dan kadang data tambahan. Metode menunjukkan jenis tindakan yang diinginkan. Alamat tujuan menunjukkan ke mana request dikirim. Jika perlu, request juga membawa data, misalnya nilai suhu dalam format JSON.</p>
+      <div class="table-scroll" tabindex="0">
+        <table>
+        <thead>
+          <tr><th>Bagian</th><th>Fungsi</th><th>Contoh sederhana</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Method</td><td>Menentukan aksi yang diminta</td><td>GET atau POST</td></tr>
+          <tr><td>URL/Endpoint</td><td>Menunjukkan alamat layanan tujuan</td><td>/api/suhu</td></tr>
+          <tr><td>Header</td><td>Memberi informasi tambahan tentang request</td><td>Content-Type: application/json</td></tr>
+          <tr><td>Body</td><td>Membawa data, biasanya pada POST</td><td>{"suhu": 28.5}</td></tr>
+        </tbody>
+        </table>
+      </div>
+
+      <h3>2.3 Struktur response</h3>
+      <p>Response adalah jawaban dari server setelah request diterima. Response biasanya memuat status dan isi pesan. Status membantu client mengetahui apakah request berhasil atau gagal. Isi pesan bisa berupa teks biasa, JSON, atau data lain.</p>
+      <div class="table-scroll" tabindex="0">
+        <table>
+        <thead>
+          <tr><th>Bagian</th><th>Makna</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Status code</td><td>Kode hasil proses, misalnya 200 berarti berhasil.</td></tr>
+          <tr><td>Header</td><td>Informasi tambahan tentang isi response.</td></tr>
+          <tr><td>Body</td><td>Isi balasan, misalnya pesan “OK” atau data JSON.</td></tr>
+        </tbody>
+        </table>
+      </div>
+
+      <h3>2.4 Alur request-response</h3>
+      <div class="svgbox" tabindex="0">
+        <svg viewBox="0 0 980 290" width="100%" role="img" aria-label="Diagram request response HTTP">
+          <rect x="100" y="40" width="220" height="70" rx="16" fill="#dbeafe" stroke="#2563eb"/>
+          <rect x="640" y="40" width="220" height="70" rx="16" fill="#dcfce7" stroke="#15803d"/>
+          <text x="210" y="82" text-anchor="middle" font-size="28" font-weight="700">Client</text>
+          <text x="750" y="82" text-anchor="middle" font-size="28" font-weight="700">Server</text>
+          <line x1="320" y1="130" x2="640" y2="130" stroke="#2563eb" stroke-width="5"/>
+          <polygon points="640,130 624,121 624,139" fill="#2563eb"/>
+          <text x="480" y="116" text-anchor="middle" font-size="18" font-weight="700" fill="#2563eb">Request</text>
+          <text x="480" y="147" text-anchor="middle" font-size="15" fill="#374151">GET / POST + URL + data</text>
+          <line x1="640" y1="210" x2="320" y2="210" stroke="#15803d" stroke-width="5"/>
+          <polygon points="320,210 336,201 336,219" fill="#15803d"/>
+          <text x="480" y="196" text-anchor="middle" font-size="18" font-weight="700" fill="#15803d">Response</text>
+          <text x="480" y="227" text-anchor="middle" font-size="15" fill="#374151">status code + isi balasan</text>
+        </svg>
+      </div>
+      <p>Urutan ini penting: client tidak tiba-tiba menerima data tanpa permintaan. Pada HTTP dasar, data biasanya datang setelah client meminta lebih dulu. Inilah alasan HTTP cocok untuk banyak kebutuhan integrasi sederhana, tetapi kurang ideal untuk komunikasi yang sangat ringan dan harus terus-menerus terjadi secara real-time.</p>
+
+      <h3>2.5 GET dan POST</h3>
+      <div class="grid two">
+        <div class="mini">
+          <div class="label">GET</div>
+          <p>GET dipakai ketika client ingin <strong>mengambil</strong> data dari server. Misalnya device meminta konfigurasi, waktu server, atau nilai tertentu dari API.</p>
+        </div>
+        <div class="mini">
+          <div class="label">POST</div>
+          <p>POST dipakai ketika client ingin <strong>mengirim</strong> data ke server. Misalnya device mengirim nilai suhu, status kelembapan, atau informasi sensor lain.</p>
+        </div>
+      </div>
+      <div class="analogy">
+        <strong>Analogi dunia nyata:</strong> GET seperti bertanya kepada petugas, “berapa nomor antrian saya?” Sedangkan POST seperti menyerahkan formulir yang sudah diisi agar diproses lebih lanjut.
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>3. Data Sederhana: Teks Biasa dan JSON</h2>
+      <p>Dalam komunikasi HTTP, data yang dikirim tidak selalu harus rumit. Pada tahap awal, data bisa berupa teks biasa seperti <code>28.5</code> atau pesan sederhana seperti <code>OK</code>. Namun, ketika data mulai bertambah dan perlu diberi label yang jelas, format JSON menjadi lebih berguna.</p>
+      <div class="grid two">
+        <div class="mini">
+          <div class="label">Teks biasa</div>
+          <p>Mudah dibaca dan sederhana. Cocok untuk contoh awal atau data tunggal yang tidak kompleks.</p>
+          <div class="code"><pre>28.5</pre></div>
+        </div>
+        <div class="mini">
+          <div class="label">JSON</div>
+          <p>Memiliki pasangan kunci dan nilai, sehingga lebih rapi untuk banyak data atau integrasi antar sistem.</p>
+          <div class="code"><pre>{
+  "suhu": 28.5,
+  "ruang": "lab-iot",
+  "status": "normal"
+}</pre></div>
+        </div>
+      </div>
+      <div class="analogy">
+        <strong>Analogi dunia nyata:</strong> teks biasa seperti menulis angka suhu di secarik kertas. JSON seperti formulir dengan kolom yang jelas: nama ruangan, nilai suhu, dan status. Saat informasi makin banyak, formulir jauh lebih mudah dipahami dibanding catatan acak.
+      </div>
+
+      <h3>3.1 Mengapa JSON penting?</h3>
+      <p>JSON penting karena data IoT jarang hanya satu nilai saja. Sering kali sebuah device perlu mengirim beberapa informasi sekaligus, misalnya suhu, kelembapan, ID alat, waktu pengiriman, dan status. Dengan JSON, setiap data memiliki nama yang jelas sehingga server atau aplikasi penerima lebih mudah memprosesnya.</p>
+
+      <h3>3.2 Kapan HTTP cocok digunakan?</h3>
+      <ul>
+        <li>Saat device perlu mengirim data ke API atau web service secara berkala.</li>
+        <li>Saat komunikasi tidak harus super ringan dan tidak harus selalu real-time.</li>
+        <li>Saat integrasi dengan layanan web menjadi prioritas.</li>
+        <li>Saat struktur komunikasi yang sederhana dan mudah dipahami lebih dibutuhkan.</li>
+      </ul>
+
+      <h3>3.3 Keterbatasan HTTP untuk real-time ringan</h3>
+      <p>Sesuai checkpoint pertemuan ini, Anda perlu memahami bahwa HTTP memiliki keterbatasan untuk real-time ringan. Hal ini karena setiap komunikasi biasanya dimulai dari request baru. Jika data harus sangat sering dikirim oleh banyak device dengan overhead kecil, HTTP tidak selalu paling efisien. Untuk kebutuhan semacam itu, model komunikasi lain seperti MQTT sering lebih sesuai, yang nantinya dibahas pada Pertemuan 7.</p>
+    </section>
+
+    <section class="card">
+      <h2>4. Implementasi Praktis: Simulasi HTTP Request dari Device</h2>
+      <p>Aktivitas utama pada Pertemuan 6 adalah membuat simulasi HTTP request dari device dan membaca respons sederhana. Skenario yang paling relevan untuk pertemuan ini adalah <strong>device virtual mengirim data suhu melalui HTTP secara periodik</strong>.</p>
+      <p>Praktik ini dikerjakan di simulator <strong>Wokwi</strong>, alat yang sama seperti pada pertemuan-pertemuan sebelumnya, sehingga tidak ada perangkat fisik yang perlu disiapkan. Yang dibangun adalah satu project ESP32 yang menyambung ke jaringan nirkabel simulator, menyusun nilai suhu virtual menjadi data JSON, mengirimnya dengan metode POST, lalu mencetak hasil pengiriman di Serial Monitor. Satu perbedaan penting dari praktik pertemuan sebelumnya perlu Anda sadari sejak awal: hasil praktik kali ini tidak terlihat sebagai lampu yang menyala atau komponen yang bergerak di panel rangkaian, melainkan hanya sebagai tulisan yang muncul di Serial Monitor. Kode lengkapnya ada pada Bab 5, jadi bacalah bab ini dan Bab 5 secara berdampingan.</p>
+
+      <h3>4.1 Tujuan praktik</h3>
+      <ul>
+        <li>Melihat bahwa device IoT dapat berkomunikasi dengan layanan luar.</li>
+        <li>Memahami urutan membuat request, menunggu response, lalu membaca hasil.</li>
+        <li>Mengenali bentuk data yang dikirim melalui HTTP.</li>
+      </ul>
+      <p><strong>Komponen yang perlu ditambahkan:</strong> tidak ada. Praktik ini hanya memerlukan board ESP32 yang sudah tersedia pada project baru, tanpa LED, resistor, sensor, maupun kabel tambahan, karena nilai suhu tidak dibaca dari sensor melainkan sudah ditetapkan di dalam program sebagai <code>suhuVirtual</code>. Yang menggantikan peran rangkaian pada pertemuan ini adalah dua alat lain, dan keduanya perlu Anda kenali lebih dahulu sebelum kode dijalankan.</p>
+      <div class="tip">
+        <strong>Alat pertama: jaringan nirkabel simulator.</strong> Jaringan di simulator sudah tersedia dengan sendirinya dan tidak perlu Anda buat, tetapi hanya satu nama yang dikenalinya, yaitu <code>Wokwi-GUEST</code>, dengan kata sandi dibiarkan <strong>kosong</strong>. Kedua nilai itu sudah tertulis pada konstanta <code>ssid</code> dan <code>password</code> di contoh kode Bab 5, jadi tugas Anda adalah memastikan keduanya tidak diubah, bukan mengisinya dengan nama jaringan tempat Anda berada. Jaringan ini juga hanya hidup selama simulasi berjalan.
+      </div>
+      <div class="tip">
+        <strong>Alat kedua: Serial Monitor.</strong> Serial Monitor adalah panel di bagian bawah layar, dan pada pertemuan ini ia satu-satunya tempat hasil praktik dapat dibaca. Pastikan panel itu terlihat sebelum tombol jalankan ditekan agar baris pertama, yaitu pesan proses penyambungan jaringan, tidak terlewat. Tidak ada kolom kecepatan yang perlu diatur di panelnya, karena angka pada <code>Serial.begin(115200)</code> di dalam program sudah menentukannya.
+      </div>
+
+      <h3>4.2 Skenario praktik</h3>
+      <p>ESP32 virtual membaca nilai suhu simulasi. Nilai ini lalu dikirim ke endpoint server menggunakan HTTP POST. Setelah itu, program memeriksa apakah server mengembalikan status berhasil. Proses diulangi secara periodik.</p>
+      <div class="svgbox" tabindex="0">
+        <svg viewBox="0 0 1050 290" width="100%" role="img" aria-label="Simulasi pengiriman data suhu via HTTP">
+          <rect x="30" y="95" width="170" height="90" rx="16" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+          <rect x="245" y="95" width="190" height="90" rx="16" fill="#dcfce7" stroke="#15803d" stroke-width="2"/>
+          <rect x="480" y="95" width="150" height="90" rx="16" fill="#ede9fe" stroke="#6d28d9" stroke-width="2"/>
+          <rect x="675" y="95" width="180" height="90" rx="16" fill="#fef3c7" stroke="#b45309" stroke-width="2"/>
+          <rect x="900" y="95" width="120" height="90" rx="16" fill="#fee2e2" stroke="#dc2626" stroke-width="2"/>
+          <text x="115" y="130" text-anchor="middle" font-size="24" font-weight="700">Sensor</text>
+          <text x="115" y="156" text-anchor="middle" font-size="16">suhu virtual</text>
+          <text x="340" y="130" text-anchor="middle" font-size="24" font-weight="700">ESP32</text>
+          <text x="340" y="156" text-anchor="middle" font-size="16">susun payload</text>
+          <text x="555" y="130" text-anchor="middle" font-size="24" font-weight="700">POST</text>
+          <text x="555" y="156" text-anchor="middle" font-size="16">kirim request</text>
+          <text x="765" y="130" text-anchor="middle" font-size="24" font-weight="700">Server</text>
+          <text x="765" y="156" text-anchor="middle" font-size="16">proses data</text>
+          <text x="960" y="130" text-anchor="middle" font-size="24" font-weight="700">Respon</text>
+          <text x="960" y="156" text-anchor="middle" font-size="16">200 / pesan</text>
+          <line x1="200" y1="140" x2="245" y2="140" stroke="#2563eb" stroke-width="4"/>
+          <polygon points="245,140 231,132 231,148" fill="#2563eb"/>
+          <line x1="435" y1="140" x2="480" y2="140" stroke="#2563eb" stroke-width="4"/>
+          <polygon points="480,140 466,132 466,148" fill="#2563eb"/>
+          <line x1="630" y1="140" x2="675" y2="140" stroke="#2563eb" stroke-width="4"/>
+          <polygon points="675,140 661,132 661,148" fill="#2563eb"/>
+          <line x1="855" y1="140" x2="900" y2="140" stroke="#2563eb" stroke-width="4"/>
+          <polygon points="900,140 886,132 886,148" fill="#2563eb"/>
+        </svg>
+      </div>
+      <p>Karena tidak ada kabel yang dipasang, yang perlu Anda pastikan bukan urutan sambungan antar komponen melainkan <strong>urutan jalur datanya</strong>: nilai <code>suhuVirtual</code> disusun menjadi <code>payload</code> berbentuk JSON, payload itu dikirim melalui objek <code>http</code> ke alamat yang tersimpan pada konstanta <code>serverUrl</code>, dan jalur menuju alamat itu baru terbuka setelah ESP32 tersambung ke jaringan <code>Wokwi-GUEST</code>. Urutan itu tidak boleh dibalik. Bila pengiriman dilakukan sebelum jaringan tersambung, request tidak akan pernah meninggalkan device. Karena itu program pada Bab 5 memanggil <code>WiFi.begin(ssid, password)</code> di dalam <code>setup()</code>, menahan program di dalam <code>while (WiFi.status() != WL_CONNECTED)</code> sampai sambungan benar-benar terjadi, lalu memeriksa sekali lagi dengan <code>if (WiFi.status() == WL_CONNECTED)</code> pada setiap putaran <code>loop()</code> sebelum request disusun.</p>
+
+      <details>
+        <summary>Rangkaian praktik ini dalam bentuk <code>diagram.json</code></summary>
+        <p>Area rangkaian di simulator sebenarnya tersimpan sebagai berkas teks bernama <code>diagram.json</code>. Buka tab tersebut, hapus seluruh isinya, lalu tempelkan isi di bawah secara utuh. Isinya hanya board ESP32 tanpa satu pun komponen dan tanpa satu pun sambungan, dan memang itulah yang dibutuhkan pertemuan ini. Tempelan ini terutama berguna bila Anda memakai kembali project pertemuan sebelumnya, karena LED, resistor, atau sensor yang masih tertinggal di panel rangkaian akan ikut terhapus sehingga tidak lagi mengganggu saat Anda membaca hasil.</p>
+        <div class="code"><pre>{
+  "version": 1,
+  "author": "Materi IoT Pertemuan 6",
+  "editor": "wokwi",
+  "parts": [
+    { "type": "board-esp32-devkit-c-v4", "id": "esp", "top": 0, "left": 0, "attrs": {} }
+  ],
+  "connections": []
+}</pre></div>
+        <p>Bila setelah ditempel board ESP32 justru hilang dari panel rangkaian, biasanya ada tanda kurung atau koma yang ikut terhapus. Tempelkan ulang seluruh isinya, jangan hanya sebagian.</p>
+      </details>
+
+      <h3>4.3 Langkah praktik</h3>
+      <ol>
+        <li>Siapkan proyek ESP32 di simulator.</li>
+        <li>Tambahkan kode untuk menghubungkan device ke jaringan Wi-Fi simulasi bila skenario mendukung.</li>
+        <li>Susun data suhu dalam bentuk teks atau JSON.</li>
+        <li>Kirim data ke endpoint server menggunakan HTTP.</li>
+        <li>Baca status code dan isi response.</li>
+        <li>Ulangi proses secara periodik.</li>
+      </ol>
+      <p>Inti dari praktik ini bukan hanya “berhasil mengirim data”, melainkan memahami alur: siapa yang memulai komunikasi, data apa yang dibawa, bagaimana server menjawab, dan bagaimana device membaca hasil tersebut.</p>
+      <p>Enam butir di atas dirinci menjadi langkah berikut, yang dikerjakan berurutan di simulator.</p>
+      <ol class="step">
+        <li>Buka <strong>wokwi.com</strong> di browser, pilih <strong>New Project</strong>, lalu pilih board <strong>ESP32</strong>. Project baru sudah berisi board ESP32 dan tidak perlu ditambahi komponen apa pun.</li>
+        <li>Bila Anda memakai kembali project dari pertemuan sebelumnya, buka tab <code>diagram.json</code> dan tempelkan isi yang tersedia pada Bab 4.2 agar komponen lama tidak ikut terbawa.</li>
+        <li>Hapus seluruh isi panel kode, lalu tempelkan contoh kode dari Bab 5.</li>
+        <li>Periksa tiga baris konstanta di bagian atas kode tanpa mengubah nilainya: <code>ssid</code> harus berisi <code>Wokwi-GUEST</code>, <code>password</code> harus tetap kosong, dan <code>serverUrl</code> harus tetap berisi alamat tujuan yang sudah tertulis di sana. Nama jaringan lain atau kata sandi yang diisi akan membuat sambungan gagal.</li>
+        <li>Pastikan panel Serial Monitor di bagian bawah layar terlihat, lalu tekan tombol jalankan berbentuk segitiga hijau.</li>
+        <li>Amati tahap penyambungan jaringan lebih dahulu. Baris <code>Menghubungkan ke WiFi...</code> muncul berulang selama sambungan belum terjadi, lalu berhenti dan digantikan satu baris <code>WiFi terhubung</code>. Jangan menilai hasil pengiriman sebelum baris itu muncul, karena selama sambungan belum terjadi program masih tertahan di dalam <code>setup()</code> dan belum mengirim apa pun.</li>
+        <li>Setelah itu amati pengirimannya. Setiap sekitar lima detik muncul satu baris <code>Kode respon HTTP:</code> beserta angkanya, dan bila angka itu positif menyusul baris <code>Isi respon:</code> beserta balasan dari server. Cocokkan angka yang Anda lihat dengan tabel arti angka di bawah.</li>
+        <li>Hitung selang waktu antara dua baris <code>Kode respon HTTP:</code> yang berurutan, lalu cocokkan dengan <code>delay(5000)</code> di akhir <code>loop()</code>, sehingga terlihat baris mana yang menentukan seberapa sering data dikirim.</li>
+        <li>Sebagai langkah variasi, hentikan simulasi, ubah <code>delay(5000)</code> menjadi <code>delay(1000)</code>, jalankan kembali, lalu bandingkan kerapatan baris yang muncul dengan pengamatan sebelumnya. Kembalikan ke <code>delay(5000)</code> setelah percobaan ini agar Serial Monitor tetap mudah dibaca.</li>
+      </ol>
+      <p>Angka yang tercetak setelah <code>Kode respon HTTP:</code> adalah satu-satunya tanda apakah pengiriman sampai atau tidak, sehingga arti angka itu perlu Anda kenali sebelum menyimpulkan hasil praktik.</p>
+      <div class="table-scroll" tabindex="0">
+        <table>
+        <thead>
+          <tr><th>Angka yang terbaca</th><th>Artinya</th><th>Yang tampak di Serial Monitor</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>200, atau angka lain pada kelompok 2xx</td>
+            <td>Request sampai ke server dan diproses tanpa masalah. Inilah kode status keberhasilan.</td>
+            <td>Baris <code>Isi respon:</code> ikut muncul beserta balasan dari server.</td>
+          </tr>
+          <tr>
+            <td>Kelompok 4xx, misalnya 404</td>
+            <td>Request sampai ke server, tetapi server menolaknya. Pada 404, jalur yang diminta tidak dikenali oleh server tujuan.</td>
+            <td>Baris <code>Isi respon:</code> tetap muncul karena angkanya positif, tetapi isinya pesan penolakan, bukan tanda data tersimpan.</td>
+          </tr>
+          <tr>
+            <td>Kelompok 5xx</td>
+            <td>Request sampai dan dikenali, tetapi server gagal memprosesnya. Masalahnya ada di sisi server, bukan di program Anda.</td>
+            <td>Sama seperti 4xx: angkanya positif sehingga isi respon tetap dibaca dan dicetak.</td>
+          </tr>
+          <tr>
+            <td>Angka negatif, misalnya <code>-1</code></td>
+            <td>Ini bukan kode status HTTP. Angka negatif berasal dari <code>HTTPClient</code> dan berarti request tidak pernah sampai ke server, biasanya karena jaringan belum benar-benar tersambung atau alamat tujuan tidak dapat dicapai.</td>
+            <td>Baris <code>Isi respon:</code> tidak muncul sama sekali, karena syarat <code>if (httpResponseCode &gt; 0)</code> tidak terpenuhi.</td>
+          </tr>
+        </tbody>
+        </table>
+      </div>
+      <p>Bedakan dengan tegas dua hal yang sering tertukar. Angka positif berarti request berhasil keluar dari device dan dijawab oleh pihak di seberang, sedangkan angka negatif berarti request tidak pernah keluar. Perbedaan itu adalah pemeriksaan pertama setiap kali hasil pengiriman terasa tidak sesuai harapan.</p>
+      <div class="tip">
+        <strong>Angka yang bukan 200 belum tentu berarti program Anda salah.</strong> Alamat pada <code>serverUrl</code> di Bab 5 dipakai sebagai contoh tujuan, bukan sebagai layanan pencatat data yang benar-benar menyimpan nilai suhu. Bila alamat tujuan tidak menyediakan jalur yang menerima POST, yang kembali adalah angka pada kelompok 4xx, dan untuk memahami alur request-response hal itu sudah cukup karena seluruh tahap pada Bab 2.4 tetap terjadi dan tetap terbaca. Bila tugas pada Bab 8.2 menuntut kode status keberhasilan, alamat tujuan perlu diganti dengan layanan yang memang menyediakan jalur penerima POST; nilai <code>ssid</code> dan <code>password</code> tetap tidak berubah.
+      </div>
+      <p><strong>Hasil yang harus terlihat:</strong> Serial Monitor menampilkan beberapa baris <code>Menghubungkan ke WiFi...</code>, lalu satu baris <code>WiFi terhubung</code> yang menandai sambungan ke <code>Wokwi-GUEST</code> sudah benar-benar terjadi. Sesudah itu muncul pasangan baris yang berulang dengan jarak sekitar lima detik: satu baris <code>Kode respon HTTP:</code> beserta angkanya, dan bila angka itu positif satu baris <code>Isi respon:</code> beserta balasan server. Pola berulang inilah bukti pengiriman berjalan periodik, bukan sekali jalan, dan angka positif yang muncul pada setiap putaran adalah bukti request benar-benar keluar dari device dan dijawab. Setelah <code>delay(5000)</code> diubah menjadi <code>delay(1000)</code>, jarak antar pasangan baris menjadi jauh lebih rapat. Di situlah terlihat bahwa satu angka di dalam program menentukan seberapa sering sebuah device melaporkan datanya.</p>
+      <div class="warn">
+        <strong>Baris <code>Menghubungkan ke WiFi...</code> muncul terus tanpa pernah berhenti.</strong> Ini kegagalan yang paling sering terjadi pada pertemuan ini, dan gejalanya khas: baris itu tercetak berulang tanpa pernah disusul <code>WiFi terhubung</code>, sedangkan baris <code>Kode respon HTTP:</code> tidak pernah muncul sama sekali karena program masih tertahan di dalam <code>setup()</code>. Periksa tiga hal berurutan. Pertama, nama jaringan pada <code>ssid</code> harus tertulis tepat sebagai <code>Wokwi-GUEST</code>, termasuk huruf besar dan tanda hubungnya. Kedua, isi <code>password</code> harus dibiarkan kosong dan bukan diisi kata sandi apa pun. Ketiga, simulasi harus dalam keadaan berjalan, karena jaringan simulator hanya tersedia selama simulasi hidup dan tidak dapat dicoba tanpa menjalankan program.
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>5. Contoh Kode HTTP Client pada ESP32</h2>
+      <p>Contoh berikut menunjukkan pola sederhana ketika ESP32 mengirim data suhu virtual dengan HTTP POST. Kode ini bersifat dasar dan dipakai untuk membantu Anda memahami alur program, bukan untuk menekankan detail library tertentu di luar tujuan Pertemuan 6.</p>
+      <div class="code"><pre>#include &lt;WiFi.h&gt;
+#include &lt;HTTPClient.h&gt;
+
+const char* ssid = "Wokwi-GUEST";
+const char* password = "";
+const char* serverUrl = "http://example.com/api/suhu";
+
+float suhuVirtual = 28.5;
+
+void setup() {
+  Serial.begin(115200);
+  WiFi.begin(ssid, password);
+
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.println("Menghubungkan ke WiFi...");
+  }
+
+  Serial.println("WiFi terhubung");
+}
+
+void loop() {
+  if (WiFi.status() == WL_CONNECTED) {
+    HTTPClient http;
+    http.begin(serverUrl);
+    http.addHeader("Content-Type", "application/json");
+
+    String payload = "{\"suhu\":" + String(suhuVirtual) + "}";
+    int httpResponseCode = http.POST(payload);
+
+    Serial.print("Kode respon HTTP: ");
+    Serial.println(httpResponseCode);
+
+    if (httpResponseCode &gt; 0) {
+      String response = http.getString();
+      Serial.println("Isi respon:");
+      Serial.println(response);
+    }
+
+    http.end();
+  }
+
+  delay(5000);
+}</pre></div>
+
+      <h3>5.1 Penjelasan struktur kode</h3>
+      <p>Kode ini dapat dipahami sebagai lima tahap utama: menyiapkan library, mendefinisikan koneksi dan alamat server, menghubungkan Wi-Fi, membuat request HTTP, lalu membaca response.</p>
+
+      <h3>5.2 Penjelasan baris per baris</h3>
+      <div class="table-scroll" tabindex="0">
+        <table>
+        <thead>
+          <tr><th>Potongan kode</th><th>Fungsi</th><th>Hubungan dengan teori</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>#include &lt;WiFi.h&gt;</code></td>
+            <td>Memanggil library untuk koneksi jaringan.</td>
+            <td>Menunjukkan bahwa komunikasi HTTP memerlukan jalur network.</td>
+          </tr>
+          <tr>
+            <td><code>#include &lt;HTTPClient.h&gt;</code></td>
+            <td>Memanggil library untuk membuat HTTP request.</td>
+            <td>Menghubungkan device dengan protokol HTTP.</td>
+          </tr>
+          <tr>
+            <td><code>const char* serverUrl = ...</code></td>
+            <td>Menyimpan alamat endpoint tujuan.</td>
+            <td>Request selalu perlu tujuan yang jelas, yaitu server atau API.</td>
+          </tr>
+          <tr>
+            <td><code>float suhuVirtual = 28.5;</code></td>
+            <td>Menyimpan contoh data suhu yang akan dikirim.</td>
+            <td>Ini mewakili data sensor pada sistem IoT.</td>
+          </tr>
+          <tr>
+            <td><code>WiFi.begin(ssid, password);</code></td>
+            <td>Memulai proses koneksi ke Wi-Fi.</td>
+            <td>Tanpa koneksi jaringan, HTTP tidak dapat berjalan.</td>
+          </tr>
+          <tr>
+            <td><code>while (WiFi.status() != WL_CONNECTED)</code></td>
+            <td>Menunggu sampai koneksi jaringan berhasil.</td>
+            <td>Menunjukkan bahwa komunikasi bergantung pada status koneksi.</td>
+          </tr>
+          <tr>
+            <td><code>HTTPClient http;</code></td>
+            <td>Membuat objek untuk mengelola komunikasi HTTP.</td>
+            <td>Objek ini mewakili mekanisme request dari sisi client.</td>
+          </tr>
+          <tr>
+            <td><code>http.begin(serverUrl);</code></td>
+            <td>Menetapkan alamat tujuan request.</td>
+            <td>Sejalan dengan konsep endpoint pada HTTP.</td>
+          </tr>
+          <tr>
+            <td><code>http.addHeader(...)</code></td>
+            <td>Menambahkan informasi bahwa data dikirim sebagai JSON.</td>
+            <td>Header membantu server memahami format data.</td>
+          </tr>
+          <tr>
+            <td><code>String payload = ...</code></td>
+            <td>Menyusun isi data yang akan dikirim.</td>
+            <td>Ini adalah body pada request POST.</td>
+          </tr>
+          <tr>
+            <td><code>int httpResponseCode = http.POST(payload);</code></td>
+            <td>Mengirim data ke server dengan metode POST.</td>
+            <td>Di sinilah request benar-benar terjadi.</td>
+          </tr>
+          <tr>
+            <td><code>http.getString()</code></td>
+            <td>Membaca isi response dari server.</td>
+            <td>Mewakili tahap response pada model request-response.</td>
+          </tr>
+          <tr>
+            <td><code>http.end();</code></td>
+            <td>Mengakhiri sesi HTTP agar sumber daya dibersihkan.</td>
+            <td>Menunjukkan bahwa koneksi perlu ditutup dengan rapi.</td>
+          </tr>
+          <tr>
+            <td><code>delay(5000);</code></td>
+            <td>Menunggu 5 detik sebelum pengiriman berikutnya.</td>
+            <td>Mewakili pengiriman data periodik sesuai skenario latihan.</td>
+          </tr>
+        </tbody>
+        </table>
+      </div>
+
+      <h3>5.3 Penjelasan alur kode secara utuh</h3>
+      <p>Saat program dimulai, ESP32 terlebih dahulu membuka komunikasi serial agar pesan dapat dilihat pada monitor. Kemudian device mencoba terhubung ke jaringan. Setelah berhasil terhubung, program masuk ke <code>loop()</code>. Pada setiap putaran, jika koneksi masih tersedia, device membuat objek HTTP, menentukan alamat server, menyusun payload JSON berisi suhu virtual, lalu mengirimkannya dengan metode POST.</p>
+      <p>Setelah request dikirim, server mengembalikan response code. Jika nilainya positif, device kemudian membaca isi response dan menampilkannya ke Serial Monitor. Setelah proses selesai, koneksi HTTP ditutup melalui <code>http.end()</code>, lalu program menunggu lima detik untuk mengirim data berikutnya.</p>
+
+      <h3>5.4 Hubungan kode dengan teori</h3>
+      <p>Kode ini adalah contoh langsung dari teori client-server. ESP32 berperan sebagai client karena ia yang memulai request. Server berperan sebagai pihak yang menerima data dan mengirim jawaban. Metode POST dipilih karena tujuan komunikasi adalah mengirim data suhu. JSON dipilih karena lebih rapi daripada teks biasa ketika sistem mulai berkembang.</p>
+
+      <h3>5.5 Bagaimana jika memakai GET?</h3>
+      <p>Jika GET digunakan, umumnya device bukan mengirim body JSON, melainkan meminta informasi dari server. Misalnya, device ingin mengambil nilai ambang batas suhu dari server. Jadi, pemilihan GET atau POST bergantung pada arah tujuan komunikasi: mengambil data atau mengirim data.</p>
+    </section>
+
+    <section class="card">
+      <h2>6. Menghubungkan Materi Ini dengan Sistem IoT yang Lebih Besar</h2>
+      <p>Pertemuan 6 adalah jembatan penting antara device lokal dan sistem terhubung. Sampai tahap ini, Anda telah melihat input, output, sensor, aktuator, struktur program, dan debugging dasar. Kini device mulai berinteraksi dengan layanan luar. Ini berarti IoT tidak lagi sekadar program yang berjalan sendiri, melainkan bagian dari ekosistem data.</p>
+      <div class="grid three">
+        <div class="mini"><strong>Dari sensor ke data</strong><br/>Nilai sensor tidak berhenti di device, tetapi dapat dikirim ke server.</div>
+        <div class="mini"><strong>Dari device ke layanan</strong><br/>Device belajar “berbicara” dengan platform luar melalui protokol HTTP.</div>
+        <div class="mini"><strong>Dari lokal ke terhubung</strong><br/>Sistem mulai bergerak dari eksperimen lokal menuju integrasi yang lebih luas.</div>
+      </div>
+      <div class="analogy">
+        <strong>Analogi dunia nyata:</strong> sebelumnya device seperti orang yang belajar sendiri di kamar tanpa melaporkan apa pun. Dengan HTTP, ia mulai mengirim laporan ke sistem administrasi pusat. Artinya, aktivitas lokal kini menjadi bagian dari sistem yang lebih besar dan dapat dipantau pihak lain.
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>7. Ringkasan Materi</h2>
+      <ul>
+        <li>HTTP adalah protokol komunikasi berbasis request-response.</li>
+        <li>Dalam model HTTP, client mengirim request dan server memberi response.</li>
+        <li>GET dipakai untuk mengambil data, sedangkan POST dipakai untuk mengirim data.</li>
+        <li>Data dapat dikirim dalam format teks biasa atau JSON, dan JSON lebih cocok saat data mulai kompleks.</li>
+        <li>HTTP cocok untuk banyak integrasi sederhana pada IoT, tetapi memiliki keterbatasan untuk real-time ringan karena model komunikasinya tidak seefisien protokol yang lebih ringan.</li>
+        <li>ESP32 dapat berperan sebagai HTTP client yang mengirim data suhu virtual secara periodik dan membaca response dari server.</li>
+      </ul>
+      <p class="footer-note">Materi ini mencakup fokus, aktivitas, target minimum, tugas latihan, dan checkpoint Pertemuan 6.</p>
+    </section>
+
+    <section class="card">
+      <h2>8. Latihan Pemahaman</h2>
+      <h3>8.1 Pertanyaan konseptual</h3>
+      <ol>
+        <li>Jelaskan perbedaan client dan server dengan contoh pada sistem IoT.</li>
+        <li>Mengapa HTTP disebut menggunakan pola request-response?</li>
+        <li>Apa perbedaan penggunaan GET dan POST?</li>
+        <li>Mengapa JSON sering lebih disukai dibanding teks biasa dalam sistem IoT?</li>
+        <li>Mengapa HTTP tidak selalu ideal untuk komunikasi real-time ringan?</li>
+      </ol>
+
+      <h3>8.2 Tugas praktik kecil</h3>
+      <p>Buat simulasi device yang mengirimkan data suhu virtual via HTTP secara periodik. Setelah itu, jelaskan dalam paragraf singkat:</p>
+      <ul>
+        <li>siapa yang berperan sebagai client,</li>
+        <li>siapa yang berperan sebagai server,</li>
+        <li>data apa yang dikirim,</li>
+        <li>mengapa metode yang dipilih sesuai dengan kebutuhan,</li>
+        <li>dan apa makna response yang diterima.</li>
+      </ul>
+
+      <h3>8.3 Rubrik penilaian tugas praktik</h3>
+      <p>Tugas praktik pada Bab 8.2 dinilai dengan empat aspek berikut. Perhatikan bahwa penjelasan alur memiliki bobot yang sama besar dengan program yang berjalan, karena tujuan pertemuan ini adalah memahami pola request-response, bukan sekadar mendapatkan kode status keberhasilan.</p>
+      <div class="table-scroll" tabindex="0">
+        <table>
+        <thead>
+          <tr><th>Aspek</th><th>Bobot</th><th>Kriteria nilai penuh</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Pengiriman data berhasil</td><td>30%</td><td>Program mengirim nilai suhu virtual dan Serial Monitor menampilkan kode status keberhasilan pada setiap pengiriman, bukan hanya pada pengiriman pertama.</td></tr>
+          <tr><td>Pengiriman berjalan periodik</td><td>20%</td><td>Pengiriman terjadi berulang pada selang waktu yang tetap, dan selang itu dapat Anda tunjukkan letaknya di dalam program.</td></tr>
+          <tr><td>Penjelasan alur request dan response</td><td>30%</td><td>Kelima butir pada Bab 8.2 terjawab: siapa client, siapa server, data apa yang dikirim, mengapa metode itu dipilih, dan apa makna response yang diterima.</td></tr>
+          <tr><td>Kerapian program dan data</td><td>20%</td><td>Alamat tujuan dan selang waktu ditulis sebagai konstanta bernama, data dikirim dalam format yang konsisten, dan program memeriksa hasil pengiriman sebelum melanjutkan.</td></tr>
+        </tbody>
+        </table>
+      </div>
+      <p class="footer-note">Tugas latihan mingguan seperti tugas ini berbobot 20 persen dari nilai akhir mata kuliah.</p>
+    </section>
+
+    <section class="card">
+      <h2>9. Checkpoint Evaluasi Pertemuan 6</h2>
+      <p>Pertemuan 6 dianggap tuntas bila tiga hal berikut dapat Anda lakukan. Ketiganya sudah dibahas pada bab-bab di atas, sehingga daftar ini sekaligus dipakai sebagai pemeriksaan diri sebelum Anda melanjutkan ke materi berikutnya.</p>
+      <div class="mini">
+        <div class="label">Target minimal pertemuan ini</div>
+        <ul>
+          <li>Memahami bahwa device IoT dapat berkomunikasi dengan layanan di luar dirinya, tidak berhenti sebagai program yang berjalan sendiri.</li>
+        </ul>
+      </div>
+      <div class="table-scroll" tabindex="0">
+        <table>
+        <thead><tr><th>Yang diperiksa</th><th>Cara memastikan sendiri</th><th>Bila belum tercapai</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>Data dapat dikirim</td>
+            <td>Kerjakan tugas praktik pada Bab 8.2 dengan mengikuti urutan langkah Bab 4.3, lalu pastikan Serial Monitor menampilkan kode status keberhasilan setiap kali data dikirim, dan pengiriman itu terulang secara periodik tanpa perlu Anda jalankan ulang.</td>
+            <td>Baca ulang Bab 5.2 dan Bab 5.3, terutama urutan menyusun payload, memanggil pengiriman POST, lalu membaca kode status yang dikembalikan server.</td>
+          </tr>
+          <tr>
+            <td>Dapat menjelaskan alur request dan response</td>
+            <td>Tutup materi ini, lalu tuliskan dari ingatan urutan lengkap kasus tugas Bab 8.2: siapa yang memulai komunikasi, apa isi request, apa yang dikerjakan server, dan apa yang dibaca device dari response. Bandingkan hasil tulisan Anda dengan Bab 2.4.</td>
+            <td>Baca ulang Bab 2.1 sampai Bab 2.4, kemudian Bab 5.4 yang memasangkan setiap bagian kode dengan teori client-server.</td>
+          </tr>
+          <tr>
+            <td>Memahami keterbatasan HTTP untuk kebutuhan real-time ringan</td>
+            <td>Jawab pertanyaan kelima pada Bab 8.1 dalam satu paragraf: sebutkan mengapa setiap pertukaran data selalu dimulai dari request baru, dan apa akibatnya bila banyak device mengirim data dengan jarak waktu yang sangat pendek. Sebagai pembanding, sebutkan juga satu situasi pada Bab 3.2 yang justru cocok ditangani HTTP.</td>
+            <td>Baca ulang Bab 3.2 dan Bab 3.3, lalu cocokkan dengan butir keterbatasan HTTP pada ringkasan di Bab 7.</td>
+          </tr>
+        </tbody>
+        </table>
+      </div>
+      <p class="footer-note">Mata kuliah ini memiliki empat checkpoint besar, yaitu CP-1 pada Pertemuan 4, CP-2 pada Pertemuan 8, CP-3 pada Pertemuan 12, dan CP-4 pada Pertemuan 16. Ketiga butir di atas adalah bekal langsung menuju CP-2, karena integrasi yang diuji di sana menuntut adanya komunikasi data, bukan hanya sensor dan aktuator. Perlu diingat juga bahwa tugas latihan mingguan menyumbang 20 persen dari nilai akhir, sehingga tugas praktik pada Bab 8.2 tetap terhitung meskipun ukurannya kecil.</p>
+    </section>
+
+    <section class="card">
+      <h2>10. Referensi Praktis</h2>
+      <p>Tiga sumber berikut adalah rujukan yang paling dekat dengan materi Pertemuan 6. Sebagian besar isinya berbahasa Inggris, dan sebaiknya dibaca setelah praktik selesai, bukan sebelum, agar istilah di dalamnya sudah memiliki bentuk nyata yang pernah Anda lihat sendiri.</p>
+      <h3>Random Nerd Tutorials: ESP32 HTTP client — <code>randomnerdtutorials.com</code></h3>
+      <p>Kumpulan tutorial yang menunjukkan variasi pengiriman HTTP dari ESP32, termasuk perbedaan GET dan POST serta pengiriman data dalam bentuk JSON. Bagian ini paling berguna untuk membandingkan contoh kode Bab 5 dengan pola lain, misalnya ketika endpoint tujuan menuntut header atau format body yang berbeda.</p>
+      <h3>ESP32 official docs (Espressif) — <code>docs.espressif.com</code></h3>
+      <p>Dokumentasi resmi pembuat ESP32, tempat penjelasan paling akurat tentang koneksi Wi-Fi dan klien HTTP pada perangkat ini. Pakai sebagai rujukan pemeriksaan ketika penjelasan baris per baris pada Bab 5.2 terasa perlu dipastikan, terutama nama fungsi dan arti nilai yang dikembalikan.</p>
+      <h3>MDN Web Docs bagian HTTP — <code>developer.mozilla.org</code></h3>
+      <p>Referensi netral tentang HTTP itu sendiri, mencakup daftar metode, struktur header, dan arti setiap kelompok kode status. Bagian ini melengkapi Bab 2.2, Bab 2.3, dan Bab 2.5 dengan penjelasan yang tidak terikat pada satu jenis perangkat.</p>
+      <p class="footer-note">Alamat di atas ditulis sebagai nama domain, bukan tautan langsung ke halaman tertentu, karena struktur halaman situs semacam ini berubah dari waktu ke waktu. Cari judul yang disebutkan di atas dari halaman utama masing-masing situs.</p>
+    </section>
+    <footer class="pagenum">
+      <span class="pagenum-seri">Materi Pertemuan 6</span>
+      <span class="pagenum-no">Halaman 6 dari 16</span>
+    </footer>
+  </div>
+</body>
+</html>

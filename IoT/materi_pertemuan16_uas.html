@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Materi Pertemuan 16 - UAS: Demo Akhir dan Laporan</title>
+  <link rel="stylesheet" href="assets/materi.css" />
+</head>
+<body>
+  <div class="wrap">
+    <section class="hero">
+      <span class="badge">Pertemuan 16</span>
+      <h1>UAS: Demo Akhir dan Laporan</h1>
+      <p class="lead">Pertemuan penutup ini membahas cara menunjukkan bahwa sistem Anda benar-benar bekerja dan benar-benar Anda pahami: menyiapkan demo yang tidak mudah gagal, menyusun presentasi singkat, menjawab pertanyaan penguji, menulis laporan akhir bab per bab, dan menutupnya dengan refleksi yang bernilai.</p>
+      <div>
+        <span class="pill">Demo akhir</span>
+        <span class="pill">Rencana cadangan</span>
+        <span class="pill">Presentasi singkat</span>
+        <span class="pill">Laporan akhir</span>
+        <span class="pill">Refleksi</span>
+        <span class="pill">CP-4</span>
+      </div>
+      <p class="notice">Yang perlu siap: sistem mini project Anda dalam keadaan dapat dijalankan, seluruh kode programnya, dashboard yang pernah Anda buat, catatan kemajuan dari Pertemuan 14 tentang implementasi mini project, dan catatan perbandingan dari Pertemuan 15 tentang perpindahan ke perangkat fisik. Tidak ada perangkat lunak baru yang perlu dipasang. Yang dibutuhkan justru satu hal yang sering terlewat, yaitu waktu untuk mencoba demo Anda sendiri dari awal sampai akhir sebelum hari penilaian.</p>
+    </section>
+
+    <section class="card">
+      <h2>Capaian Pembelajaran Pertemuan 16</h2>
+      <div class="grid two">
+        <div class="mini">
+          <div class="label">Yang dipahami</div>
+          <ul>
+            <li>Perbedaan antara menunjukkan sistem yang berjalan dan menjelaskan sistem yang Anda pahami, serta alasan penilaian akhir menuntut keduanya.</li>
+            <li>Titik-titik yang paling sering menggagalkan demo, terutama yang bergantung pada jaringan dan layanan pihak lain.</li>
+            <li>Fungsi setiap bab laporan akhir, sehingga tidak ada bab yang ditulis hanya untuk memenuhi format.</li>
+            <li>Ciri refleksi yang bernilai, yaitu menyebut apa yang berubah dalam pemahaman Anda dan apa yang akan dikerjakan berbeda.</li>
+          </ul>
+        </div>
+        <div class="mini">
+          <div class="label">Yang dapat dilakukan</div>
+          <ul>
+            <li>Menyusun urutan demo yang naik bertahap dari bagian paling andal ke bagian paling rentan.</li>
+            <li>Menyiapkan rencana cadangan berupa tangkapan layar dan rekaman yang siap dipakai ketika jaringan bermasalah.</li>
+            <li>Menyampaikan presentasi singkat dengan urutan yang jelas dalam waktu terbatas.</li>
+            <li>Menulis laporan akhir yang ringkas beserta diagram arsitektur, bukti praktis, dan refleksi.</li>
+          </ul>
+        </div>
+      </div>
+      <p>Fokus Pertemuan 16 adalah UAS berupa demo akhir dan laporan, dan pertemuan ini menjadi checkpoint besar keempat atau CP-4. Berbeda dari pertemuan sebelumnya, tidak ada materi teknis baru di sini. Seluruh isinya adalah cara menyajikan dan mempertanggungjawabkan pekerjaan yang sudah Anda bangun selama lima belas pertemuan.</p>
+    </section>
+    <section class="card">
+      <h2>1. Dua Hal yang Dinilai: Sistem yang Berjalan dan Pemahaman yang Terbukti</h2>
+      <p>Penilaian akhir mata kuliah ini berdiri di atas dua kaki. Kaki pertama adalah sistem yang benar-benar berjalan: sensor terbaca, logika kendali bekerja, data berpindah ke platform, dan dashboard menampilkannya. Kaki kedua adalah pemahaman yang terbukti: Anda dapat menjelaskan mengapa setiap bagian dibuat seperti itu, apa yang terjadi bila satu bagian dilepas, dan bagian mana yang paling rentan. Sistem yang berjalan tetapi tidak dapat dijelaskan menyisakan kecurigaan bahwa pekerjaannya tidak dipahami, sedangkan penjelasan yang bagus tanpa sistem yang berjalan tidak membuktikan apa pun. Keduanya perlu disiapkan dengan sengaja, karena keterampilannya berbeda.</p>
+      <div class="analogy">
+        <strong>Analogi:</strong> ujian mengemudi tidak selesai ketika mobil berhasil bergerak. Penguji juga menanyakan mengapa Anda memilih jalur itu, apa yang Anda lakukan bila lampu tiba-tiba mati, dan bagian mana dari kendaraan yang perlu diperiksa sebelum berangkat. Mobil yang jalan adalah syarat, bukan seluruh penilaian.
+      </div>
+      <p>UAS berupa demo akhir dan laporan berbobot 20 persen dari nilai akhir, sejajar dengan tugas latihan mingguan, praktikum dan keaktifan, UTS praktik, serta mini project simulator. Karena bobotnya sebesar itu dan hanya ada satu kesempatan menampilkannya, persiapan yang paling menentukan bukan menambah fitur baru pada hari terakhir, melainkan memastikan yang sudah ada berjalan berulang kali tanpa kejutan.</p>
+    </section>
+
+    <section class="card">
+      <h2>2. Peninjauan Ulang Pertemuan 1 sampai 16</h2>
+      <p>Sebelum menyiapkan demo, tinjau kembali seluruh perjalanan mata kuliah ini. Peninjauan ini punya dua kegunaan langsung: menjadi kerangka bab dasar teori pada laporan Anda, dan menjadi daftar bahan untuk menjawab pertanyaan penguji. Empat perhentian bertanda CP adalah checkpoint besar, yaitu titik ketika kemampuan yang terkumpul diperiksa secara menyeluruh.</p>
+      <div class="road">
+        <div class="stop"><b>Pertemuan 1</b>Orientasi IoT dan lingkungan simulator</div>
+        <div class="stop"><b>Pertemuan 2</b>Dasar pemrograman perangkat</div>
+        <div class="stop"><b>Pertemuan 3</b>Sensor dan pembacaan data</div>
+        <div class="stop"><b>Pertemuan 4 &middot; CP-1</b>Aktuator dasar</div>
+        <div class="stop"><b>Pertemuan 5</b>Penggabungan sensor dengan aktuator dan penelusuran kesalahan</div>
+        <div class="stop"><b>Pertemuan 6</b>Komunikasi data dengan HTTP</div>
+        <div class="stop"><b>Pertemuan 7</b>Komunikasi data dengan MQTT</div>
+        <div class="stop"><b>Pertemuan 8 &middot; CP-2</b>UTS berupa integrasi sensor, aktuator, dan pengiriman data</div>
+        <div class="stop"><b>Pertemuan 9</b>Pengaturan waktu pengiriman dan penyusunan payload</div>
+        <div class="stop"><b>Pertemuan 10</b>Dashboard dengan Node-RED</div>
+        <div class="stop"><b>Pertemuan 11</b>Penyimpanan data dan visualisasi tren</div>
+        <div class="stop"><b>Pertemuan 12 &middot; CP-3</b>Keamanan dan keandalan sistem</div>
+        <div class="stop"><b>Pertemuan 13</b>Perancangan mini project</div>
+        <div class="stop"><b>Pertemuan 14</b>Implementasi mini project di simulator</div>
+        <div class="stop"><b>Pertemuan 15</b>Dari simulator ke perangkat fisik</div>
+        <div class="stop here"><b>Pertemuan 16 &middot; CP-4</b>UAS berupa demo akhir dan laporan, dan di sinilah Anda sekarang</div>
+      </div>
+      <div class="tip">
+        <strong>Cara memakai daftar ini:</strong> ambil satu perhentian, lalu coba jelaskan isinya dalam dua kalimat tanpa membuka catatan. Perhentian yang tidak dapat Anda jelaskan dalam dua kalimat adalah bahan belajar utama Anda, sebab pertanyaan penguji hampir selalu berangkat dari bagian yang benar-benar Anda pakai di dalam sistem.
+      </div>
+    </section>
+    <section class="card">
+      <h2>3. Menyiapkan Demo yang Tidak Mudah Gagal</h2>
+      <p>Demo gagal hampir selalu karena alasan yang sama: bagian yang paling rentan ditampilkan paling awal, dan ketika bagian itu tersendat seluruh sisa waktu habis untuk memperbaikinya. Karena itu urutan demo disusun naik, dari bagian yang paling tidak bergantung pada apa pun menuju bagian yang paling bergantung pada jaringan dan layanan pihak lain. Dengan urutan itu, kegagalan pada bagian akhir tidak menghapus bukti bahwa bagian sebelumnya bekerja.</p>
+      <ol>
+        <li>Perlihatkan perangkat membaca sensor dan mencetak nilainya. Bagian ini hanya bergantung pada perangkat itu sendiri, sehingga paling kecil kemungkinannya gagal.</li>
+        <li>Perlihatkan logika kendali bekerja: ubah nilai sensor sampai melewati ambang, dan tunjukkan aktuator berpindah keadaan.</li>
+        <li>Perlihatkan data terkirim, misalnya melalui klien pemantau topik, sebelum berpindah ke dashboard. Dengan begitu, bila dashboard bermasalah, Anda sudah membuktikan datanya benar-benar berjalan.</li>
+        <li>Perlihatkan dashboard menampilkan nilai dan tren.</li>
+        <li>Perlihatkan perintah dari dashboard kembali ke perangkat. Bagian ini paling banyak melewati perantara, jadi letakkan paling akhir.</li>
+      </ol>
+      <p>Rencana cadangan disiapkan sebelum hari penilaian, bukan dicari ketika masalah muncul. Yang perlu ada: tangkapan layar setiap tahap demo dalam keadaan berhasil, satu rekaman layar berdurasi satu sampai dua menit yang memperlihatkan seluruh alur berjalan, serta satu berkas berisi contoh data yang pernah terkumpul. Bila sambungan tempat penilaian tidak dapat diandalkan, sediakan jaringan alternatif dari ponsel Anda dan pastikan sistem sudah pernah diuji memakai jaringan itu, sebab jaringan yang belum pernah diuji sama saja dengan tidak punya cadangan.</p>
+      <div class="warn">
+        <strong>Jangan mengubah kode pada hari demo.</strong> Perubahan kecil yang belum diuji adalah penyebab kegagalan yang paling sering terjadi dan paling disesali. Bekukan program Anda sehari sebelumnya, simpan salinannya, lalu jalankan demo penuh dari awal sampai akhir sekurang-kurangnya dua kali. Bila Anda tetap menemukan hal yang ingin diperbaiki, catat sebagai keterbatasan di dalam laporan alih-alih menambalnya menjelang penilaian.
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>4. Struktur Presentasi Singkat</h2>
+      <p>Waktu presentasi selalu lebih pendek daripada yang Anda rasa perlu, sehingga urutannya harus ditetapkan lebih dahulu. Kerangka enam menit berikut dapat dipendekkan atau diperpanjang, tetapi urutannya sebaiknya tetap: masalah dahulu, baru cara, baru bukti.</p>
+      <div class="table-scroll" tabindex="0">
+        <table>
+        <tr><th>Bagian</th><th>Perkiraan waktu</th><th>Isi inti</th></tr>
+        <tr><td>Masalah dan tujuan</td><td>30 detik</td><td>Satu kalimat tentang keadaan yang ingin diperbaiki dan satu kalimat tentang apa yang sistem Anda lakukan.</td></tr>
+        <tr><td>Arsitektur</td><td>1 menit</td><td>Diagram alur data dari sensor, perangkat, broker, sampai dashboard, dengan menyebut nama topik yang dipakai.</td></tr>
+        <tr><td>Demo</td><td>3 menit</td><td>Lima tahap sesuai urutan pada Bab 3, dijalankan tanpa menjelaskan kode baris per baris.</td></tr>
+        <tr><td>Keandalan dan keterbatasan</td><td>1 menit</td><td>Apa yang terjadi bila sambungan terputus, nilai apa yang disaring, dan hal apa yang belum tertangani.</td></tr>
+        <tr><td>Refleksi dan rencana lanjut</td><td>30 detik</td><td>Satu hal yang berubah dalam pemahaman Anda dan satu langkah berikutnya bila pekerjaan dilanjutkan.</td></tr>
+        </table>
+      </div>
+      <div class="tip">
+        <strong>Siapkan dua kalimat pembuka secara harfiah.</strong> Bagian yang paling terasa berat adalah tiga puluh detik pertama, karena saat itulah kegugupan paling tinggi sementara Anda belum punya apa pun untuk ditunjuk di layar. Tulis dua kalimat pembuka apa adanya, satu tentang keadaan yang ingin diperbaiki dan satu tentang apa yang sistem Anda lakukan, lalu ucapkan keduanya beberapa kali sampai tidak perlu dipikirkan lagi. Setelah dua kalimat itu terlewati, sisa presentasi berjalan lebih ringan karena Anda sudah berbicara sambil menunjuk hal yang nyata.
+      </div>
+    </section>
+    <section class="card">
+      <h2>5. Pertanyaan yang Sering Muncul dan Cara Menyiapkan Jawabannya</h2>
+      <p>Pertanyaan pada demo jarang menanyakan hal yang belum pernah Anda kerjakan. Hampir semuanya menguji apakah keputusan di dalam sistem Anda punya alasan. Tabel berikut menyandingkan pertanyaan yang sering muncul dengan hal yang sebenarnya sedang diperiksa, sehingga Anda dapat menyiapkan bahannya, bukan menghafal jawaban.</p>
+      <div class="table-scroll" tabindex="0">
+        <table>
+        <tr><th>Pertanyaan</th><th>Yang sebenarnya diperiksa</th><th>Cara menyiapkan jawabannya</th></tr>
+        <tr><td>Mengapa memakai MQTT dan bukan HTTP?</td><td>Apakah pilihan protokol berdasar sifat data, bukan kebetulan.</td><td>Siapkan satu alasan dari sistem Anda sendiri, misalnya pengiriman kecil yang sering atau satu data yang dipakai beberapa penerima sekaligus, dengan bekal Pertemuan 6 dan Pertemuan 7.</td></tr>
+        <tr><td>Apa yang terjadi bila jaringan terputus di tengah jalan?</td><td>Keandalan dan kejujuran tentang batasnya.</td><td>Tunjukkan bagian program yang menyambung ulang, lalu sebutkan terus terang data mana yang hilang selama terputus dan mengapa.</td></tr>
+        <tr><td>Dari mana angka ambang itu?</td><td>Apakah nilai dipilih dengan pengukuran atau ditebak.</td><td>Sebutkan hasil pengamatan Anda, termasuk lebar goyangan nilai sensor dan alasan dua ambang diberi jarak, sesuai Pertemuan 15.</td></tr>
+        <tr><td>Bagian mana yang paling rentan gagal?</td><td>Apakah Anda mengenal sistem Anda sendiri.</td><td>Tentukan satu titik paling rentan sebelum demo beserta alasannya. Jawaban bahwa tidak ada bagian yang rentan justru melemahkan posisi Anda.</td></tr>
+        <tr><td>Bila sensor memberi nilai aneh, apa yang terjadi?</td><td>Validasi data sebelum dipakai.</td><td>Tunjukkan baris yang menyaring nilai di luar rentang wajar dan jelaskan apa yang dilakukan program terhadap nilai itu.</td></tr>
+        <tr><td>Bagian mana yang Anda tulis sendiri dan bagian mana yang berasal dari contoh?</td><td>Kejujuran sumber dan pemahaman atas kode yang dipakai.</td><td>Catat sejak awal potongan yang Anda adaptasi dari contoh, dan pastikan Anda dapat menjelaskan cara kerja potongan itu.</td></tr>
+        </table>
+      </div>
+      <p>Pola menjawab yang paling aman adalah menyebut jawaban pendek lebih dahulu, lalu alasannya dalam satu atau dua kalimat, lalu berhenti. Bila Anda benar-benar tidak tahu, katakan tidak tahu dan sebutkan cara Anda akan mencari tahu, misalnya dengan menambahkan pencatatan pada titik tertentu untuk melihat perilakunya. Jawaban seperti itu jauh lebih baik daripada menebak, karena tebakan yang salah biasanya memancing pertanyaan lanjutan.</p>
+    </section>
+
+    <section class="card">
+      <h2>6. Struktur Laporan Akhir Bab per Bab</h2>
+      <p>Laporan akhir bukan salinan seluruh pekerjaan Anda, melainkan jalan terpendek bagi pembaca untuk memahami sistem Anda dan mempercayai bahwa sistem itu bekerja. Karena itu setiap bab punya satu fungsi, dan bab yang tidak menjalankan fungsinya lebih baik dipendekkan. Tabel berikut menyebutkan fungsi tiap bab beserta kesalahan yang paling sering terjadi pada bab itu, dan contoh bentuk jadinya dapat Anda lihat pada kerangka di Bab 10.</p>
+      <div class="table-scroll" tabindex="0">
+        <table>
+        <tr><th>Bab laporan</th><th>Fungsinya</th><th>Kesalahan yang sering terjadi</th></tr>
+        <tr><td>Pendahuluan</td><td>Menyebut keadaan yang ingin diperbaiki, tujuan sistem, dan batasan yang Anda tetapkan sendiri.</td><td>Berisi uraian umum tentang perkembangan teknologi yang tidak berhubungan dengan sistem Anda.</td></tr>
+        <tr><td>Dasar teori singkat</td><td>Menerangkan hanya konsep yang benar-benar dipakai sistem Anda, misalnya cara kerja sensor yang dipilih dan istilah broker, topik, publish, serta subscribe.</td><td>Menyalin uraian panjang tentang konsep yang tidak pernah muncul lagi di bab mana pun, sehingga bab ini menjadi bagian terpanjang sekaligus paling tidak terpakai.</td></tr>
+        <tr><td>Perancangan sistem</td><td>Menyajikan diagram arsitektur, daftar topik, struktur payload, dan nilai ambang beserta alasannya.</td><td>Diagram ada tetapi tidak dijelaskan, atau nilai ambang muncul tanpa alasan.</td></tr>
+        <tr><td>Implementasi</td><td>Menerangkan bagian program yang menentukan perilaku sistem, disertai potongan kode terpilih.</td><td>Menempelkan seluruh kode ke dalam badan laporan sehingga bagian pentingnya tenggelam.</td></tr>
+        <tr><td>Pengujian dan hasil</td><td>Menunjukkan bukti: tabel pembacaan, tangkapan layar dashboard, dan hasil pengujian tiap tahap.</td><td>Menyatakan sistem berhasil tanpa satu pun angka atau tangkapan layar.</td></tr>
+        <tr><td>Pembahasan keandalan dan keterbatasan</td><td>Menyebut perilaku sistem ketika sesuatu gagal dan hal apa yang belum tertangani.</td><td>Tidak ada bagian ini sama sekali, sehingga laporan terkesan tidak diuji.</td></tr>
+        <tr><td>Kesimpulan dan refleksi</td><td>Menjawab tujuan pada pendahuluan lalu menyebut apa yang berubah dalam pemahaman Anda.</td><td>Kesimpulan yang hanya mengulang isi pendahuluan.</td></tr>
+        <tr><td>Lampiran</td><td>Menampung kode lengkap, berkas flow dashboard, daftar berkas tangkapan layar, dan keterangan berkas rekaman demo.</td><td>Diisi berkas tanpa keterangan, sehingga pembaca tidak dapat mengetahui berkas mana yang menghasilkan gambar mana.</td></tr>
+        </table>
+      </div>
+      <p>Panjang laporan bukan ukuran mutunya. Laporan dua belas halaman yang setiap pernyataannya disertai angka lebih kuat daripada laporan tiga puluh halaman yang sebagian besar isinya kode tempelan dan teori umum. Ukuran yang lebih berguna adalah kepadatan bukti: hitung berapa banyak pernyataan keberhasilan di dalam laporan Anda, lalu pastikan setiap pernyataan itu punya satu angka, satu tabel, atau satu tangkapan layar di dekatnya. Pernyataan yang tidak punya pasangan bukti sebaiknya diubah menjadi pernyataan yang lebih hati-hati, atau buktinya dikumpulkan sekarang sementara sistem masih berjalan.</p>
+    </section>
+    <section class="card">
+      <h2>7. Menulis Refleksi yang Bernilai</h2>
+      <p>Refleksi sering ditulis sebagai kalimat sopan yang tidak mengandung isi, misalnya pernyataan bahwa banyak hal telah dipelajari dan semuanya berjalan lancar. Refleksi seperti itu tidak dapat dinilai karena tidak menyebut apa pun yang khusus tentang pekerjaan Anda. Refleksi yang bernilai selalu memuat tiga hal: apa yang semula Anda duga, apa yang ternyata terjadi, dan keputusan apa yang akan Anda ambil berbeda karena hal itu. Ketiganya berasal dari pengalaman, sehingga tidak dapat ditulis dengan menebak.</p>
+      <div class="tip">
+        <strong>Pola tiga kalimat yang dapat langsung dipakai:</strong> semula saya menduga bahwa pembacaan sensor akan cukup stabil untuk dipakai apa adanya; ternyata nilainya bergoyang sehingga aktuator hidup mati sendiri di sekitar ambang; karena itu, bila mengerjakan ulang, saya akan menentukan lebar goyangan lebih dahulu sebelum memilih angka ambang. Tulis tiga sampai lima paragraf dengan pola itu, masing-masing untuk satu hal yang benar-benar Anda alami.
+      </div>
+      <p>Bahan mentah refleksi sudah Anda kumpulkan tanpa sengaja. Catatan kemajuan yang Anda susun pada Pertemuan 14 tentang implementasi mini project berisi urutan masalah yang muncul dan cara Anda mengatasinya, sedangkan catatan perbandingan pada Pertemuan 15 tentang perpindahan ke perangkat fisik berisi perbedaan antara dugaan dan kenyataan. Bacalah keduanya dan tandai tiga hal yang paling mengubah cara Anda bekerja. Itulah isi refleksi Anda, dan karena berasal dari catatan, isinya akan terasa khas dan tidak dapat dipertukarkan dengan laporan orang lain.</p>
+    </section>
+
+    <section class="card">
+      <h2>8. Implementasi Praktis: Latihan Demo dan Penyiapan Berkas</h2>
+      <p>Urutan berikut dikerjakan sekurang-kurangnya satu hari sebelum penilaian, karena beberapa langkahnya menghasilkan berkas yang tidak mungkin dibuat pada saat demo berlangsung.</p>
+      <ol class="step">
+        <li>Tuliskan lima tahap demo dari Bab 3 pada selembar catatan, dan di setiap tahap tuliskan tindakan konkret yang akan Anda lakukan, misalnya nilai apa yang akan Anda ubah untuk melewati ambang.</li>
+        <li>Bekukan pekerjaan Anda. Simpan salinan berkas program dan berkas flow dashboard dengan nama yang mengandung tanggal, lalu jangan mengubah salinan itu lagi sampai penilaian selesai.</li>
+        <li>Jalankan demo penuh sambil mengukur waktu setiap tahap. Bila totalnya melewati waktu yang tersedia, pendekkan penjelasan, jangan menghapus tahap pembuktian.</li>
+        <li>Ambil tangkapan layar setiap tahap dalam keadaan berhasil dan simpan dengan nama berurutan, sehingga urutannya tetap terbaca ketika Anda perlu membukanya dengan cepat.</li>
+        <li>Rekam layar selama satu sampai dua menit yang memperlihatkan seluruh alur berjalan, dari nilai sensor berubah sampai dashboard ikut berubah.</li>
+        <li>Jalankan demo kedua, dan kali ini putuskan sambungan jaringan dengan sengaja di tengah jalan. Catat apa yang terjadi pada perangkat dan pada dashboard. Catatan ini menjadi isi bab keandalan pada laporan Anda sekaligus bahan jawaban ketika pertanyaan itu muncul.</li>
+        <li>Susun jawaban untuk enam pertanyaan pada Bab 5, masing-masing paling banyak tiga kalimat. Menuliskannya penting karena jawaban yang sudah pernah ditulis jauh lebih tertata ketika diucapkan.</li>
+        <li>Susun laporan mengikuti struktur Bab 6 dan contoh pada Bab 10, lalu periksa satu per satu apakah setiap pernyataan keberhasilan disertai bukti berupa angka atau tangkapan layar.</li>
+      </ol>
+      <div class="tip">
+        <strong>Sekali saja berlatih dengan suara nyata.</strong> Menjelaskan sistem di dalam kepala terasa lancar, tetapi kalimatnya belum pernah diuji. Berlatih satu kali dengan suara terdengar dan pengukur waktu berjalan hampir selalu memperlihatkan dua hal: bagian yang ternyata sulit dijelaskan, dan bagian yang memakan waktu jauh lebih lama daripada perkiraan Anda.
+      </div>
+    </section>
+    <section class="card">
+      <h2>9. Hasil yang Diharapkan</h2>
+      <ul>
+        <li>Demo penuh dapat dijalankan dua kali berturut-turut dengan hasil yang sama, tanpa perbaikan di tengah jalan.</li>
+        <li>Tersedia tangkapan layar setiap tahap dan satu rekaman singkat yang siap dipakai bila keadaan memaksa.</li>
+        <li>Enam pertanyaan pada Bab 5 dapat Anda jawab tanpa membaca catatan, masing-masing dalam beberapa kalimat.</li>
+        <li>Laporan memuat seluruh bab pada Bab 6, dan setiap pernyataan keberhasilan di dalamnya disertai angka atau tangkapan layar.</li>
+      </ul>
+      <h3>9.1 Jika hasilnya tidak seperti itu</h3>
+      <div class="table-scroll" tabindex="0">
+        <table>
+        <tr><th>Gejala</th><th>Kemungkinan penyebab</th><th>Yang perlu diperiksa</th></tr>
+        <tr><td>Demo berhasil pada percobaan pertama tetapi gagal pada percobaan kedua</td><td>Keadaan sistem tidak dikembalikan ke titik awal, misalnya mode manual masih aktif atau port serial masih dipakai jendela lain.</td><td>Tuliskan langkah pengembalian keadaan sebagai bagian dari catatan demo pada langkah 1 Bab 8, dan pastikan hanya satu jendela yang memakai port papan.</td></tr>
+        <tr><td>Klien pemantau memperlihatkan pesan masuk, tetapi dashboard tetap kosong</td><td>Nama topik pada dashboard berbeda dari nama topik pada program, atau perubahan flow belum diterapkan.</td><td>Bandingkan penulisan topik huruf per huruf di kedua sisi, lalu terapkan ulang flow seperti pada Pertemuan 10 tentang dashboard Node-RED.</td></tr>
+        <tr><td>Data tidak sampai sama sekali di tempat penilaian</td><td>Jaringan di lokasi berbeda dari jaringan tempat Anda menguji, atau lalu lintas ke broker tertahan.</td><td>Uji lebih dahulu memakai jaringan cadangan seperti dianjurkan pada Bab 3, lalu tampilkan rekaman bila jalur data benar-benar tertutup.</td></tr>
+        <tr><td>Demo melewati waktu yang tersedia dan bagian pembuktian terakhir tidak sempat ditampilkan</td><td>Waktu habis pada penjelasan, biasanya pada bagian arsitektur dan pada pembacaan kode baris per baris yang sebenarnya tidak diminta.</td><td>Ukur waktu setiap tahap seperti pada langkah 3 Bab 8, lalu pendekkan penjelasan sampai kerangka Bab 4 terpenuhi. Bagian yang dipendekkan adalah kalimat penjelasan, bukan tahap pembuktian, sebab tahap pembuktian itulah yang dinilai.</td></tr>
+        <tr><td>Berkas cadangan ada, tetapi tidak dapat ditemukan ketika benar-benar diperlukan</td><td>Tangkapan layar dan rekaman tersimpan dengan nama bawaan yang berisi tanggal dan waktu, sehingga urutan tahapnya tidak terbaca.</td><td>Ganti nama berkas menjadi urutan bernomor yang menyebut tahapnya, lalu kumpulkan semuanya dalam satu folder yang sudah terbuka sebelum demo dimulai. Berkas cadangan yang perlu dicari selama satu menit sama nilainya dengan tidak punya cadangan.</td></tr>
+        </table>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>10. Contoh Kerangka Laporan Akhir dan Alur Demo</h2>
+      <p>Kerangka berikut memakai satu contoh sistem, yaitu pemantauan suhu ruang dengan kendali kipas otomatis, agar terlihat sampai tingkat kedalaman mana setiap bab perlu ditulis. Ganti isinya dengan sistem Anda sendiri, tetapi pertahankan kebiasaan menuliskan angka dan alasan, bukan hanya nama bagian.</p>
+      <div class="code"><pre>LAPORAN AKHIR MINI PROJECT IoT
+Judul : Pemantauan Suhu Ruang dengan Kendali Kipas Otomatis
+Nama  : ...                    Kelas : ...
+
+BAB 1 PENDAHULUAN
+  1.1 Latar belakang : Ruang kerja memanas pada siang hari dan kipas masih
+                       dinyalakan manual, sehingga sering terlambat.
+  1.2 Tujuan         : Menyalakan kipas otomatis pada suhu tertentu dan
+                       mencatat riwayat suhu agar dapat ditinjau kembali.
+  1.3 Batasan        : Satu sensor suhu, satu kipas, pengujian di simulator,
+                       dashboard lokal, tanpa penyimpanan jangka panjang.
+
+BAB 2 DASAR TEORI SINGKAT
+  Sensor suhu, protokol MQTT beserta istilah broker, topik, publish, dan
+  subscribe, serta dashboard. Dua sampai tiga paragraf per konsep, dan hanya
+  konsep yang benar-benar dipakai pada sistem ini.
+
+BAB 3 PERANCANGAN SISTEM
+  3.1 Arsitektur : sensor -> ESP32 -> broker MQTT -> Node-RED -> dashboard
+  3.2 Daftar topik :
+        miniproject/esp32-01/suhu/data       (perangkat menuju dashboard)
+        miniproject/esp32-01/kipas/status    (perangkat menuju dashboard)
+        miniproject/esp32-01/kipas/perintah  (dashboard menuju perangkat)
+  3.3 Struktur payload : {"suhu":30.4,"kipas":"ON","mode":"AUTO"}
+  3.4 Nilai ambang : nyala pada 30,0 dan mati pada 28,5 derajat Celsius.
+                     Jarak 1,5 derajat dipilih karena goyangan pembacaan
+                     yang tercatat selama pengujian mencapai 0,6 derajat.
+
+BAB 4 IMPLEMENTASI
+  Potongan kode terpilih beserta penjelasannya: fungsi pembacaan sensor,
+  fungsi kendali ambang, fungsi pengiriman, dan fungsi penerima perintah.
+  Kode lengkap diletakkan pada lampiran, bukan pada bab ini.
+
+BAB 5 PENGUJIAN DAN HASIL
+  Tabel dua puluh baris pembacaan beserta waktunya, catatan nilai suhu saat
+  kipas berpindah keadaan, tangkapan layar dashboard, dan hasil pengujian
+  setiap tahap integrasi.
+
+BAB 6 KEANDALAN DAN KETERBATASAN
+  Perilaku sistem ketika sambungan terputus, penyaringan nilai tidak wajar,
+  serta keterbatasan yang diakui: broker publik tanpa autentikasi, riwayat
+  hanya tersimpan selama dashboard berjalan.
+
+BAB 7 KESIMPULAN DAN REFLEKSI
+  Jawaban atas tujuan pada Bab 1, lalu tiga paragraf refleksi dengan pola
+  dugaan, kenyataan, dan keputusan yang akan diubah.
+
+LAMPIRAN
+  Kode lengkap, berkas flow dashboard, daftar berkas tangkapan layar, dan
+  keterangan berkas rekaman demo.</pre></div>
+      <p>Perhatikan dua kebiasaan yang membuat kerangka di atas berbeda dari daftar isi biasa. Pertama, setiap nilai muncul bersama alasannya: nilai ambang tidak hanya disebut angkanya, tetapi juga disebutkan bahwa jarak antarambang dipilih berdasarkan goyangan pembacaan yang benar-benar tercatat. Kedua, keterbatasan disebutkan terus terang, termasuk pemakaian broker publik tanpa autentikasi dan riwayat yang hanya bertahan selama dashboard berjalan. Keterbatasan yang Anda sebut sendiri hampir selalu memperkuat posisi Anda, sebab menunjukkan bahwa Anda mengenal batas sistem Anda; keterbatasan yang baru ditemukan penguji menimbulkan kesan sebaliknya.</p>
+      <h3>10.1 Alur demo menit ke menit</h3>
+      <p>Alur berikut ditulis sebagai urutan tindakan yang Anda lakukan sendiri di depan penguji, dengan asumsi waktu enam menit. Sesuaikan angkanya bila waktu Anda berbeda, tetapi jangan menukar urutannya.</p>
+      <ol class="step">
+        <li>Menit 0:00 sampai 0:30. Sebutkan masalah dan hasilnya dalam dua kalimat, lalu tampilkan diagram arsitektur di layar dan biarkan diagram itu terbuka.</li>
+        <li>Menit 0:30 sampai 1:30. Telusuri diagram dengan menyebut nama ketiga topik dan arah datanya, sehingga penguji sudah memegang peta sebelum melihat sistem berjalan.</li>
+        <li>Menit 1:30 sampai 2:30. Jalankan perangkat dan tunjukkan nilai sensor tercetak berkala. Sebutkan berapa jeda pengirimannya dan mengapa jeda itu dipilih.</li>
+        <li>Menit 2:30 sampai 3:30. Ubah nilai sensor sampai melewati ambang, tunjukkan aktuator berpindah keadaan, lalu tunjukkan status barunya ikut terkirim.</li>
+        <li>Menit 3:30 sampai 4:15. Buka klien pemantau topik dan tunjukkan payload yang masuk. Inilah bukti bahwa data benar-benar berpindah, terlepas dari keadaan dashboard.</li>
+        <li>Menit 4:15 sampai 5:00. Buka dashboard, tunjukkan angka terbaru dan grafik trennya, lalu kirim satu perintah dari dashboard dan tunjukkan perangkat menuruti perintah itu.</li>
+        <li>Menit 5:00 sampai 5:30. Sebutkan satu titik paling rentan pada sistem Anda dan jelaskan apa yang terjadi ketika sambungan terputus, memakai hasil pengujian pada langkah 6 Bab 8.</li>
+        <li>Menit 5:30 sampai 6:00. Tutup dengan satu paragraf refleksi dan satu rencana lanjut yang konkret, lalu nyatakan bahwa Anda siap menerima pertanyaan.</li>
+      </ol>
+    </section>
+
+    <section class="card">
+      <h2>11. Ringkasan Materi</h2>
+      <ol>
+        <li>Penilaian akhir memeriksa dua hal sekaligus: sistem yang benar-benar berjalan dan pemahaman yang dapat Anda pertanggungjawabkan.</li>
+        <li>Urutan demo disusun naik dari bagian paling andal ke bagian paling bergantung pada jaringan, sehingga kegagalan di akhir tidak menghapus bukti sebelumnya.</li>
+        <li>Rencana cadangan berupa tangkapan layar, rekaman, dan jaringan alternatif dibuat sebelum hari penilaian, dan program dibekukan sehari sebelumnya.</li>
+        <li>Pertanyaan penguji hampir selalu menguji alasan di balik keputusan Anda, jadi bahan jawabannya disiapkan dari sistem Anda sendiri.</li>
+        <li>Refleksi bernilai bila memuat dugaan awal, kenyataan yang ditemui, dan keputusan yang akan diubah, dan bahannya berasal dari catatan Anda sendiri.</li>
+      </ol>
+    </section>
+    <section class="card">
+      <h2>12. Latihan Pemahaman</h2>
+      <p>Kerjakan cek cepat berikut tanpa membuka bab sebelumnya, lalu bandingkan dengan kunci jawaban.</p>
+      <ol>
+        <li>Urutan demo disusun dari bagian yang paling ... menuju bagian yang paling ...</li>
+        <li>Manakah yang bukan rencana cadangan yang berguna: (a) tangkapan layar setiap tahap, (b) rekaman singkat seluruh alur, atau (c) niat memperbaiki kode bila terjadi kegagalan.</li>
+        <li>Sebutkan satu ciri refleksi yang tidak dapat dinilai.</li>
+      </ol>
+      <details>
+        <summary>Kunci jawaban</summary>
+        <p>1. Paling andal atau paling tidak bergantung pada apa pun, menuju yang paling bergantung pada jaringan dan layanan pihak lain. 2. (c), karena memperbaiki kode di depan penguji memakan seluruh waktu yang tersisa. 3. Kalimat umum yang tidak menyebut satu pun hal khusus dari pekerjaan Anda.</p>
+      </details>
+      <p>Pertanyaan reflektif berikut tidak memiliki kunci jawaban tunggal. Tuliskan jawabannya dengan kalimat sendiri.</p>
+      <ol>
+        <li>Bagian mana dari sistem Anda yang paling sulit dijelaskan kepada orang lain, dan mengapa?</li>
+        <li>Bila demo hanya boleh menampilkan satu tahap, tahap mana yang paling membuktikan sistem Anda bekerja?</li>
+        <li>Keputusan teknis mana yang akan Anda ubah bila mengerjakan ulang dari awal?</li>
+        <li>Pengetahuan dari pertemuan mana yang paling sering Anda pakai selama membangun sistem ini?</li>
+        <li>Apa satu hal yang belum tertangani pada sistem Anda, dan mengapa Anda memilih untuk tidak menanganinya?</li>
+      </ol>
+    </section>
+
+    <section class="card">
+      <h2>13. Tugas Akhir Pertemuan 16: Laporan Akhir dan Demo</h2>
+      <p>Tugas akhir mata kuliah ini adalah menampilkan demo sistem Anda dan menyerahkan laporan akhir yang ringkas. Ringkas di sini berarti setiap bagian menjalankan fungsinya, bukan berarti sedikit isinya. Seluruh berkas disiapkan sebelum hari penilaian sesuai langkah pada Bab 8.</p>
+      <ul>
+        <li>Laporan akhir yang ringkas mengikuti struktur pada Bab 6 dan contoh kerangka pada Bab 10.</li>
+        <li>Kode program lengkap, disertakan sebagai lampiran atau berkas terpisah.</li>
+        <li>Diagram arsitektur yang memperlihatkan alur data dari sensor sampai dashboard beserta nama topik.</li>
+        <li>Tangkapan layar dashboard dalam keadaan menampilkan data, bukan dalam keadaan kosong.</li>
+        <li>Rekaman demo bila diperlukan, terutama sebagai bukti cadangan ketika jaringan di tempat penilaian tidak dapat diandalkan.</li>
+      </ul>
+      <div class="table-scroll" tabindex="0">
+        <table>
+        <tr><th>Aspek</th><th>Bobot</th><th>Kriteria nilai penuh</th></tr>
+        <tr><td>Demo sistem berjalan</td><td>30%</td><td>Kelima tahap pada Bab 3 tampil berurutan, data benar-benar berpindah, dan perintah dari dashboard sampai ke perangkat.</td></tr>
+        <tr><td>Penguasaan saat menjawab pertanyaan</td><td>20%</td><td>Setiap keputusan teknis dapat dijelaskan alasannya, termasuk nilai ambang dan pilihan protokol.</td></tr>
+        <tr><td>Kelengkapan dan ketepatan laporan</td><td>25%</td><td>Semua bab pada Bab 6 ada, isinya sesuai fungsinya, dan tidak ada keterangan yang bertentangan dengan demo.</td></tr>
+        <tr><td>Diagram dan bukti praktis</td><td>15%</td><td>Diagram arsitektur benar dan dijelaskan, serta setiap klaim keberhasilan disertai angka atau tangkapan layar.</td></tr>
+        <tr><td>Refleksi</td><td>10%</td><td>Memuat dugaan awal, kenyataan yang ditemui, dan keputusan yang akan diubah, dengan contoh yang khas dari pekerjaan Anda.</td></tr>
+        </table>
+      </div>
+      <p>UAS berupa demo akhir dan laporan ini berbobot 20 persen dari nilai akhir mata kuliah.</p>
+    </section>
+    <section class="card">
+      <h2>14. Checkpoint Evaluasi Pertemuan 16</h2>
+      <p>Pertemuan ini dianggap tuntas bila butir-butir berikut dapat Anda lakukan sendiri. Daftar ini sekaligus dipakai sebagai pemeriksaan diri terakhir sebelum penilaian, sehingga tidak ada kekurangan yang baru ditemukan ketika demo sudah berjalan.</p>
+      <div class="mini">
+        <div class="label">Target minimal pertemuan ini</div>
+        <p>Sistem dapat dijelaskan secara menyeluruh dari sensor sampai dashboard, ada bukti praktis berupa demo yang berjalan beserta tangkapan layar dan data, dan penjelasan Anda memperlihatkan pemahaman pada tingkat konsep sekaligus tingkat implementasi.</p>
+      </div>
+      <div class="table-scroll" tabindex="0">
+        <table>
+        <tr><th>Yang diperiksa</th><th>Cara memastikan sendiri</th><th>Bila belum tercapai</th></tr>
+        <tr><td>Sistem dapat dijelaskan menyeluruh</td><td>Jelaskan alur data dari sensor sampai dashboard dalam dua menit tanpa membuka catatan, memakai daftar perhentian pada Bab 2.</td><td>Baca kembali Bab 2 dan tandai perhentian yang belum dapat Anda jelaskan.</td></tr>
+        <tr><td>Demo berjalan berulang dengan hasil sama</td><td>Jalankan urutan lima tahap Bab 3 dua kali berturut-turut seperti pada langkah 3 Bab 8.</td><td>Baca kembali Bab 3 dan baris pertama tabel Bab 9.1.</td></tr>
+        <tr><td>Pertanyaan penguji dapat dijawab beralasan</td><td>Jawab keenam pertanyaan pada Bab 5 dengan suara terdengar, masing-masing paling banyak tiga kalimat.</td><td>Baca kembali Bab 5 dan susun jawaban tertulis lebih dahulu.</td></tr>
+        <tr><td>Laporan akhir lengkap dan berbukti</td><td>Cocokkan laporan Anda dengan struktur Bab 6, contoh kerangka Bab 10, dan daftar yang dikumpulkan pada Bab 13.</td><td>Baca kembali Bab 6, lalu pendekkan bab yang tidak menjalankan fungsinya.</td></tr>
+        <tr><td>Refleksi memuat perubahan pemahaman</td><td>Periksa apakah setiap paragraf refleksi memuat dugaan, kenyataan, dan keputusan yang akan diubah, seperti pola pada Bab 7.</td><td>Baca kembali Bab 7 dan ambil bahan dari catatan kemajuan Anda.</td></tr>
+        </table>
+      </div>
+      <p class="footer-note">Empat checkpoint besar mata kuliah ini berada pada Pertemuan 4 sebagai CP-1, Pertemuan 8 sebagai CP-2, Pertemuan 12 sebagai CP-3, dan Pertemuan 16 sebagai CP-4, yaitu pertemuan ini. Selain UAS yang berbobot 20 persen, tugas latihan mingguan sepanjang perkuliahan juga berbobot 20 persen dari nilai akhir, sehingga pekerjaan mingguan Anda tetap menentukan meski penilaian akhir sudah dekat.</p>
+    </section>
+
+    <section class="card">
+      <h2>15. Referensi Praktis</h2>
+      <dl class="gloss">
+        <dt>Rubrik demo akhir mata kuliah ini — <code>rubrik pada Bab 13 halaman ini</code></dt>
+        <dd>Rubrik demo akhir tidak merujuk sumber luar mana pun, dan rubrik yang berlaku adalah tabel pada Bab 13. Pakai kelima aspeknya sebagai daftar periksa terakhir sebelum penilaian.</dd>
+        <dt>Templat laporan akhir praktikum — <code>kata kunci: templat laporan praktikum, format laporan proyek</code></dt>
+        <dd>Untuk kebutuhan ini tidak ada satu sumber baku yang ditunjuk. Pakai kata kunci tersebut untuk mencari format yang berlaku di lingkungan Anda, lalu sesuaikan urutan babnya dengan struktur pada Bab 6.</dd>
+        <dt>Dokumentasi simulator Wokwi — <code>docs.wokwi.com</code></dt>
+        <dd>Berguna ketika demo dijalankan dari simulator, terutama untuk memastikan cara membagikan atau membuka kembali proyek Anda sebagaimana disiapkan pada langkah 2 Bab 8.</dd>
+      </dl>
+      <p class="footer-note">Alamat sumber ditulis sebagai nama domain karena struktur halaman sebuah situs berubah dari waktu ke waktu, sehingga jalur halaman yang dicantumkan hari ini belum tentu masih berlaku ketika Anda membacanya.</p>
+    </section>
+    <footer class="pagenum">
+      <span class="pagenum-seri">Materi Pertemuan 16</span>
+      <span class="pagenum-no">Halaman 16 dari 16</span>
+    </footer>
+  </div>
+</body>
+</html>

@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Materi Pertemuan 11 - Penyimpanan Data, Riwayat, dan Visualisasi Tren</title>
+  <link rel="stylesheet" href="assets/materi.css" />
+</head>
+<body>
+  <div class="wrap">
+    <section class="hero">
+      <span class="badge">Pertemuan 11</span>
+      <h1>Penyimpanan Data, Riwayat, dan Visualisasi Tren</h1>
+      <p class="lead">Materi ini membahas pencatatan data sensor, penyimpanan riwayat, dan penggambaran grafik tren, dengan dua pilihan penyimpanan yang realistis: berkas CSV lewat node file pada Node-RED, dan saluran data pada layanan cloud yang menyimpan serta menggambar grafiknya sendiri.</p>
+      <div>
+        <span class="pill">Logging Data</span>
+        <span class="pill">Riwayat</span>
+        <span class="pill">Data Berseri Waktu</span>
+        <span class="pill">Grafik Tren</span>
+        <span class="pill">Berkas CSV</span>
+        <span class="pill">ThingSpeak</span>
+        <span class="pill">Retensi Data</span>
+      </div>
+      <p class="notice">Yang perlu siap: Node-RED beserta dashboard yang Anda bangun pada Pertemuan 10 tentang dashboard dasar, satu sumber data yang masih mengirim nilai secara berkala, dan browser. Bagian layanan cloud memerlukan satu akun gratis. Tidak ada perangkat keras baru dan tidak ada pustaka baru pada program device.</p>
+    </section>
+
+    <section class="card">
+      <h2>Capaian Pembelajaran Pertemuan 11</h2>
+      <div class="grid two">
+        <div class="mini">
+          <div class="label">Yang dipahami</div>
+          <ul>
+            <li>Perbedaan data terkini yang selalu tertimpa dengan data berseri waktu yang disimpan bersama cap waktunya.</li>
+            <li>Hubungan antara interval pengiriman, jumlah baris data, dan ukuran penyimpanan.</li>
+            <li>Alasan memilih penyimpanan berkas lokal atau saluran pada layanan cloud.</li>
+            <li>Cara membaca grafik tren, termasuk pengaruh satuan, rentang sumbu, dan data yang hilang.</li>
+          </ul>
+        </div>
+        <div class="mini">
+          <div class="label">Yang dapat dilakukan</div>
+          <ul>
+            <li>Menambahkan grafik tren untuk satu parameter pada dashboard yang sudah ada.</li>
+            <li>Mencatat data ke berkas CSV lewat node file, lengkap dengan cap waktu.</li>
+            <li>Mengirim nilai ke sebuah saluran pada layanan cloud memakai kunci tulis.</li>
+            <li>Menentukan kolom yang perlu dicatat agar riwayatnya berguna.</li>
+          </ul>
+        </div>
+      </div>
+      <p>Fokus Pertemuan 11 ada pada empat hal yang saling menyambung: pencatatan data, penyimpanan riwayat, grafik tren, dan pemilihan penyimpanan sederhana. Pertemuan 9 tentang penyusunan payload dan pengaturan waktu pengiriman menentukan bentuk serta kekerapan data yang keluar dari device, lalu Pertemuan 10 tentang dashboard dasar membuat nilainya tampil di layar. Sampai di sini sistem masih hidup di masa kini: begitu angka baru datang, angka lama hilang. Pertemuan ini menambahkan ingatan.</p>
+    </section>
+    <section class="card">
+      <h2>1. Mengapa Data Sesaat Tidak Cukup</h2>
+      <p>Dashboard dari Pertemuan 10 menjawab satu pertanyaan dengan baik: berapa nilainya sekarang. Persoalannya, pertanyaan yang benar-benar berguna dalam pemantauan berbunyi lain: apakah angka ini sedang naik, sejak kapan, apakah 29,4 wajar untuk jam ini, dan apakah tadi malam pernah ada lonjakan yang tidak dilihat siapa pun. Tidak satu pun di antaranya dapat dijawab oleh satu angka, karena semuanya memerlukan pembanding, dan pembandingnya adalah nilai yang sama pada waktu yang berbeda.</p>
+      <div class="analogy">
+        <strong>Analogi dunia nyata:</strong> saldo rekening dan mutasi rekening. Saldo hari ini adalah satu angka yang benar, tetapi ia tidak memberi tahu apakah Anda sedang berhemat, dan tidak memberi tahu ada tarikan besar pekan lalu. Yang menjawab itu adalah daftar mutasi, yaitu deretan angka yang masing-masing punya tanggal.
+      </div>
+      <p>Ketika deretan nilai digambar sebagai garis terhadap waktu, empat hal langsung terbaca yang tidak pernah terlihat pada satu angka tunggal. <strong>Arah perubahan</strong> memungkinkan tindakan diambil sebelum batas terlampaui. <strong>Kecepatan perubahan</strong> membedakan kenaikan dua derajat dalam satu jam yang wajar dari kenaikan dua derajat dalam dua menit yang hampir selalu berarti ada yang salah. <strong>Pola yang berulang</strong> membuat penyimpangan dari kebiasaan harian mudah disadari. Dan <strong>bagian kosong</strong> menandakan sistem berhenti mengirim.</p>
+    </section>
+
+    <section class="card">
+      <h2>2. Data Terkini dan Data Berseri Waktu</h2>
+      <p><strong>Data terkini</strong> adalah satu tempat penyimpanan yang selalu ditimpa: nilai baru menghapus nilai sebelumnya, sehingga yang tersisa selalu satu angka. Gauge pada dashboard bekerja seperti ini, dan pesan MQTT yang ditandai sebagai pesan tersimpan pada broker juga hanya menyimpan satu nilai terakhir per topic. <strong>Data berseri waktu</strong> adalah kumpulan baris yang masing-masing memuat satu nilai beserta waktu pengambilannya; tidak ada yang ditimpa, sehingga kumpulannya terus bertambah panjang. Dari kumpulan itulah grafik tren digambar.</p>
+      <div class="table-scroll" tabindex="0">
+        <table>
+        <thead>
+          <tr><th>Aspek</th><th>Data terkini</th><th>Data berseri waktu</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Yang disimpan</td><td>Satu nilai, yaitu yang terakhir</td><td>Semua nilai bersama cap waktunya</td></tr>
+          <tr><td>Saat nilai baru datang</td><td>Nilai lama tertimpa dan hilang</td><td>Satu baris baru ditambahkan di akhir</td></tr>
+          <tr><td>Pertanyaan yang terjawab</td><td>Berapa nilainya sekarang</td><td>Bagaimana perubahannya, kapan puncaknya, apakah ada pola</td></tr>
+          <tr><td>Bila sistem mati sepuluh menit</td><td>Tidak ada bekas apa pun</td><td>Terlihat sebagai lubang kosong</td></tr>
+        </tbody>
+        </table>
+      </div>
+      <h3>2.1 Cap waktu adalah bagian dari datanya</h3>
+      <p>Deretan angka tanpa keterangan waktu bukan data berseri waktu, melainkan hanya daftar angka: nilai 29,4 pada baris kelima tidak berarti apa pun bila tidak diketahui kapan ia diukur. Cap waktu sebaiknya ditulis dalam urutan tahun-bulan-tanggal seperti <code>2026-08-30 09:15:07</code> agar dapat diurutkan sebagai teks; bentuk <code>30/08/2026</code> menyulitkan pengurutan dan mudah tertukar dengan kebiasaan penulisan tanggal di negara lain. Untuk pertemuan ini cap waktu diambil dari komputer yang menjalankan Node-RED. Waktu itu menggambarkan saat data diterima, bukan saat diukur, tetapi hampir selalu benar tanggalnya, sedangkan device kecil tanpa sinkronisasi waktu sering memulai hitungannya dari nol setiap kali dinyalakan.</p>
+    </section>
+    <section class="card">
+      <h2>3. Laju Data dan Berapa Lama Data Perlu Disimpan</h2>
+      <p>Begitu setiap pembacaan disimpan, keputusan tentang interval pengiriman yang dibuat pada Pertemuan 9 berubah maknanya. Dulu interval dipilih agar jaringan tidak dibanjiri; sekarang interval yang sama menentukan seberapa cepat penyimpanan terisi dan seberapa padat grafik yang akan Anda baca.</p>
+      <p>Perhitungannya sederhana dan sebaiknya dilakukan sebelum pencatatan dinyalakan. Satu pengiriman setiap sepuluh detik berarti 8.640 baris per hari; untuk satu baris CSV yang panjangnya sekitar 45 karakter, sehari menghasilkan sekitar 380 KB.</p>
+      <div class="table-scroll" tabindex="0">
+        <table>
+        <thead>
+          <tr><th>Interval kirim</th><th>Baris per hari</th><th>Ukuran 30 hari</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>1 detik</td><td>86.400</td><td>sekitar 117 MB</td></tr>
+          <tr><td>5 detik</td><td>17.280</td><td>sekitar 23 MB</td></tr>
+          <tr><td>10 detik</td><td>8.640</td><td>sekitar 12 MB</td></tr>
+          <tr><td>1 menit</td><td>1.440</td><td>sekitar 2 MB</td></tr>
+          <tr><td>5 menit</td><td>288</td><td>sekitar 0,4 MB</td></tr>
+        </tbody>
+        </table>
+      </div>
+      <p>Kolom terakhir memakai asumsi 45 byte per baris dan satu parameter; bila Anda mencatat tiga parameter, kalikan tiga. Yang perlu diambil bukan angka pastinya, melainkan bentuk hubungannya: mempersingkat interval sepuluh kali lipat memperbesar berkas sepuluh kali lipat juga, setiap hari.</p>
+      <h3>3.1 Memilih interval dan lama penyimpanan</h3>
+      <p>Interval harus cukup rapat untuk menangkap kejadian tercepat yang benar-benar Anda pedulikan, dan tidak lebih rapat dari itu. Suhu ruangan berubah dalam hitungan menit sehingga interval sepuluh detik sampai satu menit sudah cukup, sedangkan status pintu yang bisa berubah dalam dua detik akan terlewat bila intervalnya satu menit. Lama penyimpanan ditentukan oleh pertanyaan terpanjang yang ingin dijawab: apakah nilainya sedang naik hanya perlu 10 sampai 30 menit terakhir, apakah tadi malam pernah melewati batas perlu 24 jam, dan apakah ada pola harian perlu tujuh hari.</p>
+      <div class="warn">
+        <strong>Dua kesalahan yang sama merugikan.</strong> Interval terlalu rapat membuat berkas membengkak tanpa menambah pemahaman; interval terlalu jarang membuat grafik tampak rapi tetapi berbohong, karena lonjakan di antara dua titik pengambilan tidak pernah tercatat.
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>4. Dua Pilihan Penyimpanan Sederhana yang Realistis</h2>
+      <p>Sistem sungguhan biasanya memakai basis data khusus untuk data berseri waktu. Pada tahap ini hal itu belum diperlukan dan justru menambah sumber masalah baru. Dua pilihan berikut lebih sederhana dan keduanya bisa Anda kerjakan sendiri.</p>
+      <h3>4.1 Berkas CSV lewat node file pada Node-RED</h3>
+      <p>CSV atau <em>comma separated values</em> adalah berkas teks biasa yang setiap barisnya memuat beberapa nilai dipisahkan koma. Tidak ada yang perlu dipasang: Node-RED menyediakan node <code>file</code> pada kelompok storage, dan node itu menuliskan apa pun yang masuk sebagai satu baris pada berkas yang Anda tentukan. Berkasnya tersimpan di komputer yang menjalankan Node-RED dan dapat dibuka dengan penyunting teks maupun program lembar kerja. Keunggulannya kendali penuh; kelemahannya, berkas itu hanya ada di satu komputer dan tidak menggambar grafik sendiri.</p>
+      <h3>4.2 Saluran pada layanan cloud</h3>
+      <p>Pilihan kedua adalah mengirim nilai ke layanan cloud yang dibuat untuk data IoT, misalnya ThingSpeak. Di sana Anda membuat sebuah <strong>saluran</strong> atau <em>channel</em>, memberi nama beberapa <strong>medan</strong> data atau <em>field</em>, lalu mengirim nilai memakai sebuah <strong>kunci tulis</strong> atau <em>Write API Key</em>. Layanan itu menyimpan tiap nilai bersama cap waktunya dan menggambar grafiknya sendiri, sehingga dapat dibuka dari mana saja. Imbalannya, akun gratis membatasi seberapa sering satu saluran boleh diperbarui, biasanya sekitar satu pengiriman setiap lima belas detik. Batas seperti ini dapat berubah, jadi periksa keterangan pada akun Anda.</p>
+      <div class="table-scroll" tabindex="0">
+        <table>
+        <thead>
+          <tr><th>Aspek</th><th>Berkas CSV di komputer sendiri</th><th>Saluran pada layanan cloud</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Tempat data berada</td><td>Berkas pada komputer yang menjalankan Node-RED</td><td>Server layanan, diakses lewat internet</td></tr>
+          <tr><td>Yang perlu disiapkan</td><td>Satu node file dan satu nama berkas</td><td>Akun, saluran, nama medan data, dan kunci tulis</td></tr>
+          <tr><td>Cap waktu</td><td>Anda susun sendiri di dalam baris data</td><td>Ditambahkan otomatis saat data diterima</td></tr>
+          <tr><td>Grafik</td><td>Tidak ada; perlu node chart atau lembar kerja</td><td>Sudah digambar sendiri oleh layanan</td></tr>
+          <tr><td>Akses dari luar jaringan</td><td>Tidak bisa tanpa memindahkan berkasnya</td><td>Bisa, cukup membuka halaman saluran</td></tr>
+          <tr><td>Batas laju kirim</td><td>Praktis tidak ada</td><td>Ada; pengiriman terlalu rapat ditolak</td></tr>
+        </tbody>
+        </table>
+      </div>
+      <div class="tip">
+        <strong>Keduanya sebaiknya dipakai bersama.</strong> Cara yang lazim adalah mencatat data mentah ke berkas lokal sebagai cadangan, sementara nilai yang lebih jarang dikirim ke layanan cloud untuk ditampilkan.
+      </div>
+    </section>
+    <section class="card">
+      <h2>5. Memilih Data yang Perlu Dicatat</h2>
+      <p>Godaan pertama ketika pencatatan mulai berfungsi adalah mencatat segalanya, dan godaan itu sebaiknya ditahan. Ukurannya sederhana: untuk setiap kolom yang dicatat, Anda harus bisa menyebutkan satu pertanyaan pemantauan yang membutuhkan kolom itu. Dengan ukuran tersebut, satu baris riwayat yang berguna biasanya cukup memuat lima kolom, yaitu <code>waktu</code>, <code>device</code>, <code>parameter</code>, <code>nilai</code>, dan <code>satuan</code>.</p>
+      <p>Di antara kelimanya, <code>waktu</code> adalah satu-satunya yang tidak boleh hilang, karena tanpa cap waktu data tidak dapat diurutkan maupun digambar. <code>device</code> menjaga nilai dari beberapa sumber tetap dapat dipisahkan, <code>parameter</code> menjelaskan besaran yang diukur, <code>nilai</code> memuat pengukurannya, dan <code>satuan</code> membuat angka itu tetap terbaca berbulan-bulan kemudian. Contoh isi tiap kolom ada pada Bab 9.</p>
+      <p>Kolom tambahan boleh ada bila menjawab pertanyaan tertentu, misalnya status koneksi. Sebaliknya, jangan mencatat setiap putaran <code>loop()</code>, jangan mencampur pesan teknis dengan baris data ukur karena jumlah kolom antar baris menjadi berbeda sehingga berkas tidak lagi terbaca sebagai tabel, dan jangan mencatat nilai yang jelas tidak masuk akal seperti minus 127 derajat dari sensor yang lepas, karena nilai semacam itu merusak skala grafik.</p>
+    </section>
+
+    <section class="card">
+      <h2>6. Membaca Grafik Tren dengan Benar</h2>
+      <p>Grafik tren adalah alat penerjemah, dan seperti semua penerjemah ia bisa keliru menyampaikan maksud: grafik yang sama bisa memberi kesan sangat gawat atau sangat tenang hanya karena satu pengaturan sumbu diubah. Empat hal wajib ada padanya, yaitu sumbu horizontal waktu beserta keterangan rentangnya seperti 20 menit terakhir, sumbu vertikal nilai beserta satuannya, rentang sumbu vertikal yang ditetapkan atas dasar pertimbangan, serta judul yang menyebut parameter dan sumbernya.</p>
+      <h3>6.1 Rentang sumbu yang mengubah kesan</h3>
+      <p>Inilah hal yang paling sering menyesatkan. Bila rentang sumbu vertikal dibiarkan menyesuaikan diri secara otomatis, grafik selalu mengisi seluruh tinggi kotaknya, apa pun isi datanya. Suhu yang bergerak antara 29,3 dan 29,6 derajat akan tampak seperti pegunungan bergerigi, padahal selisihnya hanya tiga persepuluh derajat; dengan rentang tetap 20 sampai 40 derajat, garis yang sama tampak hampir datar, dan itulah gambaran yang jujur.</p>
+      <h3>6.2 Lubang pada grafik dan garis yang berbohong</h3>
+      <p>Bila data berhenti datang selama sepuluh menit, ada dua kemungkinan tampilan. Grafik yang benar memperlihatkan bagian kosong pada rentang itu, dan kekosongan itu memberi tahu bahwa sistem sempat berhenti. Grafik yang menyambung titik sebelum dan sesudah kekosongan dengan satu garis lurus panjang justru menyembunyikannya, dan garis lurus itu adalah nilai yang tidak pernah diukur. Karena itu, garis lurus panjang yang mencurigakan selalu diperiksa dulu ke berkas riwayatnya.</p>
+      <h3>6.3 Membaca dalam empat lapis</h3>
+      <p>Sebuah grafik dibaca berlapis. <strong>Tinggi garis</strong> menjawab apakah nilainya wajar; bila mencurigakan, periksa satuan pada sumbu dan sumber datanya. <strong>Arah dan kemiringan</strong> menjawab sedang naik, turun, atau tetap, dan seberapa cepat, dengan catatan kemiringan bergantung pada lebar jendela waktu. <strong>Riak kecil</strong> menjawab apakah pembacaannya tenang atau berisik. <strong>Paku tajam dan bagian kosong</strong> menjawab apakah ada kejadian singkat atau data yang hilang, dan pemastiannya selalu ada pada berkas riwayat.</p>
+    </section>
+    <section class="card">
+      <h2>7. Implementasi Praktis: Grafik Tren dan Pencatatan Riwayat</h2>
+      <p>Bagian ini menambahkan dua hal pada dashboard yang sudah Anda bangun pada Pertemuan 10 tentang dashboard dasar: satu grafik tren untuk satu parameter, dan satu jalur pencatatan ke berkas CSV. Semuanya dikerjakan di dalam Node-RED, tanpa mengubah program pada device.</p>
+      <p>Tiga alat berjalan berbarengan di sepanjang bab ini, dan sebaiknya ketiganya sudah terbuka sebelum langkah pertama dikerjakan. Yang pertama adalah <strong>simulator</strong> pada satu tab browser, menjalankan project yang sama seperti pertemuan sebelumnya sebagai sumber angka. Yang kedua adalah <strong>editor Node-RED</strong> pada tab lain, tempat seluruh pekerjaan bab ini dilakukan. Yang ketiga adalah <strong>halaman dashboard</strong> pada tab ketiga, tempat grafiknya diamati sambil pengaturannya diubah. Satu alat lagi diperlukan sebentar saja di bagian akhir, yaitu <strong>penyunting teks</strong> untuk melihat isi berkas riwayat. Node-RED sendiri harus tetap berjalan di komputer Anda selama ketiga tab itu terbuka, sebab berkas CSV ditulis oleh Node-RED, bukan oleh browser.</p>
+      <p><strong>Komponen yang perlu ditambahkan:</strong> tidak ada. Seluruh pekerjaan pertemuan ini berada di sisi Node-RED, sehingga tidak ada rangkaian baru yang dirakit dan tidak ada sambungan yang diubah: perangkat pengirimnya adalah rangkaian yang sudah dipakai pada pertemuan sebelumnya, dan Anda hanya perlu menjalankan project yang sama seperti sebelumnya agar angkanya kembali mengalir. Bila project itu tidak dijalankan, seluruh langkah di bawah tetap dapat dipasang, tetapi grafiknya akan tetap kosong dan berkas riwayatnya tidak pernah bertambah baris.</p>
+      <div class="tip">
+        <strong>Penamaan pada palet bisa berbeda antarversi.</strong> Node grafik kadang tertulis <code>chart</code> dan kadang <code>ui-chart</code>. Kenali dari tiga tanda yang tidak berubah: ia berada pada kelompok dashboard, pengaturannya meminta <em>Group</em>, dan ia menyediakan tipe garis atau <em>Line chart</em>. Node berkas ada pada kelompok storage dengan nama <code>file</code>.
+      </div>
+      <ol class="step">
+        <li>Buka editor Node-RED pada browser di alamat yang sama seperti Pertemuan 10, lalu buka flow dashboard Anda.</li>
+        <li>Kenali empat bagian pada layar editor, karena seluruh langkah berikut hanya memakai keempatnya: <strong>palet node</strong> di sisi kiri beserta kotak pencarian di atasnya, <strong>kanvas</strong> di tengah tempat node disusun dan disambungkan, <strong>panel samping</strong> di sisi kanan yang memuat tab debug, dan tombol <strong>Deploy</strong> di sudut kanan atas.</li>
+        <li>Pastikan sumber angkanya masih hidup: sambungkan sementara sebuah node debug ke sumber data dan periksa bahwa nilai baru masuk berkala. Bila tidak ada, selesaikan itu lebih dahulu.</li>
+        <li>Node grafiknya diambil dari palet di sisi kiri: gulirkan sampai kelompok dashboard, atau ketik <code>chart</code> pada kotak pencarian di atas palet agar daftarnya tersaring lebih cepat. Setelah node itu berada di kanvas, klik ganda padanya untuk membuka <strong>kotak pengaturan</strong>. Semua kolom yang disebut pada dua langkah berikut berada di dalam kotak itu, bukan di kanvas.</li>
+        <li>Tarik node grafik ke kanvas, isi <em>Group</em> dengan grup yang sama dengan gauge Anda, beri <em>Label</em> yang menyebut parameter dan sumbernya seperti <code>Suhu lab esp32-lab-01</code>, lalu pilih tipe garis.</li>
+        <li>Isi rentang sumbu waktu dengan 20 menit terakhir, dan tetapkan batas sumbu vertikal secara manual, misalnya minimum 20 dan maksimum 40 untuk suhu ruangan.</li>
+        <li>Tutup kotak pengaturan dengan tombol <em>Done</em> di sudut kanan atasnya. Sampai di situ pengaturannya belum berlaku: yang membuat perubahan aktif adalah tombol <strong>Deploy</strong> di sudut kanan atas editor. Selama masih ada perubahan yang belum dikirim, tombol itu tampak menyala; setelah ditekan dan pengirimannya berhasil, warnanya kembali pudar dan sebuah pemberitahuan singkat muncul di bagian atas kanvas. Setiap kali bab ini menyebut Deploy, tombol inilah yang dimaksud.</li>
+        <li>Hubungkan keluaran sumber angka ke masukan node grafik. Masukannya harus berupa satu angka pada <code>msg.payload</code>; bila payload Anda masih berbentuk JSON seperti pada Pertemuan 9, ambil satu bidangnya lebih dahulu. Dengan node change, aturannya berbentuk <em>Set</em> pada <code>msg.payload</code> dengan nilai bertipe <code>msg</code> dan isi <code>payload.suhu</code>, sehingga pesan yang semula memuat seluruh objek berubah menjadi memuat satu angka saja. Bila payload masih berupa teks JSON dan belum berbentuk objek, sisipkan node json sebelum node change agar teks itu diubah lebih dahulu.</li>
+        <li>Tekan Deploy, buka halaman dashboard, dan amati sekitar dua menit. Garis harus bertambah panjang setiap kali data baru masuk.</li>
+        <li>Untuk pencatatan, tarik satu node function dan satu node file. Isi node function dengan kode penyusun baris CSV pada Bab 9, lalu sambungkan sumber angka ke function, dan function ke node file.</li>
+        <li>Kedua node itu berada pada palet yang sama: node function pada kelompok function, dan node file pada kelompok storage. Klik ganda pada node file untuk membuka kotak pengaturannya. Di dalamnya ada satu kolom nama berkas, satu pilihan tindakan, dan dua kotak centang; keempatnya itulah yang muncul sebagai <code>filename</code>, <code>overwriteFile</code>, <code>appendNewline</code>, dan <code>createDir</code> pada potongan ekspor di Bab 9.3, sehingga pengaturan Anda dapat dibandingkan langsung dengan potongan tersebut.</li>
+        <li>Pada node file, isi nama berkas dengan alamat lengkap seperti <code>/home/pengguna/iot/log_suhu.csv</code>, pilih tindakan menambahkan ke berkas, aktifkan penambahan baris baru, dan aktifkan pembuatan direktori.</li>
+        <li>Sadari di mana berkas riwayat itu akan jatuh: alamat pada kolom nama berkas dibaca dari sisi komputer yang menjalankan Node-RED, bukan dari sisi browser yang menampilkan editornya. Jadi setelah Deploy ditekan dan satu data masuk, <code>log_suhu.csv</code> harus muncul di folder yang Anda tulis pada komputer itu, dan folder tersebut dibuat sendiri oleh node file bila belum ada. Bentuk alamat untuk masing-masing sistem beserta akibat bila alamatnya tidak ditulis lengkap ada pada catatan di bawah daftar langkah ini.</li>
+        <li>Siapkan baris judul kolom lebih dahulu, sebab node file yang bertugas menambahkan tidak pernah menuliskannya sendiri. Cara paling sederhana: buat berkasnya dengan penyunting teks, isi satu baris <code>waktu,device,parameter,nilai,satuan</code>, simpan, lalu biarkan Node-RED menambahkan baris data di bawahnya. Cara kedua bila Anda tidak ingin menyentuh berkas secara manual: sambungkan sementara satu node inject yang mengirim teks judul kolom itu ke node file, tekan tombol picunya tepat satu kali sebelum data pertama masuk, lalu putuskan kembali node inject tersebut.</li>
+        <li>Catatan bila Anda melihat cara lain di internet: palet dasar Node-RED juga menyediakan node bernama <code>csv</code> yang dapat mengubah objek menjadi baris CSV sekaligus menuliskan baris judul kolom secara otomatis. Alur pada bab ini sengaja memakai satu jalur saja, yaitu node function langsung ke node file, agar Anda melihat bentuk barisnya sendiri. Jadi bila suatu saat Anda memakai node <code>csv</code> dan judul kolomnya muncul sendiri, itu bukan pertentangan dengan langkah di atas, melainkan pekerjaan yang diambil alih oleh node tersebut.</li>
+        <li>Sambungkan satu node debug dari kelompok common ke keluaran node function, berdampingan dengan sambungan yang menuju node file. Dengan begitu setiap baris yang dituliskan juga tampil pada tab debug di panel samping beserta waktu kedatangannya. Inilah cara memastikan barisnya bertambah tanpa membuka berkasnya berulang kali: satu entri baru pada tab debug berarti satu baris baru pada berkas, dan bila tab debug diam selama beberapa kali jeda pengiriman, yang berhenti adalah sumber datanya, bukan pencatatannya.</li>
+        <li>Tekan Deploy, tunggu tiga sampai lima menit, lalu buka berkasnya dengan penyunting teks. Isinya harus berupa baris yang terus bertambah, bukan satu baris yang tertimpa.</li>
+        <li>Uji lubang data secara sengaja: hentikan sumber data sekitar satu menit, lalu hidupkan lagi, dan perhatikan apa yang terjadi pada grafik dan pada berkas.</li>
+        <li>Bila ingin mencoba penyimpanan cloud, buat satu akun dan satu saluran, catat kunci tulisnya, lalu kirim nilai memakai node http request seperti pada Bab 9, dengan jarak kirim minimal lima belas detik.</li>
+        <li>Sebagai percobaan variasi, ubah tepat satu nilai: perlambat jeda pengiriman pada sumber data Anda menjadi dua kali lipat dari nilai yang Anda tetapkan pada Pertemuan 9 tentang penyusunan payload dan pengaturan waktu pengiriman. Jalankan lagi, hitung entri baru pada tab debug selama rentang waktu yang sama seperti pengamatan sebelumnya, lalu bandingkan dengan hitungan sebelumnya. Jumlah baris yang bertambah harus turun kira-kira setengahnya, dan grafiknya menjadi lebih renggang walaupun jendela waktunya tidak diubah. Percobaan inilah yang membuat hubungan pada tabel Bab 3 dapat Anda ukur sendiri, bukan hanya dibaca.</li>
+      </ol>
+      <p><strong>Hasil yang harus terlihat:</strong> pada halaman dashboard, satu garis yang bertambah panjang setiap kali data baru masuk, berjudul <code>Suhu lab esp32-lab-01</code>, dengan sumbu vertikal yang berhenti pada 20 dan 40 sehingga riak kecil tidak lagi tampak seperti pegunungan. Pada tab debug, satu entri baru bertanda waktu muncul setiap satu jeda pengiriman, dan isinya sudah berupa satu baris utuh berisi lima nilai yang dipisahkan koma. Pada berkas <code>log_suhu.csv</code>, baris bertambah di bawah baris judul kolom dengan cap waktu yang naik berurutan, dan angka pada baris terakhir sama dengan angka yang sedang tampil di dashboard. Setelah sumber data dihentikan sekitar satu menit, jeda itu terlihat sebagai bagian tanpa titik pada grafik dan sebagai lompatan cap waktu pada berkas, seperti lompatan dari 09:16:00 ke 09:18:30 pada contoh Bab 9.1.</p>
+      <div class="tip">
+        <strong>Tulis alamat berkas secara lengkap, dan sesuaikan bentuknya dengan sistem Anda.</strong> Pada Linux dan macOS bentuknya <code>/home/pengguna/iot/log_suhu.csv</code>, sedangkan pada Windows menjadi <code>C:\Users\Pengguna\iot\log_suhu.csv</code>. Bila Anda hanya menulis <code>log_suhu.csv</code> tanpa alamat, berkasnya tetap dibuat, tetapi di direktori kerja Node-RED yang biasanya bernama <code>.node-red</code> di dalam folder pengguna, bukan di tempat yang Anda duga. Pilih folder yang pasti boleh ditulisi oleh pengguna yang menjalankan Node-RED; bila berkas tidak pernah muncul padahal alamatnya sudah benar, hak tulis pada folder itulah yang pertama perlu dicurigai.
+      </div>
+      <div class="warn">
+        <strong>Dua kekeliruan yang paling sering terjadi pada langkah di atas.</strong> Yang pertama, grafik yang tampak kosong padahal datanya jelas masuk: bila rentang sumbu waktu disetel lebih pendek daripada jeda pengiriman, misalnya jendela satu menit untuk data yang datang setiap lima menit, titik yang lama sudah dibuang dari grafik sebelum titik berikutnya tiba, sehingga kotaknya hampir selalu kosong tanpa ada yang salah pada alur Anda. Jendela waktu harus memuat beberapa kali jeda pengiriman, dan angka 20 menit pada langkah pengisian sumbu waktu di atas dipilih dengan alasan itu. Yang kedua, berkas yang isinya tetap satu baris tetapi angkanya berubah terus: node file masih berjalan dengan tindakan menimpa, bukan menambahkan, jadi periksa pasangan pilihan yang muncul sebagai <code>overwriteFile</code> dan <code>appendNewline</code> pada Bab 9.3 sebelum mencurigai kode node function.
+      </div>
+      <p>Bila di satu titik Anda macet dan penyebabnya tidak terlihat, mintalah bantuan teman atau ajukan pertanyaan di kelas dengan menyertakan tangkapan layar panel debug.</p>
+    </section>
+    <section class="card">
+      <h2>8. Hasil yang Diharapkan</h2>
+      <p>Setelah langkah di atas selesai, tiga hal berikut harus dapat Anda tunjukkan.</p>
+      <ul>
+        <li>Satu grafik garis yang bergerak pada dashboard, berjudul jelas, dengan sumbu vertikal bersatuan dan batas yang Anda tetapkan sendiri.</li>
+        <li>Satu berkas CSV yang diawali satu baris judul kolom, jumlah barisnya bertambah dengan cap waktu berurutan, dan angka pada baris terakhirnya cocok dengan yang tampil di dashboard.</li>
+        <li>Jeda satu menit yang Anda buat sengaja, terlihat pada grafik sebagai bagian tanpa titik data dan pada berkas sebagai lompatan cap waktu.</li>
+      </ul>
+      <h3>8.1 Jika hasilnya tidak seperti itu</h3>
+      <div class="table-scroll" tabindex="0">
+        <table>
+        <thead>
+          <tr><th>Gejala</th><th>Kemungkinan penyebab</th><th>Yang perlu diperiksa</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Grafik tetap kosong meski gauge bergerak</td><td>Payload bukan angka murni, misalnya masih teks JSON</td><td>Node debug tepat sebelum grafik; nilai harus tampil sebagai angka, tidak diapit tanda kutip</td></tr>
+          <tr><td>Garis melompat-lompat sangat ekstrem</td><td>Rentang sumbu vertikal dibiarkan otomatis</td><td>Batas minimum dan maksimum pada pengaturan grafik, lihat Bab 6</td></tr>
+          <tr><td>Berkas CSV tidak muncul sama sekali</td><td>Alamat berkas salah atau folder tujuan tidak ada</td><td>Alamat lengkap pada node file, pilihan pembuatan direktori, dan pesan merah pada panel debug</td></tr>
+          <tr><td>Berkas hanya berisi satu baris yang berubah</td><td>Node file masih menimpa berkas, bukan menambahkan</td><td>Pilihan tindakan dan pilihan penambahan baris baru pada node file</td></tr>
+          <tr><td>Isi berkas menumpuk pada satu kolom ketika dibuka di lembar sebar</td><td>Pemisah kolom dan tanda desimal belum ditetapkan saat berkas dibuka</td><td>Pengaturan impor pada aplikasi lembar sebar, dan isi berkas apa adanya lewat penyunting teks, lihat Bab 9</td></tr>
+        </tbody>
+        </table>
+      </div>
+    </section>
+    <section class="card">
+      <h2>9. Contoh Lengkap: Isi Berkas CSV dan Konfigurasi Node</h2>
+      <h3>9.1 Isi berkas riwayat</h3>
+      <p>Berikut potongan sebenarnya dari sebuah berkas <code>log_suhu.csv</code>. Baris pertama adalah baris judul kolom, ditulis satu kali saja ketika berkas pertama dibuat, dan tidak ditulis oleh Node-RED: node file yang disetel menambahkan hanya menuliskan apa yang dikirimkan kepadanya, jadi judul kolom itu disiapkan sendiri seperti pada langkah keempat belas Bab 7. Berkas tanpa baris judul tetap terbaca oleh program, tetapi beberapa bulan kemudian tidak ada lagi yang ingat kolom keempat berisi apa.</p>
+      <div class="code"><pre>waktu,device,parameter,nilai,satuan
+2026-08-30 09:15:00,esp32-lab-01,suhu,28.9,C
+2026-08-30 09:15:20,esp32-lab-01,suhu,29.2,C
+2026-08-30 09:15:30,esp32-lab-01,suhu,29.4,C
+2026-08-30 09:15:50,esp32-lab-01,suhu,29.7,C
+2026-08-30 09:16:00,esp32-lab-01,suhu,31.6,C
+2026-08-30 09:18:30,esp32-lab-01,suhu,29.8,C
+2026-08-30 09:18:40,esp32-lab-01,suhu,29.6,C
+2026-08-30 09:18:50,esp32-lab-01,suhu,29.5,C</pre></div>
+      <p>Kelima kolom selalu muncul dengan urutan yang sama. <code>waktu</code> berisi <code>2026-08-30 09:15:00</code>, yaitu tanggal dan jam saat nilai diterima, ditulis tahun-bulan-tanggal agar dapat diurutkan sebagai teks. <code>device</code> berisi <code>esp32-lab-01</code> sebagai nama sumber, <code>parameter</code> berisi <code>suhu</code>, <code>nilai</code> berisi angka seperti <code>29.4</code> dengan titik desimal, dan <code>satuan</code> berisi <code>C</code> agar angka itu tidak mungkin salah dibaca.</p>
+      <p>Dua hal terbaca dari potongan itu tanpa perlu grafik. Nilai pada 09:16:00 melompat dari 29,7 ke 31,6 dalam sepuluh detik, terlalu cepat untuk suhu ruangan sehingga patut dicurigai sebagai gangguan pembacaan. Selain itu tidak ada baris antara 09:16:00 dan 09:18:30, artinya sistem berhenti mengirim selama dua setengah menit.</p>
+      <p>Berkas ini dapat dibuka dengan dua cara, dan keduanya berguna. Penyunting teks memperlihatkan isinya apa adanya, dan itulah cara paling jujur untuk memastikan barisnya benar-benar bertambah serta jumlah komanya tetap sama pada setiap baris. Aplikasi lembar sebar memperlihatkannya sebagai tabel yang dapat diurutkan, dijumlahkan, dan digambar, tetapi ada satu jebakan: pada pengaturan bahasa Indonesia koma dipakai sebagai tanda desimal, sehingga <code>28.9</code> bisa terbaca sebagai teks, atau lebih buruk lagi sebagai <code>289</code>. Karena itu jangan membuka berkas CSV dengan klik ganda; pakai menu impor, lalu tetapkan sendiri bahwa pemisah kolomnya adalah koma dan tanda desimalnya adalah titik. Bila seluruh isi satu baris menumpuk pada satu kolom, pemisah kolom itulah yang belum disetel, bukan berkas Anda yang rusak.</p>
+      <h3>9.2 Kode node function penyusun baris</h3>
+      <p>Node file hanya menuliskan apa yang diterimanya. Baris CSV lengkap beserta cap waktunya disusun lebih dahulu oleh satu node function berikut.</p>
+      <div class="code"><pre>// 1. Ambil nilai yang masuk dan pastikan bentuknya angka
+var nilai = Number(msg.payload);
+
+// 2. Tolak data yang bukan angka agar berkas tidak rusak
+if (isNaN(nilai)) {
+    node.warn("bukan angka, baris tidak dicatat: " + msg.payload);
+    return null;
+}
+
+// 3. Ambil waktu dari komputer yang menjalankan Node-RED
+var t = new Date();
+var dua = function (n) { return String(n).padStart(2, "0"); };
+var waktu = t.getFullYear() + "-" + dua(t.getMonth() + 1) + "-" + dua(t.getDate())
+          + " " + dua(t.getHours()) + ":" + dua(t.getMinutes()) + ":" + dua(t.getSeconds());
+
+// 4. Susun satu baris: waktu,device,parameter,nilai,satuan
+msg.payload = waktu + ",esp32-lab-01,suhu," + nilai.toFixed(1) + ",C";
+
+// 5. Teruskan ke node file
+return msg;</pre></div>
+      <ul>
+        <li><strong>Bagian 1.</strong> <code>msg.payload</code> adalah isi pesan yang datang dari node sebelumnya. <code>Number()</code> mengubahnya menjadi angka bila bentuknya masih teks, misalnya <code>"29.4"</code> yang tiba lewat MQTT, sebab teks dan angka berperilaku berbeda ketika dibandingkan maupun dibulatkan.</li>
+        <li><strong>Bagian 2.</strong> <code>Number()</code> hanya berguna bila hasilnya diperiksa: <code>return null</code> membuang pesan sehingga tidak ada baris yang ditulis, dan inilah yang mencegah kata seperti <code>nan</code> masuk ke berkas, sementara <code>node.warn</code> membuat penolakan tetap terlihat pada panel debug.</li>
+        <li><strong>Bagian 3.</strong> Menyusun cap waktu tahun-bulan-tanggal. Fungsi <code>dua</code> menambahkan nol di depan agar jam 9 tertulis <code>09</code>, sehingga pengurutan teks tetap benar.</li>
+        <li><strong>Bagian 4.</strong> Menggabungkan lima kolom dengan koma. <code>toFixed(1)</code> menyeragamkan angka desimal agar berkas tidak bercampur antara <code>29</code> dan <code>29.40000001</code>.</li>
+      </ul>
+      <p>Menambah satu parameter lagi tidak mengubah susunan itu, hanya menambah baris. Bila pesan yang masuk berupa objek dengan dua bidang seperti <code>{"suhu":29.4,"lembap":62}</code>, bagian 4 diganti dengan bentuk berikut, dan node file akan menuliskan keduanya berurutan.</p>
+      <div class="code"><pre>// 4b. Dua parameter dari satu pesan, tetap lima kolom tiap baris
+var baris = [];
+baris.push(waktu + ",esp32-lab-01,suhu," + Number(msg.payload.suhu).toFixed(1) + ",C");
+baris.push(waktu + ",esp32-lab-01,lembap," + Number(msg.payload.lembap).toFixed(1) + ",%");
+msg.payload = baris.join("\n");</pre></div>
+      <p>Perhatikan bahwa jumlah kolom tiap baris tetap lima. Inilah keuntungan bentuk yang dipilih pada Bab 5: parameter baru masuk sebagai baris baru, bukan sebagai kolom baru, sehingga baris judul kolom tidak pernah perlu diubah dan data lama tetap terbaca berdampingan dengan data baru. Satu catatan kecil, dengan bentuk ini pemeriksaan <code>isNaN</code> pada bagian 2 perlu dilakukan untuk tiap bidang, bukan sekali untuk seluruh pesan.</p>
+      <h3>9.3 Potongan konfigurasi node grafik dan node berkas</h3>
+      <p>Potongan berikut adalah bagian penting dari hasil ekspor flow, ditampilkan untuk dibaca dan dibandingkan dengan pengaturan Anda, bukan untuk disalin utuh.</p>
+      <div class="code"><pre>{
+  "type": "file",
+  "filename": "/home/pengguna/iot/log_suhu.csv",
+  "appendNewline": true,
+  "createDir": true,
+  "overwriteFile": "false"
+},
+{
+  "type": "ui_chart",
+  "label": "Suhu lab esp32-lab-01",
+  "chartType": "line",
+  "removeOlder": "20",
+  "removeOlderUnit": "60",
+  "ymin": "20",
+  "ymax": "40"
+}</pre></div>
+      <ul>
+        <li><code>"overwriteFile": "false"</code> bersama <code>"appendNewline": true</code> adalah pasangan yang membuat berkas bertambah baris. Bila yang pertama bernilai benar, setiap data baru menghapus seluruh isi berkas.</li>
+        <li><code>"removeOlder": "20"</code> dengan <code>"removeOlderUnit": "60"</code> berarti jendela dua puluh menit terakhir; titik yang lebih tua dibuang dari grafik, tetapi tetap ada di berkas CSV. <code>"ymin"</code> dan <code>"ymax"</code> adalah batas sumbu vertikal yang ditetapkan sendiri; bila kosong, grafik memakai rentang otomatis dengan akibat yang dibahas pada Bab 6.</li>
+        <li>Nama properti pada hasil ekspor dapat berbeda antarversi dashboard, misalnya <code>"type": "ui_chart"</code> pada versi yang beredar luas dan nama lain pada versi yang lebih baru. Yang tidak berubah adalah maknanya: selalu ada properti untuk judul, tipe grafik, panjang jendela waktu, serta batas bawah dan batas atas sumbu. Karena itu bandingkan artinya, bukan ejaannya. Untuk melihat bentuk ekspor pada versi Anda sendiri, pilih node grafik pada kanvas lalu gunakan menu ekspor pada editor.</li>
+      </ul>
+      <h3>9.4 Bentuk pengiriman ke layanan cloud</h3>
+      <p>Pengiriman ke ThingSpeak berbentuk satu permintaan web biasa. Nilai dititipkan pada alamatnya, dan kunci tulis saluran menjadi tanda bahwa pengirimnya berhak.</p>
+      <div class="code"><pre>GET https://api.thingspeak.com/update?api_key=KUNCI_TULIS_ANDA&amp;field1=29.4</pre></div>
+      <p>Di Node-RED alamat itu diisikan pada node http request dengan metode GET, didahului node function yang menyusun alamatnya dari nilai terkini. Jawaban layanan berupa satu angka: nomor urut data bila diterima, atau nol bila ditolak, yang hampir selalu berarti kunci tulis salah atau pengiriman terlalu rapat. Penamaan menu pada halaman layanan bisa sedikit berbeda antarversi; yang tidak berubah, kunci tulis selalu ditampilkan berpasangan dengan kunci baca pada halaman kunci milik saluran, dan tiap medan punya nomor tetap yang dipakai sebagai <code>field1</code> dan seterusnya.</p>
+      <p>Pemastian bahwa data benar-benar sampai dilakukan di dua tempat. Yang pertama pada panel debug Node-RED: sambungkan node debug ke keluaran node http request, lalu baca jawabannya, karena angka yang lebih besar dari nol berarti data tercatat beserta nomor urutnya. Yang kedua pada halaman saluran Anda sendiri: buka tampilan privat saluran itu, dan titik baru harus muncul pada grafik medan yang bersangkutan dalam beberapa detik. Bila jawabannya nol padahal kunci tulisnya sudah benar, penyebabnya hampir selalu jarak kirim yang terlalu rapat, jadi perlambat pengiriman lebih dahulu sebelum mencurigai hal lain. Halaman saluran juga menyediakan pengunduhan riwayat dalam bentuk CSV, sehingga isi penyimpanan cloud dapat dibandingkan baris demi baris dengan berkas lokal Anda.</p>
+      <div class="warn">
+        <strong>Kunci tulis adalah kata sandi saluran Anda.</strong> Siapa pun yang memilikinya dapat mengisi saluran Anda dengan data palsu, jadi jangan menuliskannya pada laporan dan jangan mengunggahnya ke penyimpanan bersama. Cara memisahkan kunci dari kode dibahas pada Pertemuan 12 tentang keamanan dan keandalan dasar.
+      </div>
+    </section>
+    <section class="card">
+      <h2>10. Ringkasan Materi</h2>
+      <ul>
+        <li>Data sesaat menjawab berapa nilainya sekarang; hanya riwayat yang dapat menjawab arah, kecepatan, pola, dan kejadian yang sudah lewat.</li>
+        <li>Data berseri waktu adalah kumpulan baris bercap waktu yang tidak pernah ditimpa, dan cap waktu adalah bagian datanya, bukan pelengkap.</li>
+        <li>Interval pengiriman menentukan jumlah baris dan ukuran berkas secara langsung; retensi ditentukan oleh pertanyaan terpanjang yang ingin dijawab.</li>
+        <li>Dua penyimpanan sederhana yang realistis adalah berkas CSV lewat node file dan saluran pada layanan cloud dengan kunci tulis.</li>
+        <li>Satu baris riwayat yang berguna umumnya memuat waktu, device, parameter, nilai, dan satuan.</li>
+        <li>Grafik tren hanya jujur bila satuan, rentang sumbu, dan bagian kosongnya dibaca ikut serta.</li>
+      </ul>
+    </section>
+    <section class="card">
+      <h2>11. Latihan Pemahaman</h2>
+      <p>Jawab lebih dahulu tanpa membuka kunci, lalu bandingkan.</p>
+      <details>
+        <summary>1. Pengiriman tiap 5 detik menghasilkan berapa baris per hari?</summary>
+        <p>17.280 baris, yaitu 12 baris per menit dikali 1.440 menit. Dengan sekitar 45 byte per baris, satu bulan mendekati 23 MB untuk satu parameter.</p>
+      </details>
+      <details>
+        <summary>2. Grafik memperlihatkan garis lurus panjang tanpa riak. Apa dua kemungkinannya?</summary>
+        <p>Nilainya benar-benar tidak berubah, atau data berhenti datang dan grafik menyambungkan dua titik yang terpisah jauh. Pemastiannya dengan memeriksa apakah pada rentang waktu itu ada baris di berkas riwayat.</p>
+      </details>
+      <details>
+        <summary>3. Berkas CSV Anda bertambah baris dengan benar, tetapi ketika dibuka pada aplikasi lembar sebar seluruh isi baris menumpuk pada satu kolom. Apa penyebabnya?</summary>
+        <p>Berkasnya tidak rusak; yang belum ditetapkan adalah pemisah kolom pada saat berkas dibuka. Buka melalui menu impor, tetapkan koma sebagai pemisah kolom dan titik sebagai tanda desimal, lalu isinya akan terbagi menjadi lima kolom. Pembanding yang selalu benar adalah penyunting teks, karena penyunting teks memperlihatkan isi berkas apa adanya.</p>
+      </details>
+      <p>Lima pertanyaan reflektif berikut dijawab dengan kalimat sendiri: (1) pertanyaan pemantauan apa yang ingin Anda jawab dari riwayat sistem Anda; (2) interval berapa yang Anda pilih dan apa alasannya; (3) berapa lama data perlu disimpan untuk menjawab pertanyaan itu; (4) mengapa rentang sumbu vertikal yang Anda pakai adalah pilihan yang jujur; (5) apa yang akan hilang bila sistem Anda hanya menyimpan nilai terakhir.</p>
+    </section>
+    <section class="card">
+      <h2>12. Tugas Latihan Pertemuan 11</h2>
+      <p>Tambahkan visualisasi tren untuk satu parameter pada dashboard yang sudah Anda bangun, lengkap dengan penyimpanan riwayatnya. Pilih parameter yang paling berarti bagi sistem Anda, dan pastikan grafiknya dapat dibaca orang lain tanpa penjelasan tambahan.</p>
+      <ul>
+        <li>Tangkapan layar dashboard yang memperlihatkan grafik tren berisi data minimal sepuluh menit.</li>
+        <li>Sepuluh baris pertama berkas riwayat Anda, atau tangkapan layar grafik pada saluran cloud.</li>
+        <li>Satu halaman penjelasan: parameter yang dipilih, interval kirim beserta alasannya, rentang sumbu yang dipakai beserta alasannya, dan satu paragraf pembacaan tren.</li>
+      </ul>
+      <div class="table-scroll" tabindex="0">
+        <table>
+        <thead>
+          <tr><th>Aspek</th><th>Bobot</th><th>Kriteria nilai penuh</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Grafik tren berfungsi</td><td>30%</td><td>Grafik bergerak mengikuti data baru, bertipe garis, dan berada pada dashboard yang sama</td></tr>
+          <tr><td>Riwayat tersimpan dan relevan</td><td>25%</td><td>Baris bertambah dengan cap waktu berurutan dan kolom yang benar-benar dibutuhkan</td></tr>
+          <tr><td>Keterbacaan visualisasi</td><td>25%</td><td>Judul, satuan, dan rentang sumbu jelas serta tidak menyesatkan</td></tr>
+          <tr><td>Alasan interval dan retensi</td><td>10%</td><td>Interval dan lama penyimpanan dikaitkan dengan pertanyaan pemantauan, bukan sekadar disebut</td></tr>
+          <tr><td>Pembacaan tren</td><td>10%</td><td>Penjelasan menyebut apa yang tampak pada grafik dan apa artinya bagi sistem</td></tr>
+        </tbody>
+        </table>
+      </div>
+    </section>
+    <section class="card">
+      <h2>13. Checkpoint Evaluasi Pertemuan 11</h2>
+      <p>Pertemuan ini dianggap tuntas bila butir berikut dapat Anda lakukan sendiri. Daftar ini sekaligus dipakai sebagai pemeriksaan diri sebelum tugas dikumpulkan.</p>
+      <div class="mini">
+        <div class="label">Target minimal pertemuan ini</div>
+        <p>Ada grafik atau log riwayat yang benar-benar berisi data, data yang tersimpan relevan dengan tujuan pemantauan, dan visualisasinya terbaca dengan benar.</p>
+      </div>
+      <div class="table-scroll" tabindex="0">
+        <table>
+        <thead>
+          <tr><th>Yang diperiksa</th><th>Cara memastikan sendiri</th><th>Bila belum tercapai</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Grafik atau log riwayat sudah ada</td><td>Buka dashboard dan berkas riwayat berdampingan seperti pada Bab 8; grafik bergerak dan jumlah baris berkas bertambah</td><td>Ulangi Bab 7 dan cocokkan gejalanya dengan tabel pada Bab 8</td></tr>
+          <tr><td>Data yang tersimpan relevan</td><td>Untuk tiap kolom, sebutkan satu pertanyaan pemantauan yang membutuhkannya, memakai ukuran pada Bab 5</td><td>Baca ulang Bab 5, dan Bab 3 untuk interval serta retensinya</td></tr>
+          <tr><td>Visualisasi terbaca dengan benar</td><td>Minta teman membaca grafik Anda tanpa penjelasan; ia harus dapat menyebut parameter, satuan, dan rentang waktunya</td><td>Baca ulang Bab 6, terutama bagian rentang sumbu</td></tr>
+        </tbody>
+        </table>
+      </div>
+      <p class="footer-note">Pertemuan ini berada di antara dua checkpoint besar: CP-2 pada Pertemuan 8 dan CP-3 pada Pertemuan 12, setelah CP-1 pada Pertemuan 4 dan sebelum CP-4 pada Pertemuan 16. Tugas latihan mingguan berbobot 20 persen dari nilai akhir.</p>
+    </section>
+    <section class="card">
+      <h2>14. Referensi Praktis</h2>
+      <dl class="gloss">
+        <dt>Dokumentasi ThingSpeak — <code>thingspeak.com</code></dt>
+        <dd>Keterangan resmi tentang saluran, medan data, kunci tulis, dan batas laju pengiriman akun gratis. Dipakai bersama Bab 4 dan Bab 9.</dd>
+        <dt>Dokumentasi Node-RED — <code>nodered.org</code></dt>
+        <dd>Keterangan node inti termasuk node file dan node grafik pada dashboard, beserta contoh flow. Dipakai bersama Bab 7 dan Bab 9.</dd>
+        <dt>Topik pencatatan telemetri dasar</dt>
+        <dd>Bila ingin memperdalam, telusuri dengan kata kunci <code>time series logging</code>, <code>data retention</code>, dan <code>csv logging</code>. Menyambung dengan Bab 2 dan Bab 3.</dd>
+      </dl>
+      <p class="footer-note">Alamat sumber ditulis sebagai nama domain karena struktur halaman sebuah situs berubah dari waktu ke waktu, sehingga tautan langsung cepat menjadi tidak berlaku.</p>
+    </section>
+    <footer class="pagenum">
+      <span class="pagenum-seri">Materi Pertemuan 11</span>
+      <span class="pagenum-no">Halaman 11 dari 16</span>
+    </footer>
+  </div>
+</body>
+</html>

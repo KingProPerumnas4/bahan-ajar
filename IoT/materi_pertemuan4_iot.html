@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Materi Pertemuan 4 - Aktuator Dasar IoT</title>
+  <link rel="stylesheet" href="assets/materi.css" />
+</head>
+<body>
+  <div class="wrap">
+    <section class="hero">
+      <span class="badge">Pertemuan 4</span>
+      <h1>Aktuator Dasar: Buzzer, Servo, dan Relay Virtual</h1>
+      <p class="lead">Materi ini membahas konsep aktuator, hubungan input sensor dengan respons keluaran, pengenalan PWM secara sederhana, serta praktik simulasi buzzer, servo, dan relay virtual pada ESP32.</p>
+      <div>
+        <span class="pill">Konsep Aktuator</span>
+        <span class="pill">Buzzer</span>
+        <span class="pill">Servo</span>
+        <span class="pill">Relay Virtual</span>
+        <span class="pill">If-Else</span>
+        <span class="pill">PWM Sederhana</span>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Capaian Pembelajaran Pertemuan 4</h2>
+      <div class="grid two">
+        <div class="mini">
+          <div class="label">Yang dipahami</div>
+          <ul>
+            <li>Perbedaan sensor dan aktuator dalam sistem IoT.</li>
+            <li>Fungsi buzzer, servo, dan relay virtual sebagai keluaran sistem.</li>
+            <li>Hubungan logika kondisi dengan respons aktuator.</li>
+            <li>Pengenalan PWM secara sederhana untuk mengatur perilaku output tertentu.</li>
+          </ul>
+        </div>
+        <div class="mini">
+          <div class="label">Yang dapat dilakukan</div>
+          <ul>
+            <li>Mengaktifkan buzzer saat kondisi tertentu.</li>
+            <li>Menggerakkan servo virtual ke sudut tertentu.</li>
+            <li>Membuat simulasi relay virtual untuk on/off beban.</li>
+            <li>Menerapkan logika <code>if-else</code> agar aktuator merespons input dengan benar.</li>
+          </ul>
+        </div>
+      </div>
+      <p>Fokus Pertemuan 4 adalah konsep aktuator, output terkontrol kondisi, dan pengenalan PWM secara sederhana. Aktivitas praktiknya meliputi mengaktifkan buzzer, menggerakkan servo virtual, dan membuat simulasi relay virtual. Target minimumnya adalah Anda mampu menghubungkan input sensor dengan respons aktuator.</p>
+    </section>
+
+    <section class="card">
+      <h2>1. Pengantar: Dari Sensor ke Aktuator</h2>
+      <p>Pada pertemuan sebelumnya, sistem lebih banyak berfokus pada bagaimana perangkat membaca input. Pada Pertemuan 4, fokus bergeser ke bagaimana sistem <strong>memberi respons</strong>. Respons ini diwujudkan melalui komponen yang disebut <strong>aktuator</strong>. Jika sensor bertugas “merasakan” kondisi lingkungan, maka aktuator bertugas “bertindak” berdasarkan keputusan program.</p>
+      <p>Dalam sistem IoT, aktuator sangat penting karena membuat sistem tidak hanya mampu memantau, tetapi juga mampu mengeksekusi aksi. Saat sensor mendeteksi kondisi tertentu, program memproses data, lalu aktuator melakukan keluaran yang bisa dilihat, didengar, atau menggerakkan mekanisme fisik.</p>
+      <div class="analogy">
+        <strong>Analogi dunia nyata:</strong> bayangkan sebuah gedung dengan petugas keamanan. Sensor seperti mata dan telinga petugas yang mendeteksi keadaan. Aktuator seperti tangan dan suara petugas yang kemudian membuka pintu, menyalakan alarm, atau memberi sinyal peringatan. Tanpa aktuator, sistem hanya tahu apa yang terjadi, tetapi tidak bisa bertindak.
+      </div>
+
+      <h3>1.1 Sensor dan aktuator: dua peran yang berbeda</h3>
+      <div class="table-scroll" tabindex="0">
+        <table>
+        <thead>
+          <tr><th>Komponen</th><th>Peran utama</th><th>Contoh</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Sensor</td><td>Membaca kondisi dari lingkungan</td><td>LDR, potensiometer, sensor suhu, sensor jarak</td></tr>
+          <tr><td>Aktuator</td><td>Menjalankan aksi sebagai keluaran sistem</td><td>LED, buzzer, servo, relay, motor</td></tr>
+        </tbody>
+        </table>
+      </div>
+      <p>Perbedaan ini penting karena pada desain IoT, input dan output harus dipahami sebagai dua sisi dari alur sistem. Sensor memasukkan informasi ke program, sedangkan aktuator menampilkan akibat dari keputusan program.</p>
+
+      <h3>1.2 Output terkontrol kondisi</h3>
+      <p>Ada penekanan khusus pada <strong>output terkontrol kondisi</strong>. Artinya, aktuator tidak aktif sembarangan. Aktuator bekerja karena program menemukan kondisi tertentu, misalnya:</p>
+      <ul>
+        <li>Jika sensor aktif, buzzer menyala.</li>
+        <li>Jika tombol ditekan, servo bergerak ke sudut 90 derajat.</li>
+        <li>Jika nilai input melewati ambang tertentu, relay berubah dari OFF ke ON.</li>
+      </ul>
+      <p>Logika seperti ini memperkenalkan Anda pada konsep hubungan sebab-akibat dalam pemrograman sistem tertanam: <strong>input → proses → output</strong>.</p>
+
+      <div class="svgbox" tabindex="0">
+        <svg viewBox="0 0 1000 240" width="100%" role="img" aria-label="Diagram alur input proses output aktuator">
+          <rect x="40" y="70" width="220" height="100" rx="18" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+          <rect x="390" y="70" width="220" height="100" rx="18" fill="#dcfce7" stroke="#15803d" stroke-width="2"/>
+          <rect x="740" y="70" width="220" height="100" rx="18" fill="#fee2e2" stroke="#be123c" stroke-width="2"/>
+          <text x="150" y="112" text-anchor="middle" font-size="26" font-weight="700">Input</text>
+          <text x="150" y="138" text-anchor="middle" font-size="16">sensor / tombol / kondisi</text>
+          <text x="500" y="112" text-anchor="middle" font-size="26" font-weight="700">Proses</text>
+          <text x="500" y="138" text-anchor="middle" font-size="16">logika if-else pada ESP32</text>
+          <text x="850" y="112" text-anchor="middle" font-size="26" font-weight="700">Output</text>
+          <text x="850" y="138" text-anchor="middle" font-size="16">buzzer / servo / relay</text>
+          <line x1="260" y1="120" x2="390" y2="120" stroke="#2563eb" stroke-width="4"/>
+          <polygon points="390,120 376,112 376,128" fill="#2563eb"/>
+          <line x1="610" y1="120" x2="740" y2="120" stroke="#2563eb" stroke-width="4"/>
+          <polygon points="740,120 726,112 726,128" fill="#2563eb"/>
+        </svg>
+      </div>
+
+      <h3>1.3 Mengapa aktuator penting dalam IoT?</h3>
+      <p>Jika sebuah sistem hanya membaca data, maka sistem itu baru sampai tahap monitoring. Ketika sistem mulai memberi tindakan berdasarkan data, maka sistem berkembang menuju otomasi. Aktuator menjadi jembatan antara keputusan digital dan aksi nyata. Dalam skala kecil, aksi itu bisa berupa bunyi buzzer atau gerak servo. Dalam skala industri, konsep yang sama digunakan untuk membuka katup, menyalakan mesin, atau memutus aliran listrik.</p>
+    </section>
+
+    <section class="card">
+      <h2>2. Mengenal Tiga Aktuator Dasar</h2>
+      <p>Pertemuan ini berfokus pada tiga aktuator yang sangat cocok untuk tahap awal pembelajaran: buzzer, servo, dan relay virtual. Ketiganya mewakili tiga bentuk keluaran yang berbeda, yaitu <strong>suara</strong>, <strong>gerak posisi</strong>, dan <strong>saklar elektronik</strong>. Dengan mempelajari tiga aktuator ini, Anda mulai melihat bahwa output dalam sistem IoT tidak selalu berupa lampu, tetapi bisa berupa tanda suara, pergerakan mekanik, atau kontrol terhadap perangkat lain.</p>
+
+      <h3>2.1 Buzzer</h3>
+      <p>Buzzer adalah aktuator yang menghasilkan bunyi. Dalam sistem sederhana, buzzer sering dipakai sebagai alarm atau penanda kondisi. Misalnya, saat sensor mendeteksi objek terlalu dekat, buzzer berbunyi sebagai peringatan. Buzzer membantu memperjelas bahwa sistem dapat memberikan output yang langsung terdengar oleh manusia.</p>
+      <div class="analogy">
+        <strong>Analogi dunia nyata:</strong> buzzer seperti bel pintu atau alarm parkir mobil. Saat kondisi tertentu terjadi, bunyi digunakan sebagai tanda agar orang segera sadar dan merespons.</div>
+
+      <h3>2.2 Servo</h3>
+      <p>Servo adalah aktuator yang dapat bergerak ke sudut tertentu. Tidak seperti motor DC biasa yang berputar terus, servo lebih fokus pada <strong>kontrol posisi</strong>. Karena itu servo sangat cocok untuk simulasi gerbang otomatis, lengan mekanik sederhana, atau penunjuk sudut.</p>
+      <div class="analogy">
+        <strong>Analogi dunia nyata:</strong> servo seperti palang parkir otomatis. Sistem tidak hanya ingin palang bergerak, tetapi ingin ia berhenti pada sudut tertentu, misalnya tertutup di 0 derajat dan terbuka di 90 derajat.</div>
+
+      <h3>2.3 Relay virtual</h3>
+      <p>Relay adalah saklar yang dikendalikan secara elektrik. Dalam simulasi, relay virtual dipakai untuk memahami konsep ON/OFF beban. Walaupun yang terlihat mungkin hanya simbol atau LED indikator, ide dasarnya penting: sebuah device kecil seperti ESP32 dapat mengendalikan perangkat lain melalui mekanisme saklar.</p>
+      <div class="analogy">
+        <strong>Analogi dunia nyata:</strong> relay seperti petugas yang menekan saklar utama lampu gedung. ESP32 tidak harus menyalakan beban besar secara langsung, tetapi bisa memberi perintah agar saklar tersebut berubah posisi.</div>
+
+      <h3>2.4 Pengenalan PWM secara sederhana</h3>
+      <p>PWM dikenalkan secara sederhana lebih dahulu. PWM atau <em>Pulse Width Modulation</em> adalah teknik mengatur output dengan memanipulasi lebar pulsa sinyal. Pada level awal, Anda tidak harus masuk ke detail elektronik yang rumit. Yang penting dipahami adalah bahwa beberapa aktuator memerlukan sinyal yang lebih terkontrol daripada sekadar HIGH atau LOW.</p>
+      <p>Servo merupakan contoh yang baik untuk memperkenalkan ide ini. Servo tidak hanya butuh kondisi ON atau OFF, melainkan pola sinyal tertentu agar dapat bergerak ke posisi yang diinginkan. Karena itu, pengenalan PWM pada pertemuan ini menjadi jembatan menuju kontrol output yang lebih halus.</p>
+
+      <div class="svgbox" tabindex="0">
+        <svg viewBox="0 0 1040 320" width="100%" role="img" aria-label="Diagram tiga aktuator dasar IoT">
+          <rect x="40" y="60" width="280" height="190" rx="18" fill="#fff7ed" stroke="#ea580c" stroke-width="2"/>
+          <rect x="380" y="60" width="280" height="190" rx="18" fill="#eef2ff" stroke="#4f46e5" stroke-width="2"/>
+          <rect x="720" y="60" width="280" height="190" rx="18" fill="#eff6ff" stroke="#2563eb" stroke-width="2"/>
+          <text x="180" y="105" text-anchor="middle" font-size="28" font-weight="700">Buzzer</text>
+          <text x="180" y="138" text-anchor="middle" font-size="17">Output berupa bunyi</text>
+          <text x="180" y="170" text-anchor="middle" font-size="17">Cocok untuk alarm</text>
+          <text x="180" y="202" text-anchor="middle" font-size="17">Respons cepat & jelas</text>
+          <text x="520" y="105" text-anchor="middle" font-size="28" font-weight="700">Servo</text>
+          <text x="520" y="138" text-anchor="middle" font-size="17">Output berupa posisi sudut</text>
+          <text x="520" y="170" text-anchor="middle" font-size="17">Cocok untuk gerbang</text>
+          <text x="520" y="202" text-anchor="middle" font-size="17">Memerlukan kontrol sinyal</text>
+          <text x="860" y="105" text-anchor="middle" font-size="28" font-weight="700">Relay</text>
+          <text x="860" y="138" text-anchor="middle" font-size="17">Output berupa saklar</text>
+          <text x="860" y="170" text-anchor="middle" font-size="17">Cocok untuk on/off beban</text>
+          <text x="860" y="202" text-anchor="middle" font-size="17">Logika digital sangat kuat</text>
+          <line x1="180" y1="250" x2="180" y2="292" stroke="#ea580c" stroke-width="4"/>
+          <line x1="520" y1="250" x2="520" y2="292" stroke="#4f46e5" stroke-width="4"/>
+          <line x1="860" y1="250" x2="860" y2="292" stroke="#2563eb" stroke-width="4"/>
+          <text x="180" y="312" text-anchor="middle" font-size="15">suara</text>
+          <text x="520" y="312" text-anchor="middle" font-size="15">gerak</text>
+          <text x="860" y="312" text-anchor="middle" font-size="15">saklar</text>
+        </svg>
+      </div>
+
+      <h3>2.5 Hubungan aktuator dengan logika program</h3>
+      <p>Tiga aktuator tadi terlihat berbeda, tetapi cara berpikir programnya serupa. Program mengecek kondisi, lalu memilih respons. Jika kondisi benar, aktuator diberi perintah tertentu. Jika tidak, aktuator dimatikan, dikembalikan ke posisi awal, atau dibiarkan pada keadaan aman. Pola ini membuat <code>if-else</code> menjadi struktur logika yang sangat penting pada pertemuan ini.</p>
+    </section>
+
+    <section class="card">
+      <h2>3. Logika If-Else sebagai Jembatan Input ke Output</h2>
+      <p>Checkpoint evaluasi pertemuan ini menyebut bahwa Anda harus mampu membuat aktuator merespons kondisi dengan benar dan memahami bahwa logika <code>if-else</code> berjalan. Ini berarti Anda bukan hanya diminta menyalakan aktuator, tetapi memahami <strong>mengapa</strong> aktuator menyala pada kondisi tertentu dan tidak menyala pada kondisi lain.</p>
+      <p>Struktur <code>if-else</code> memungkinkan program mengambil keputusan. Dengan kata lain, device tidak hanya menjalankan perintah kaku, tetapi melakukan pemilihan aksi berdasarkan input yang diterima.</p>
+      <div class="code"><pre>if (sensorAktif) {
+  // jalankan respons
+} else {
+  // kembali ke kondisi aman
+}</pre></div>
+      <p>Walaupun singkat, struktur di atas mewakili inti otomasi. Program memeriksa kondisi <code>sensorAktif</code>. Jika benar, maka respons dijalankan. Jika salah, sistem masuk ke kondisi lain. Logika ini nanti dapat diterapkan ke buzzer, servo, relay, maupun kombinasi beberapa aktuator sekaligus.</p>
+      <div class="analogy">
+        <strong>Analogi dunia nyata:</strong> seperti penjaga pintu otomatis. Jika kartu akses valid, pintu dibuka. Jika tidak valid, pintu tetap tertutup. Satu keputusan kecil menghasilkan dua perilaku sistem yang berbeda.</div>
+    </section>
+
+    <section class="card">
+      <h2>4. Implementasi Praktis: Simulasi Portal Otomatis Sederhana</h2>
+      <p>Tugas latihan Pertemuan 4 adalah membuat simulasi <strong>portal otomatis sederhana: sensor aktif → servo bergerak → buzzer bunyi</strong>. Skenario ini sangat baik karena menunjukkan hubungan langsung antara input dan dua jenis output berbeda sekaligus, yaitu suara dan gerakan.</p>
+
+      <h3>4.1 Alur kerja sistem</h3>
+      <ol>
+        <li>Sistem membaca status input, misalnya dari tombol atau sensor virtual.</li>
+        <li>Jika input aktif, program menganggap ada objek atau kondisi yang memicu portal.</li>
+        <li>Servo bergerak ke posisi membuka portal.</li>
+        <li>Buzzer berbunyi sebagai tanda bahwa portal sedang aktif.</li>
+        <li>Jika input tidak aktif, servo kembali ke posisi semula dan buzzer mati.</li>
+      </ol>
+
+      <div class="svgbox" tabindex="0">
+        <svg viewBox="0 0 1080 250" width="100%" role="img" aria-label="Diagram portal otomatis sederhana">
+          <rect x="20" y="75" width="180" height="100" rx="18" fill="#dbeafe" stroke="#2563eb"/>
+          <rect x="240" y="75" width="180" height="100" rx="18" fill="#dcfce7" stroke="#15803d"/>
+          <rect x="460" y="30" width="180" height="80" rx="18" fill="#eef2ff" stroke="#4f46e5"/>
+          <rect x="460" y="140" width="180" height="80" rx="18" fill="#fff7ed" stroke="#ea580c"/>
+          <rect x="700" y="75" width="340" height="100" rx="18" fill="#fee2e2" stroke="#be123c"/>
+          <text x="110" y="115" text-anchor="middle" font-size="24" font-weight="700">Sensor</text>
+          <text x="110" y="140" text-anchor="middle" font-size="16">tombol / trigger</text>
+          <text x="330" y="115" text-anchor="middle" font-size="24" font-weight="700">ESP32</text>
+          <text x="330" y="140" text-anchor="middle" font-size="16">if-else</text>
+          <text x="550" y="77" text-anchor="middle" font-size="24" font-weight="700">Servo</text>
+          <text x="550" y="98" text-anchor="middle" font-size="16">portal membuka</text>
+          <text x="550" y="187" text-anchor="middle" font-size="24" font-weight="700">Buzzer</text>
+          <text x="550" y="208" text-anchor="middle" font-size="16">alarm berbunyi</text>
+          <text x="870" y="115" text-anchor="middle" font-size="24" font-weight="700">Respons Sistem</text>
+          <text x="870" y="140" text-anchor="middle" font-size="16">akses terbuka dan ada sinyal bunyi</text>
+          <line x1="200" y1="125" x2="240" y2="125" stroke="#2563eb" stroke-width="4"/>
+          <polygon points="240,125 226,117 226,133" fill="#2563eb"/>
+          <line x1="420" y1="110" x2="460" y2="70" stroke="#2563eb" stroke-width="4"/>
+          <polygon points="460,70 446,74 452,84" fill="#2563eb"/>
+          <line x1="420" y1="140" x2="460" y2="180" stroke="#2563eb" stroke-width="4"/>
+          <polygon points="460,180 448,167 441,177" fill="#2563eb"/>
+          <line x1="640" y1="70" x2="700" y2="105" stroke="#2563eb" stroke-width="4"/>
+          <polygon points="700,105 687,95 681,106" fill="#2563eb"/>
+          <line x1="640" y1="180" x2="700" y2="145" stroke="#2563eb" stroke-width="4"/>
+          <polygon points="700,145 681,144 687,155" fill="#2563eb"/>
+        </svg>
+      </div>
+
+      <h3>4.2 Mengapa skenario ini efektif untuk belajar?</h3>
+      <p>Skenario ini menggabungkan dua ide penting sekaligus. Pertama, ada hubungan sebab-akibat yang mudah dipahami. Kedua, ada lebih dari satu aktuator yang harus dikelola dalam satu logika program. Artinya Anda belajar bahwa satu input dapat memicu beberapa aksi secara bersamaan.</p>
+      <div class="analogy">
+        <strong>Analogi dunia nyata:</strong> seperti gerbang parkir kampus. Saat kartu atau sensor valid, palang terbuka dan terdengar bunyi notifikasi. Sistem tidak hanya melakukan satu aksi, tetapi kombinasi aksi yang saling melengkapi.</div>
+    </section>
+
+    <section class="card">
+      <h2>5. Contoh Kode dan Penjelasan Terperinci</h2>
+      <p>Berikut contoh kode sederhana yang menggambarkan portal otomatis berbasis tombol atau sensor digital. Ketika input aktif, servo bergerak ke 90 derajat dan buzzer menyala. Ketika input tidak aktif, servo kembali ke 0 derajat dan buzzer dimatikan.</p>
+      <div class="code"><pre>#include &lt;ESP32Servo.h&gt;
+
+const int sensorPin = 15;
+const int buzzerPin = 2;
+const int servoPin = 18;
+
+Servo portalServo;
+
+void setup() {
+  pinMode(sensorPin, INPUT);
+  pinMode(buzzerPin, OUTPUT);
+  portalServo.attach(servoPin);
+  portalServo.write(0);
+}
+
+void loop() {
+  int sensorState = digitalRead(sensorPin);
+
+  if (sensorState == HIGH) {
+    digitalWrite(buzzerPin, HIGH);
+    portalServo.write(90);
+  } else {
+    digitalWrite(buzzerPin, LOW);
+    portalServo.write(0);
+  }
+
+  delay(200);
+}</pre></div>
+
+      <h3>5.1 Gambaran umum kode</h3>
+      <p>Kode ini memperlihatkan satu pola inti dalam embedded programming: membaca input, memutuskan kondisi, lalu mengendalikan output. Walaupun sederhana, pola ini adalah fondasi bagi banyak sistem IoT yang lebih kompleks.</p>
+
+      <h3>5.2 Penjelasan setiap bagian kode</h3>
+      <div class="table-scroll" tabindex="0">
+        <table>
+        <thead>
+          <tr><th>Bagian kode</th><th>Fungsi</th><th>Hubungan dengan teori</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>#include &lt;ESP32Servo.h&gt;</code></td>
+            <td>Memanggil library agar ESP32 dapat mengendalikan servo dengan lebih mudah.</td>
+            <td>Menunjukkan bahwa beberapa aktuator memerlukan bantuan pustaka atau pengaturan sinyal khusus.</td>
+          </tr>
+          <tr>
+            <td><code>const int sensorPin = 15;</code><br/><code>const int buzzerPin = 2;</code><br/><code>const int servoPin = 18;</code></td>
+            <td>Mendefinisikan pin untuk input sensor, buzzer, dan servo.</td>
+            <td>Memetakan hubungan antara logika program dan jalur fisik/virtual pada board.</td>
+          </tr>
+          <tr>
+            <td><code>Servo portalServo;</code></td>
+            <td>Membuat objek servo agar dapat diatur sudutnya melalui program.</td>
+            <td>Menghubungkan teori aktuator servo dengan implementasi program.</td>
+          </tr>
+          <tr>
+            <td><code>pinMode(sensorPin, INPUT);</code></td>
+            <td>Menetapkan pin sensor sebagai masukan.</td>
+            <td>Menegaskan bahwa sistem tetap dimulai dari input.</td>
+          </tr>
+          <tr>
+            <td><code>pinMode(buzzerPin, OUTPUT);</code></td>
+            <td>Menetapkan buzzer sebagai keluaran.</td>
+            <td>Menunjukkan perbedaan peran input dan output.</td>
+          </tr>
+          <tr>
+            <td><code>portalServo.attach(servoPin);</code></td>
+            <td>Menghubungkan objek servo ke pin yang digunakan.</td>
+            <td>Memungkinkan device mengirim sinyal kontrol ke servo.</td>
+          </tr>
+          <tr>
+            <td><code>portalServo.write(0);</code></td>
+            <td>Mengatur posisi awal servo ke 0 derajat.</td>
+            <td>Memberi kondisi awal yang terdefinisi agar sistem stabil.</td>
+          </tr>
+          <tr>
+            <td><code>int sensorState = digitalRead(sensorPin);</code></td>
+            <td>Membaca status input dari pin sensor.</td>
+            <td>Menjadi tahap observasi sebelum sistem bertindak.</td>
+          </tr>
+          <tr>
+            <td><code>if (sensorState == HIGH)</code></td>
+            <td>Memeriksa apakah input sedang aktif.</td>
+            <td>Inti dari output terkontrol kondisi.</td>
+          </tr>
+          <tr>
+            <td><code>digitalWrite(buzzerPin, HIGH);</code></td>
+            <td>Menyalakan buzzer.</td>
+            <td>Contoh respons output berupa bunyi.</td>
+          </tr>
+          <tr>
+            <td><code>portalServo.write(90);</code></td>
+            <td>Menggerakkan servo ke sudut 90 derajat.</td>
+            <td>Contoh respons output berupa posisi mekanis.</td>
+          </tr>
+          <tr>
+            <td><code>else</code> beserta isi bloknya</td>
+            <td>Mengembalikan sistem ke keadaan normal saat input tidak aktif.</td>
+            <td>Menunjukkan pentingnya kondisi aman dalam perancangan sistem.</td>
+          </tr>
+          <tr>
+            <td><code>delay(200);</code></td>
+            <td>Memberi jeda kecil agar pembacaan sistem lebih stabil.</td>
+            <td>Memperlihatkan bahwa waktu juga memengaruhi perilaku program.</td>
+          </tr>
+        </tbody>
+        </table>
+      </div>
+
+      <h3>5.3 Penjelasan alur eksekusi program</h3>
+      <p>Saat board mulai bekerja, fungsi <code>setup()</code> dijalankan satu kali. Di sini pin input dan output disiapkan, lalu servo diatur ke posisi awal 0 derajat. Setelah itu program masuk ke <code>loop()</code>, yang berjalan terus-menerus. Setiap pengulangan, sistem membaca status sensor. Jika status HIGH, buzzer dinyalakan dan servo dibuka ke 90 derajat. Jika tidak, buzzer dimatikan dan servo kembali ke posisi awal.</p>
+      <p>Dengan demikian, program ini benar-benar mempraktikkan teori <strong>input → proses → output</strong>. Input dibaca dari sensor, proses dilakukan melalui logika <code>if-else</code>, dan output diwujudkan pada buzzer serta servo.</p>
+
+      <h3>5.4 Di mana posisi relay virtual dalam pola ini?</h3>
+      <p>Relay virtual dapat dimasukkan dengan pola logika yang sama. Misalnya, ketika sensor aktif, relay ON untuk menyalakan beban virtual, dan ketika sensor tidak aktif, relay OFF. Jadi walaupun contoh kode di atas fokus pada servo dan buzzer, struktur berpikirnya langsung bisa dipindahkan ke relay.</p>
+      <div class="code"><pre>if (sensorState == HIGH) {
+  digitalWrite(relayPin, HIGH);
+} else {
+  digitalWrite(relayPin, LOW);
+}</pre></div>
+      <p>Potongan ini memperjelas bahwa relay sangat cocok untuk memperkenalkan konsep saklar digital. Dibanding servo yang punya sudut dan buzzer yang menghasilkan bunyi, relay lebih menekankan kondisi dua keadaan: hidup atau mati.</p>
+    </section>
+
+    <section class="card">
+      <h2>6. Praktik Terpandu: Buzzer, Servo, dan Relay Virtual</h2>
+      <p>Praktik pertemuan ini dikerjakan di simulator <strong>Wokwi</strong>, jadi tidak ada perangkat fisik yang perlu disiapkan. Praktiknya tiga dan saling bertumpuk: buzzer, lalu servo sehingga portal otomatis pada Bab 4 terbentuk seutuhnya, lalu relay virtual sebagai keluaran saklar. Kodenya memakai contoh pada Bab 5 dan tidak ditulis ulang di sini.</p>
+
+      <h3>6.1 Menyiapkan lingkungan kerja di simulator</h3>
+      <ol class="step">
+        <li>Buka <strong>wokwi.com</strong>, pilih <strong>New Project</strong>, lalu pilih board <strong>ESP32</strong>. Simulator berjalan di browser, tidak ada yang perlu diinstal.</li>
+        <li>Kenali empat bagian: <strong>panel kode</strong> berisi <code>sketch.ino</code>, <strong>panel rangkaian</strong> di sisi kanan, tab <code>diagram.json</code> di atasnya, dan <strong>tombol jalankan</strong> segitiga hijau.</li>
+        <li>Tekan tanda tambah (<strong>+</strong>) pada panel rangkaian untuk mengambil komponen. Untuk menyambung dua kaki, klik kaki pertama lalu kaki kedua.</li>
+        <li>Tambahkan pustaka sekali saja: buka tab <strong>Library Manager</strong>, tekan tombol tambah, lalu pilih <strong>ESP32Servo</strong> yang diperlukan baris <code>#include &lt;ESP32Servo.h&gt;</code> pada kode Bab 5.</li>
+      </ol>
+      <div class="warn">
+        <strong>Project baru hanya berisi board.</strong> Bila kode Bab 5 dijalankan pada project yang rangkaiannya kosong, GPIO 2 dan GPIO 18 tetap berganti keadaan tetapi tidak ada bunyi maupun gerakan, sehingga kode yang benar mudah dikira salah. Pasang rangkaian lebih dahulu.
+      </div>
+      <div class="table-scroll" tabindex="0">
+        <table>
+        <thead><tr><th>Komponen</th><th>Pin ESP32</th><th>Mode di <code>setup()</code></th><th>Nama di program</th></tr></thead>
+        <tbody>
+          <tr><td>Tombol input</td><td>GPIO 15</td><td><code>INPUT</code></td><td><code>sensorPin</code></td></tr>
+          <tr><td>Buzzer</td><td>GPIO 2</td><td><code>OUTPUT</code></td><td><code>buzzerPin</code></td></tr>
+          <tr><td>Servo</td><td>GPIO 18</td><td><code>attach()</code></td><td><code>servoPin</code></td></tr>
+          <tr><td>Relay, Praktik 3</td><td>GPIO 2, ganti buzzer</td><td><code>OUTPUT</code></td><td><code>relayPin</code></td></tr>
+        </tbody>
+        </table>
+      </div>
+      <p>Pemetaan pin di atas mengikuti kode Bab 5 dan dipakai ketiga praktik; buat project terpisah untuk masing-masing. Nomor pin yang tidak sama antara rangkaian dan program adalah penyebab kegagalan paling sering. Servo dan modul relay mengambil daya dari pin <strong>5V</strong>, bukan dari pin GPIO yang hanya mengirim sinyal kontrol.</p>
+
+      <h3>6.2 Praktik 1: Buzzer sebagai penanda kondisi</h3>
+      <p>Praktik pertama membuat buzzer berbunyi hanya ketika input aktif, bentuk paling sederhana dari keluaran terkontrol kondisi pada Bab 1.2: satu pin keluaran berubah karena keadaan pin masukan, bukan karena waktu.</p>
+      <p><strong>Komponen yang perlu ditambahkan:</strong> satu tombol (<em>pushbutton</em>) sebagai sumber input, satu resistor 10 kΩ, dan satu buzzer.</p>
+      <div class="svgbox" tabindex="0">
+        <svg viewBox="0 40 700 300" width="100%" role="img" aria-label="Rangkaian buzzer: GPIO 15 ke kaki 1 tombol dan ke resistor 10 kilo ohm yang ujungnya ke GND, kaki 2 tombol ke 3V3, kaki 2 buzzer ke GPIO 2, kaki 1 buzzer ke GND">
+          <rect x="30" y="60" width="170" height="260" rx="14" fill="#dcfce7" stroke="#15803d" stroke-width="2"/>
+          <text x="115" y="110" text-anchor="middle" font-size="22" font-weight="700">ESP32</text>
+          <g text-anchor="end" font-size="15" font-weight="700"><text x="194" y="155" fill="#111827">GND</text><text x="194" y="190" fill="#15803d">GPIO 15</text><text x="194" y="225" fill="#6d28d9">3V3</text><text x="194" y="260" fill="#15803d">GPIO 2</text><text x="194" y="295" fill="#111827">GND</text></g>
+          <g stroke-width="4"><line x1="200" y1="150" x2="330" y2="150" stroke="#111827"/><line x1="440" y1="150" x2="500" y2="150" stroke="#15803d"/><line x1="500" y1="150" x2="500" y2="185" stroke="#15803d"/><line x1="200" y1="185" x2="540" y2="185" stroke="#15803d"/><line x1="200" y1="220" x2="540" y2="220" stroke="#6d28d9"/><line x1="200" y1="255" x2="330" y2="255" stroke="#15803d"/><line x1="200" y1="290" x2="330" y2="290" stroke="#111827"/></g>
+          <circle cx="500" cy="185" r="5" fill="#15803d"/>
+          <rect x="330" y="130" width="110" height="40" rx="8" fill="#fef3c7" stroke="#b45309" stroke-width="2"/>
+          <rect x="540" y="165" width="150" height="80" rx="10" fill="#ede9fe" stroke="#6d28d9" stroke-width="2"/>
+          <rect x="330" y="235" width="160" height="70" rx="10" fill="#fff7ed" stroke="#ea580c" stroke-width="2"/>
+          <g text-anchor="middle" font-size="16" font-weight="700"><text x="385" y="156" font-size="14">10 kΩ</text><text x="628" y="212">Tombol</text><text x="420" y="276">Buzzer</text></g>
+        </svg>
+      </div>
+      <p>Sambungannya ada lima: <strong>GPIO 15 → kaki 1 tombol</strong>, <strong>kaki 2 tombol → 3V3</strong>, <strong>GPIO 15 → resistor 10 kΩ → GND</strong>, <strong>kaki 2 buzzer → GPIO 2</strong>, dan <strong>kaki 1 buzzer → GND</strong>. Resistor itu <em>pull-down</em>: ia menahan GPIO 15 tetap LOW selama tombol tidak ditekan. Kode Bab 5 memakai mode <code>INPUT</code> dan menganggap input aktif saat terbaca HIGH, jadi tombol menghubungkan GPIO 15 ke 3V3, berlawanan dengan pola <code>INPUT_PULLUP</code> pada Pertemuan 2 tentang GPIO dan LED blink.</p>
+
+      <details>
+        <summary>Rangkaian Praktik 1 dalam bentuk <code>diagram.json</code></summary>
+        <p>Buka tab <code>diagram.json</code>, hapus isinya, lalu tempelkan kode di bawah secara utuh.</p>
+        <div class="code"><pre>{
+  "version": 1,
+  "author": "Materi IoT Pertemuan 4",
+  "editor": "wokwi",
+  "parts": [
+    { "type": "board-esp32-devkit-c-v4", "id": "esp", "top": 0, "left": 0, "attrs": {} },
+    { "type": "wokwi-pushbutton", "id": "btn1", "top": -70, "left": 150, "attrs": { "color": "green" } },
+    { "type": "wokwi-resistor", "id": "r1", "top": 30, "left": 130, "attrs": { "value": "10000" } },
+    { "type": "wokwi-buzzer", "id": "bz1", "top": 120, "left": 140, "attrs": {} }
+  ],
+  "connections": [
+    [ "esp:15", "btn1:1.l", "violet", [ "v0" ] ],
+    [ "btn1:2.l", "esp:3V3", "red", [ "v0" ] ],
+    [ "esp:15", "r1:1", "violet", [ "v0" ] ],
+    [ "r1:2", "esp:GND.1", "black", [ "v0" ] ],
+    [ "bz1:2", "esp:2", "green", [ "v0" ] ],
+    [ "bz1:1", "esp:GND.2", "black", [ "v0" ] ]
+  ]
+}</pre></div>
+      </details>
+      <ol class="step">
+        <li>Buat project ESP32 baru, lalu pasang rangkaian seperti gambar di atas atau tempelkan <code>diagram.json</code> tadi.</li>
+        <li>Hapus seluruh isi panel kode, lalu tempelkan contoh kode Bab 5 apa adanya.</li>
+        <li>Pastikan angka pada <code>sensorPin</code> dan <code>buzzerPin</code> sama dengan pin yang tersambung, yaitu 15 dan 2.</li>
+        <li>Tekan tombol jalankan, lalu tahan klik tetikus pada gambar tombol beberapa saat dan lepaskan. Amati kapan buzzer berbunyi dan kapan berhenti. Servo belum dipasang, jadi barisnya belum berpengaruh.</li>
+        <li>Sebagai variasi, ubah <code>if (sensorState == HIGH)</code> menjadi <code>if (sensorState == LOW)</code>, jalankan kembali, lalu bandingkan hasilnya dengan pengamatan tadi dan kembalikan ke <code>HIGH</code>.</li>
+      </ol>
+      <p><strong>Hasil yang harus terlihat:</strong> buzzer diam selama tombol tidak ditekan, berbunyi terus-menerus selama klik ditahan, lalu diam begitu klik dilepaskan; tanda gelombang bunyi muncul di sekitar gambar buzzer sehingga keaktifannya terlihat walaupun suara browser dimatikan. Setelah kondisi diubah menjadi <code>LOW</code>, urutannya terbalik, dan itulah bukti bahwa bunyi ditentukan oleh kondisi di dalam <code>if</code>.</p>
+      <div class="warn">
+        <strong>Buzzer berbunyi sendiri tanpa disentuh?</strong> Hampir selalu resistor 10 kΩ belum terpasang antara GPIO 15 dan GND, sehingga GPIO 15 mengambang dan <code>digitalRead()</code> dapat membaca HIGH secara acak. Penyebab kedua adalah kaki tombol yang salah: dua kaki sesisi sudah tersambung di dalam tombol, jadi pakai kaki yang berseberangan.
+      </div>
+
+      <h3>6.3 Praktik 2: Servo membuka dan menutup portal</h3>
+      <p>Aktuator kedua ditambahkan sehingga portal otomatis pada Bab 4 terbentuk seutuhnya: satu input memicu dua keluaran sekaligus. Praktik ini juga bentuk nyata PWM pada Bab 2.4, karena sudut servo ditentukan oleh pola sinyal pada satu pin, bukan oleh keadaan HIGH atau LOW saja.</p>
+      <p><strong>Komponen yang perlu ditambahkan:</strong> satu servo. Rangkaian Praktik 1 dipakai kembali: tombol, resistor 10 kΩ, dan buzzer tetap terpasang.</p>
+      <div class="svgbox" tabindex="0">
+        <svg viewBox="0 40 700 200" width="100%" role="img" aria-label="Sambungan servo: kaki PWM ke GPIO 18, kaki V plus ke 5V, kaki GND ke GND, sedangkan rangkaian Praktik 1 tetap terpasang">
+          <rect x="30" y="60" width="170" height="160" rx="14" fill="#dcfce7" stroke="#15803d" stroke-width="2"/>
+          <text x="115" y="110" text-anchor="middle" font-size="22" font-weight="700">ESP32</text>
+          <g text-anchor="end" font-size="15" font-weight="700"><text x="194" y="155" fill="#15803d">GPIO 18</text><text x="194" y="185" fill="#6d28d9">5V</text><text x="194" y="215" fill="#111827">GND</text></g>
+          <g stroke-width="4"><line x1="200" y1="150" x2="330" y2="150" stroke="#15803d"/><line x1="200" y1="180" x2="330" y2="180" stroke="#6d28d9"/><line x1="200" y1="210" x2="330" y2="210" stroke="#111827"/></g>
+          <rect x="330" y="130" width="230" height="100" rx="10" fill="#eef2ff" stroke="#4f46e5" stroke-width="2"/>
+          <text x="470" y="186" text-anchor="middle" font-size="16" font-weight="700">Servo</text>
+          <g font-size="13" fill="#374151"><text x="340" y="155">PWM</text><text x="340" y="185">V+</text><text x="340" y="215">GND</text></g>
+        </svg>
+      </div>
+      <p>Sambungan tombol dan buzzer tidak berubah. Yang ditambahkan hanya tiga sambungan servo: <strong>kaki PWM → GPIO 18</strong>, <strong>kaki V+ → 5V</strong>, dan <strong>kaki GND → GND</strong>. Hanya kaki PWM yang menerima sinyal kontrol; dua kaki lain sekadar memberi daya.</p>
+
+      <details>
+        <summary>Rangkaian Praktik 2 dalam bentuk <code>diagram.json</code></summary>
+        <p>Buka tab <code>diagram.json</code>, hapus isinya, lalu tempelkan kode di bawah secara utuh; isinya rangkaian Praktik 1 ditambah servo.</p>
+        <div class="code"><pre>{
+  "version": 1,
+  "author": "Materi IoT Pertemuan 4",
+  "editor": "wokwi",
+  "parts": [
+    { "type": "board-esp32-devkit-c-v4", "id": "esp", "top": 0, "left": 0, "attrs": {} },
+    { "type": "wokwi-pushbutton", "id": "btn1", "top": -70, "left": 150, "attrs": { "color": "green" } },
+    { "type": "wokwi-resistor", "id": "r1", "top": 30, "left": 130, "attrs": { "value": "10000" } },
+    { "type": "wokwi-buzzer", "id": "bz1", "top": 120, "left": 140, "attrs": {} },
+    { "type": "wokwi-servo", "id": "srv1", "top": 210, "left": 150, "attrs": {} }
+  ],
+  "connections": [
+    [ "esp:15", "btn1:1.l", "violet", [ "v0" ] ],
+    [ "btn1:2.l", "esp:3V3", "red", [ "v0" ] ],
+    [ "esp:15", "r1:1", "violet", [ "v0" ] ],
+    [ "r1:2", "esp:GND.1", "black", [ "v0" ] ],
+    [ "bz1:2", "esp:2", "green", [ "v0" ] ],
+    [ "bz1:1", "esp:GND.2", "black", [ "v0" ] ],
+    [ "esp:18", "srv1:PWM", "green", [ "v0" ] ],
+    [ "srv1:V+", "esp:5V", "red", [ "v0" ] ],
+    [ "srv1:GND", "esp:GND.3", "black", [ "v0" ] ]
+  ]
+}</pre></div>
+      </details>
+      <ol class="step">
+        <li>Buka project Praktik 1, lalu tambahkan satu servo.</li>
+        <li>Sambungkan kaki PWM ke <strong>GPIO 18</strong>, kaki V+ ke <strong>5V</strong>, dan kaki GND ke <strong>GND</strong>.</li>
+        <li>Pastikan kode Bab 5 masih utuh dan angka pada <code>servoPin</code> sama dengan pin kaki PWM, yaitu 18.</li>
+        <li>Jalankan simulasi, catat posisi awal lengan servo, lalu tahan klik tetikus pada gambar tombol dan amati lengan servo bersama buzzer. Lepaskan klik dan amati sekali lagi.</li>
+        <li>Sebagai variasi, ubah <code>portalServo.write(90)</code> menjadi <code>portalServo.write(45)</code>, jalankan kembali, lalu bandingkan seberapa jauh lengan berputar.</li>
+      </ol>
+      <p><strong>Hasil yang harus terlihat:</strong> pada awal simulasi lengan servo berdiri pada 0 derajat dan buzzer diam. Ketika tombol ditahan, lengan berputar ke 90 derajat dan buzzer berbunyi pada saat yang sama, bukan menyusul; ketika dilepaskan, lengan kembali ke 0 derajat dan buzzer berhenti. Setelah sudut diubah menjadi 45, lengan hanya berputar setengah dari jarak tadi sedangkan bunyi buzzer tidak berubah.</p>
+      <div class="warn">
+        <strong>Simulasi berhenti dan menyebut <code>ESP32Servo.h</code> tidak ditemukan?</strong> Pustakanya belum ditambahkan; ulangi langkah pustaka pada Bagian 6.1. Bila servo diam padahal buzzer berbunyi, periksa kaki PWM sudah di GPIO 18 dan kaki V+ sudah di 5V, karena servo tanpa daya tetap diam.
+      </div>
+
+      <h3>6.4 Praktik 3: Relay virtual sebagai keluaran saklar</h3>
+      <p>Praktik terakhir menukar keluaran bunyi dengan saklar. Logika programnya tidak berubah sedikit pun, dan itulah yang diperlihatkan: pola <code>if-else</code> yang sama dapat mengendalikan aktuator berbeda, sesuai Bab 5.4.</p>
+      <p><strong>Komponen yang perlu ditambahkan:</strong> satu modul relay. Tombol, resistor 10 kΩ, dan servo tetap terpasang, sedangkan buzzer dilepas agar GPIO 2 bebas dipakai modul relay sehingga nomor pin di dalam program tidak berubah.</p>
+      <div class="svgbox" tabindex="0">
+        <svg viewBox="0 40 700 200" width="100%" role="img" aria-label="Sambungan modul relay: kaki IN ke GPIO 2 bekas buzzer, kaki VCC ke 5V, kaki GND ke GND, sedangkan tombol, resistor, dan servo tetap terpasang">
+          <rect x="30" y="60" width="170" height="160" rx="14" fill="#dcfce7" stroke="#15803d" stroke-width="2"/>
+          <text x="115" y="110" text-anchor="middle" font-size="22" font-weight="700">ESP32</text>
+          <g text-anchor="end" font-size="15" font-weight="700"><text x="194" y="155" fill="#15803d">GPIO 2</text><text x="194" y="185" fill="#6d28d9">5V</text><text x="194" y="215" fill="#111827">GND</text></g>
+          <g stroke-width="4"><line x1="200" y1="150" x2="330" y2="150" stroke="#15803d"/><line x1="200" y1="180" x2="330" y2="180" stroke="#6d28d9"/><line x1="200" y1="210" x2="330" y2="210" stroke="#111827"/></g>
+          <rect x="330" y="130" width="230" height="100" rx="10" fill="#eff6ff" stroke="#2563eb" stroke-width="2"/>
+          <text x="470" y="186" text-anchor="middle" font-size="16" font-weight="700">Modul Relay</text>
+          <g font-size="13" fill="#374151"><text x="340" y="155">IN</text><text x="340" y="185">VCC</text><text x="340" y="215">GND</text></g>
+        </svg>
+      </div>
+      <p>Sambungannya ada tiga: <strong>kaki IN → GPIO 2</strong>, yaitu pin bekas buzzer, lalu <strong>kaki VCC → 5V</strong> dan <strong>kaki GND → GND</strong>. Kaki COM, NO, dan NC dibiarkan kosong karena yang diamati perpindahan saklarnya, bukan bebannya.</p>
+
+      <details>
+        <summary>Rangkaian Praktik 3 dalam bentuk <code>diagram.json</code></summary>
+        <p>Buka tab <code>diagram.json</code>, hapus isinya, lalu tempelkan kode di bawah secara utuh; isinya rangkaian Praktik 2 dengan buzzer diganti modul relay.</p>
+        <div class="code"><pre>{
+  "version": 1,
+  "author": "Materi IoT Pertemuan 4",
+  "editor": "wokwi",
+  "parts": [
+    { "type": "board-esp32-devkit-c-v4", "id": "esp", "top": 0, "left": 0, "attrs": {} },
+    { "type": "wokwi-pushbutton", "id": "btn1", "top": -70, "left": 150, "attrs": { "color": "green" } },
+    { "type": "wokwi-resistor", "id": "r1", "top": 30, "left": 130, "attrs": { "value": "10000" } },
+    { "type": "wokwi-relay-module", "id": "rly1", "top": 120, "left": 140, "attrs": {} },
+    { "type": "wokwi-servo", "id": "srv1", "top": 240, "left": 150, "attrs": {} }
+  ],
+  "connections": [
+    [ "esp:15", "btn1:1.l", "violet", [ "v0" ] ],
+    [ "btn1:2.l", "esp:3V3", "red", [ "v0" ] ],
+    [ "esp:15", "r1:1", "violet", [ "v0" ] ],
+    [ "r1:2", "esp:GND.1", "black", [ "v0" ] ],
+    [ "esp:2", "rly1:IN", "green", [ "v0" ] ],
+    [ "rly1:VCC", "esp:5V", "red", [ "v0" ] ],
+    [ "rly1:GND", "esp:GND.2", "black", [ "v0" ] ],
+    [ "esp:18", "srv1:PWM", "green", [ "v0" ] ],
+    [ "srv1:V+", "esp:5V", "red", [ "v0" ] ],
+    [ "srv1:GND", "esp:GND.3", "black", [ "v0" ] ]
+  ]
+}</pre></div>
+      </details>
+      <ol class="step">
+        <li>Buka project Praktik 2, hapus kedua sambungan buzzer, lalu keluarkan buzzernya dari area rangkaian.</li>
+        <li>Tambahkan satu modul relay, lalu sambungkan kaki IN ke <strong>GPIO 2</strong>, kaki VCC ke <strong>5V</strong>, dan kaki GND ke <strong>GND</strong>.</li>
+        <li>Pada panel kode, ganti <code>buzzerPin</code> menjadi <code>relayPin</code> di ketiga barisnya seperti potongan Bab 5.4. Nilainya tetap 2.</li>
+        <li>Jalankan simulasi, tahan klik tetikus pada gambar tombol dan amati modul relay serta lengan servo bersamaan, lalu lepaskan dan perhatikan apakah keduanya kembali ke keadaan awal.</li>
+        <li>Sebagai variasi, ubah <code>delay(200)</code> pada akhir <code>loop()</code> menjadi <code>delay(2000)</code>, jalankan kembali, lalu bandingkan seberapa cepat relay merespons tombol.</li>
+      </ol>
+      <p><strong>Hasil yang harus terlihat:</strong> selama tombol tidak ditekan, lampu indikator pada modul relay mati dan saklarnya berada pada kaki NC. Ketika tombol ditahan, lampu indikator menyala, saklar berpindah ke kaki NO, dan lengan servo membuka pada saat yang sama. Setelah jeda menjadi 2000, relay tampak lambat: ada tenggang sampai sekitar dua detik sebelum lampu menyala, dan tekanan tombol yang singkat dapat terlewat karena program menunggu di dalam <code>delay()</code>. Kembalikan nilainya ke 200.</p>
+      <div class="tip">
+        <strong>Relay virtual tidak menyalakan apa pun.</strong> Yang berubah hanya keadaan saklarnya, jadi jangan menunggu lampu beban atau bunyi; tandanya adalah lampu indikator pada modulnya dan perpindahan sambungan dari NC ke NO.
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>7. Menghubungkan Teori dan Praktik</h2>
+      <div class="grid two">
+        <div class="mini"><strong>Teori:</strong> aktuator adalah keluaran sistem.<br/><strong>Praktik:</strong> buzzer berbunyi, servo bergerak, relay berubah status.</div>
+        <div class="mini"><strong>Teori:</strong> output harus terkontrol kondisi.<br/><strong>Praktik:</strong> aktuator aktif hanya saat <code>sensorState == HIGH</code>.</div>
+        <div class="mini"><strong>Teori:</strong> logika program menentukan respons.<br/><strong>Praktik:</strong> struktur <code>if-else</code> mengatur kapan output aktif dan nonaktif.</div>
+        <div class="mini"><strong>Teori:</strong> beberapa output memerlukan sinyal yang lebih spesifik.<br/><strong>Praktik:</strong> servo dikontrol melalui sudut dan pengenalan PWM secara sederhana.</div>
+      </div>
+      <p>Bagian penting dari pertemuan ini adalah menyadari bahwa satu input dapat mengaktifkan beberapa bentuk respons. Itulah inti dari otomasi dasar. Sistem tidak lagi pasif, tetapi mulai menunjukkan perilaku yang dirancang.</p>
+    </section>
+
+    <section class="card">
+      <h2>8. Ringkasan Materi dan Latihan Pemahaman</h2>
+      <ul>
+        <li>Aktuator adalah komponen yang menjalankan aksi sebagai keluaran sistem.</li>
+        <li>Buzzer menghasilkan bunyi, servo mengatur posisi sudut, dan relay virtual berfungsi sebagai saklar ON/OFF.</li>
+        <li>Output terkontrol kondisi berarti aktuator bekerja berdasarkan keputusan program, bukan secara acak.</li>
+        <li>Logika <code>if-else</code> menjadi inti untuk menghubungkan input sensor dengan respons aktuator.</li>
+        <li>Pengenalan PWM secara sederhana membantu memahami bahwa beberapa aktuator memerlukan kontrol sinyal yang lebih spesifik.</li>
+      </ul>
+
+      <h3>Latihan pemahaman</h3>
+      <ol>
+        <li>Jelaskan perbedaan sensor dan aktuator dengan contoh masing-masing.</li>
+        <li>Mengapa servo tidak cukup dipahami hanya sebagai ON/OFF seperti relay?</li>
+        <li>Apa peran logika <code>if-else</code> dalam sistem portal otomatis?</li>
+        <li>Jika sensor aktif terus-menerus, bagaimana perilaku buzzer dan servo pada kode di atas?</li>
+        <li>Bagaimana cara memodifikasi logika agar relay virtual ikut aktif saat portal terbuka?</li>
+      </ol>
+      <p class="footer-note">Materi Pertemuan 4 ini berfokus pada konsep aktuator, output terkontrol kondisi, pengenalan PWM secara sederhana, aktivitas mengaktifkan buzzer, menggerakkan servo, simulasi relay virtual, serta latihan portal otomatis sederhana.</p>
+    </section>
+    <section class="card">
+      <h2>9. Tugas Latihan Pertemuan 4</h2>
+      <p>Tugas latihan pertemuan ini adalah membuat simulasi portal otomatis sederhana: sensor aktif, servo bergerak membuka portal, lalu buzzer berbunyi. Rangkaian dan pola kodenya sudah dibahas pada Bab 4, Bab 5, dan Bab 6, jadi bagian itu tidak perlu ditulis ulang di sini. Yang dinilai adalah apakah perilaku sistem benar-benar muncul sesuai urutan dan apakah Anda dapat menjelaskan alasan setiap keputusan yang Anda ambil.</p>
+
+      <h3>9.1 Rumusan tugas</h3>
+      <p>Bangun satu proyek simulasi yang memuat minimal satu sumber input berupa tombol atau sensor virtual, satu servo, dan satu buzzer. Program harus memakai logika <code>if-else</code> seperti pada Bab 3 sehingga aktuator hanya bekerja ketika kondisi input terpenuhi. Anda diperbolehkan menambahkan relay virtual sebagai keluaran ketiga dengan pola yang dijelaskan pada Bab 5.4, tetapi penambahan itu bersifat pilihan.</p>
+
+      <h3>9.2 Urutan perilaku yang harus terlihat</h3>
+      <ol>
+        <li>Kondisi awal: portal tertutup, servo berada pada sudut tutup, dan buzzer diam.</li>
+        <li>Input menjadi aktif, dan program membaca perubahan itu di dalam <code>loop()</code>.</li>
+        <li>Servo bergerak dari sudut tutup ke sudut buka.</li>
+        <li>Buzzer berbunyi selama portal berada pada posisi terbuka.</li>
+        <li>Input kembali tidak aktif: buzzer berhenti dan servo kembali ke sudut tutup.</li>
+      </ol>
+      <p>Urutan ini penting dan menjadi bagian yang paling mudah dinilai. Bila buzzer berbunyi tetapi servo tidak bergerak, atau servo bergerak tanpa ada input yang memicunya, berarti hubungan input dan output belum benar. Perbaiki bagian logikanya lebih dahulu sebelum merapikan tampilan rangkaian.</p>
+
+      <h3>9.3 Yang dikumpulkan</h3>
+      <ul>
+        <li><strong>Kode program</strong> lengkap dalam bentuk teks, bukan potongan, sehingga dapat dijalankan ulang apa adanya.</li>
+        <li><strong>Tangkapan layar rangkaian</strong> pada simulator, yang memperlihatkan sambungan pin sensor, servo, dan buzzer secara terbaca.</li>
+        <li><strong>Catatan sudut servo</strong> yang Anda pakai: berapa derajat untuk posisi tutup, berapa derajat untuk posisi buka, dan alasan memilih kedua angka tersebut.</li>
+      </ul>
+      <p>Sudut servo tidak wajib 0 dan 90 derajat seperti contoh pada Bab 5. Nilai lain diterima selama Anda dapat menjelaskan mengapa nilai itu masuk akal untuk sebuah portal, misalnya karena sudut buka yang terlalu kecil membuat portal tampak belum terbuka penuh.</p>
+
+      <h3>9.4 Rubrik penilaian</h3>
+      <div class="table-scroll" tabindex="0">
+        <table>
+        <thead>
+          <tr><th>Aspek</th><th>Bobot</th><th>Kriteria nilai penuh</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Kelengkapan rangkaian</td><td>25%</td><td>Input, servo, dan buzzer terpasang serta tersambung ke pin yang sama dengan yang tertulis di dalam program</td></tr>
+          <tr><td>Ketepatan logika</td><td>30%</td><td>Struktur <code>if-else</code> membuat aktuator aktif hanya pada kondisi yang dimaksud, dan blok <code>else</code> benar-benar mengembalikan sistem ke kondisi aman</td></tr>
+          <tr><td>Urutan perilaku</td><td>25%</td><td>Kelima langkah pada Bab 9.2 terlihat berurutan ketika simulasi dijalankan</td></tr>
+          <tr><td>Catatan dan penjelasan</td><td>20%</td><td>Sudut servo dicatat lengkap dengan alasannya, dan tangkapan layar rangkaian terbaca</td></tr>
+        </tbody>
+        </table>
+      </div>
+      <p class="footer-note">Program yang berjalan tetapi tidak dapat Anda jelaskan bernilai lebih rendah daripada program sederhana yang Anda pahami sepenuhnya. Bila hasil simulasi belum sesuai, telusuri urutannya dari sisi input lebih dahulu, bukan dari aktuator.</p>
+    </section>
+
+    <section class="card">
+      <h2>10. Checkpoint Evaluasi Pertemuan 4</h2>
+      <p>Pertemuan 4 dianggap tuntas bila tiga hal berikut dapat Anda lakukan. Ketiganya sudah dibahas di materi ini, sehingga daftar di bawah sekaligus dipakai sebagai pemeriksaan diri sebelum Anda melanjutkan ke pertemuan berikutnya.</p>
+      <div class="mini">
+        <div class="label">Target minimal pertemuan ini</div>
+        <ul>
+          <li>Mampu menghubungkan input sensor dengan respons aktuator.</li>
+          <li>Keluaran sistem muncul karena kondisi yang terbaca oleh program, bukan karena kebetulan atau karena aktuator dinyalakan terus-menerus.</li>
+        </ul>
+      </div>
+      <div class="table-scroll" tabindex="0">
+        <table>
+        <thead><tr><th>Yang diperiksa</th><th>Cara memastikan sendiri</th><th>Bila belum tercapai</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>Aktuator merespons kondisi dengan benar</td>
+            <td>Jalankan simulasi tugas pada Bab 9, lalu ubah input dari tidak aktif menjadi aktif dan sebaliknya beberapa kali. Servo dan buzzer harus berubah setiap kali input berubah, dan tetap diam selama input tidak berubah.</td>
+            <td>Baca ulang Bab 1.2 tentang output terkontrol kondisi, lalu Bab 5.3 tentang alur eksekusi program.</td>
+          </tr>
+          <tr>
+            <td>Logika <code>if-else</code> berjalan sesuai rancangan</td>
+            <td>Tutup materi ini, tulis ulang blok <code>if-else</code> portal dari ingatan, lalu bandingkan dengan kode pada Bab 5. Periksa apakah blok <code>else</code> Anda benar-benar mengembalikan servo ke sudut tutup dan mematikan buzzer.</td>
+            <td>Kembali ke Bab 3, lalu ke baris <code>if (sensorState == HIGH)</code> beserta pasangan <code>else</code>-nya pada tabel penjelasan di Bab 5.2.</td>
+          </tr>
+          <tr>
+            <td>Dapat menjelaskan perbedaan sensor dan aktuator</td>
+            <td>Jelaskan keduanya masing-masing dalam satu kalimat, lalu sebutkan dua contoh sensor dan dua contoh aktuator tanpa melihat materi. Uji jawaban Anda dengan menyebutkan arah datanya: sensor memasukkan data ke program, aktuator menerima perintah dari program.</td>
+            <td>Baca ulang Bab 1.1 beserta tabel perbandingannya, dan Bab 2 tentang tiga aktuator dasar.</td>
+          </tr>
+        </tbody>
+        </table>
+      </div>
+      <p>Pertemuan 4 sekaligus menjadi checkpoint besar pertama, yaitu <strong>CP-1</strong>, yang memeriksa penguasaan GPIO, hubungan sensor-aktuator, dan logika dasar. Cakupan CP-1 diambil dari tiga pertemuan berikut:</p>
+      <ul>
+        <li><strong>Pertemuan 2:</strong> struktur program <code>setup()</code> dan <code>loop()</code>, konsep GPIO, serta input dan output digital.</li>
+        <li><strong>Pertemuan 3:</strong> perbedaan data digital dan analog, pembacaan sensor virtual dengan <code>analogRead()</code>, dan pemakaian ambang batas.</li>
+        <li><strong>Pertemuan 4:</strong> konsep aktuator, output terkontrol kondisi, logika <code>if-else</code>, dan pengenalan PWM secara sederhana.</li>
+      </ul>
+      <p class="footer-note">CP-1 pada Pertemuan 4 adalah yang pertama dari empat checkpoint besar; berikutnya CP-2 pada Pertemuan 8, CP-3 pada Pertemuan 12, dan CP-4 pada Pertemuan 16. Materi sesudah ini dibangun dengan asumsi ketiga butir di atas sudah terlewati, jadi lebih baik menuntaskan bagian yang belum tercapai sekarang daripada menundanya. Perlu diingat juga bahwa tugas latihan mingguan, termasuk tugas pada Bab 9, berbobot 20 persen dari nilai akhir.</p>
+    </section>
+
+    <section class="card">
+      <h2>11. Referensi Praktis</h2>
+      <p>Tiga sumber berikut menjadi rujukan lanjutan untuk materi pertemuan ini. Sebagian besar berbahasa Inggris, dan sebaiknya dibaca setelah praktik selesai agar istilah di dalamnya sudah punya bentuk nyata dari simulasi yang Anda jalankan sendiri.</p>
+
+      <h3>11.1 Wokwi Docs, bagian servo dan buzzer — <code>wokwi.com</code></h3>
+      <p>Dokumentasi resmi simulator yang dipakai pada mata kuliah ini. Bagian servo dan buzzer menjelaskan pin yang tersedia pada masing-masing komponen serta cara memasangnya di area rangkaian. Bacaan ini langsung berguna saat Anda menyiapkan tangkapan layar rangkaian untuk tugas pada Bab 9.</p>
+
+      <h3>11.2 Arduino Reference, analogWrite dan dasar PWM — <code>docs.arduino.cc</code></h3>
+      <p>Halaman rujukan resmi untuk perintah keluaran analog beserta penjelasan singkat tentang lebar pulsa. Bacaan ini memperjelas pengenalan PWM pada Bab 2.4, terutama alasan mengapa sebagian aktuator tidak cukup dikendalikan hanya dengan HIGH dan LOW.</p>
+
+      <h3>11.3 Random Nerd Tutorials: ESP32 servo — <code>randomnerdtutorials.com</code></h3>
+      <p>Tutorial dengan banyak gambar tentang pengendalian servo pada ESP32, termasuk pemilihan pin dan pemakaian pustaka servo. Berguna sebagai pembanding untuk kode pada Bab 5, khususnya baris <code>attach()</code> dan <code>write()</code> yang menentukan pin serta sudut servo.</p>
+
+      <p class="footer-note">Alamat di atas ditulis sebagai nama domain, bukan tautan langsung ke halaman tertentu, karena struktur halaman situs semacam ini berubah dari waktu ke waktu. Cari judul bagian yang disebutkan di atas dari halaman utama masing-masing situs.</p>
+    </section>
+    <footer class="pagenum">
+      <span class="pagenum-seri">Materi Pertemuan 4</span>
+      <span class="pagenum-no">Halaman 4 dari 16</span>
+    </footer>
+  </div>
+</body>
+</html>

@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Materi Pertemuan 13 - Perancangan Mini Project IoT</title>
+  <link rel="stylesheet" href="assets/materi.css" />
+</head>
+<body>
+  <div class="wrap">
+    <section class="hero">
+      <span class="badge">Pertemuan 13</span>
+      <h1>Perancangan Mini Project IoT</h1>
+      <p class="lead">Pertemuan ini tidak menambah satu pun baris kode. Yang dikerjakan adalah memutuskan lebih dahulu apa yang akan dibangun, mengapa hal itu perlu, data apa yang mengalir ke mana, dan komponen apa yang dipakai beserta alasannya, sehingga pekerjaan membangun pada pertemuan berikutnya berjalan tanpa membongkar ulang.</p>
+      <div>
+        <span class="pill">Kebutuhan</span>
+        <span class="pill">Use Case</span>
+        <span class="pill">Diagram Blok</span>
+        <span class="pill">Alur Data</span>
+        <span class="pill">Peer Review</span>
+      </div>
+      <p class="notice">Yang perlu siap: hasil latihan Pertemuan 1 sampai 12, alat tulis atau editor teks untuk menyusun dokumen rancangan, dan satu berkas gambar sederhana atau kertas untuk diagram blok. Tidak ada perangkat lunak baru yang perlu dipasang, dan simulator Wokwi baru dipakai kembali pada pertemuan berikutnya.</p>
+    </section>
+
+    <section class="card">
+      <h2>Capaian Pembelajaran Pertemuan 13</h2>
+      <div class="grid two">
+        <div class="mini">
+          <div class="label">Yang dipahami</div>
+          <ul>
+            <li>Alasan rancangan disusun sebelum perangkat dibangun, dan biaya yang timbul bila dilewati.</li>
+            <li>Perbedaan kebutuhan fungsional dan kebutuhan non-fungsional beserta cara mengujinya.</li>
+            <li>Cara membaca diagram blok dan alur data sebagai satu kesatuan, bukan gambar hiasan.</li>
+            <li>Alasan setiap pemilihan komponen harus disertai alasan dan alternatif.</li>
+          </ul>
+        </div>
+        <div class="mini">
+          <div class="label">Yang dapat dilakukan</div>
+          <ul>
+            <li>Mengubah satu masalah nyata menjadi tujuan yang dapat diukur.</li>
+            <li>Menulis kebutuhan bernomor yang dapat diperiksa satu per satu.</li>
+            <li>Menyusun use case singkat, diagram blok, dan pemetaan alur data lengkap dengan bentuk payload.</li>
+            <li>Menelaah rancangan teman memakai daftar periksa dan memberi masukan yang dapat dikerjakan.</li>
+          </ul>
+        </div>
+      </div>
+      <p>Fokus Pertemuan 13 ada pada enam hal: perumusan kebutuhan, use case, diagram blok, alur data, pemilihan komponen, dan peer review. Seluruhnya bermuara pada satu keluaran, yaitu dokumen rancangan mini project Anda. Dokumen itu bukan tugas administratif, sebab pada Pertemuan 14 dokumen inilah yang Anda wujudkan menjadi prototipe, dan pada akhir mata kuliah ia menjadi dasar laporan serta demo.</p>
+    </section>
+    <section class="card">
+      <h2>1. Mengapa Perancangan Dikerjakan Lebih Dahulu</h2>
+      <p>Pada latihan mingguan, mengubah pikiran hampir tidak berbiaya: satu baris kode diganti, program diunggah ulang, selesai. Pada sebuah proyek utuh biayanya berbeda. Keputusan bahwa data dikirim sebagai teks biasa, misalnya, ikut menentukan bentuk topic, cara dashboard membaca angka, dan bentuk berkas riwayat. Ketika keputusan itu diubah di tengah jalan, yang ikut berubah bukan satu baris melainkan program device, alur pada Node-RED, dan seluruh berkas riwayat yang sudah terkumpul.</p>
+      <p>Karena itu perancangan bukan penundaan pekerjaan, melainkan pemindahan pekerjaan ke tempat yang paling murah. Menghapus satu kotak pada diagram menghabiskan sepuluh detik; menghapus komponen yang sudah dipasang dan sudah ditulisi program menghabiskan satu sore. Rancangan juga membuat pekerjaan dapat dibagi dan dinilai, sebab orang lain dapat membaca apa yang Anda maksud tanpa menunggu programnya jadi.</p>
+      <div class="analogy">
+        <strong>Analogi:</strong> tidak ada tukang yang menuangkan pondasi sambil memikirkan di mana kamar mandi akan diletakkan. Gambar rumah dibuat lebih dahulu bukan karena gambarnya berharga, melainkan karena memindahkan dinding di atas kertas jauh lebih murah daripada memindahkan dinding yang sudah berdiri.
+      </div>
+      <p>Rancangan pada tingkat ini tidak perlu tebal. Empat pertanyaan sudah cukup: masalah apa yang diselesaikan, dari mana angkanya datang, ke mana angkanya pergi, dan bagaimana pemakainya melihat serta memerintah. Dokumen contoh pada Bab 10 memperlihatkan keempat jawaban itu dalam bentuk yang selesai.</p>
+    </section>
+
+    <section class="card">
+      <h2>2. Dari Masalah ke Tujuan yang Terukur</h2>
+      <p>Rancangan yang goyah hampir selalu berawal dari masalah yang dirumuskan terlalu longgar, misalnya "ruangan kurang nyaman" atau "ingin memantau tanaman". Rumusan seperti itu tidak dapat dinyatakan selesai, karena tidak ada satu pun angka yang dapat dibandingkan pada akhir pekerjaan. Langkah pertama perancangan adalah mengubah keluhan menjadi <strong>tujuan yang terukur</strong>: menyebut besaran yang diukur, batas atau ambang yang dipakai, tindakan yang terjadi, dan tenggat waktunya.</p>
+      <p>Cara praktisnya adalah menulis satu kalimat yang memuat empat unsur tersebut sekaligus, lalu membacanya ulang dengan pertanyaan tunggal: bila prototipe sudah jalan, dapatkah saya membuktikan kalimat ini benar atau salah hanya dengan melihat dashboard dan log? Bila jawabannya belum, berarti masih ada unsur yang hilang.</p>
+      <div class="table-scroll" tabindex="0">
+        <table>
+        <thead>
+          <tr><th>Rumusan yang belum terukur</th><th>Rumusan yang terukur</th><th>Yang ditambahkan</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Ruang baca terasa panas</td><td>Suhu ruang baca terpantau setiap 10 detik dan kipas menyala otomatis ketika suhu melewati 30 derajat</td><td>Besaran, selang waktu, ambang, dan tindakan</td></tr>
+          <tr><td>Ingin memantau tanaman</td><td>Kelembapan tanah tercatat tiap 5 menit dan peringatan muncul di dashboard bila nilainya di bawah 35 persen selama 15 menit</td><td>Besaran, selang waktu, ambang, dan syarat lama</td></tr>
+          <tr><td>Menghemat listrik</td><td>Pemakaian daya satu ruangan terekam setiap menit dan riwayat sehari dapat ditampilkan sebagai grafik tren</td><td>Besaran, selang waktu, dan bentuk keluaran</td></tr>
+        </tbody>
+        </table>
+      </div>
+      <div class="tip">
+        <strong>Ambang boleh salah, asal tertulis.</strong> Nilai 30 derajat pada contoh di atas mungkin terlalu rendah untuk ruangan Anda. Yang penting adalah angkanya ditulis di dalam rancangan, sehingga ketika pengujian menunjukkan kipas terlalu sering menyala, yang Anda ubah adalah satu angka yang jelas letaknya, bukan menebak-nebak bagian mana yang perlu diperbaiki.
+      </div>
+    </section>
+    <section class="card">
+      <h2>3. Kebutuhan Fungsional dan Non-Fungsional</h2>
+      <p>Setelah tujuan terukur ditetapkan, tujuan itu dipecah menjadi daftar <strong>kebutuhan</strong>, yaitu pernyataan tentang apa yang harus dipenuhi sistem. Kebutuhan dibagi dua. <strong>Kebutuhan fungsional</strong> menyebut apa yang sistem lakukan: membaca sensor, mengirim data, menyalakan kipas, menampilkan grafik. <strong>Kebutuhan non-fungsional</strong> menyebut seberapa baik hal itu dilakukan: seberapa sering, seberapa cepat, seberapa tahan gangguan, seberapa aman.</p>
+      <p>Pembagian ini bukan urusan istilah. Kebutuhan fungsional yang terpenuhi tanpa kebutuhan non-fungsional menghasilkan sistem yang bekerja hanya di meja pengujian: data terkirim, tetapi berhenti selamanya begitu Wi-Fi sekali terputus. Sebaliknya kebutuhan non-fungsional tanpa daftar fungsional yang jelas menghasilkan janji yang tidak dapat diperiksa.</p>
+      <div class="table-scroll" tabindex="0">
+        <table>
+        <thead>
+          <tr><th>Aspek</th><th>Kebutuhan fungsional</th><th>Kebutuhan non-fungsional</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Pertanyaan yang dijawab</td><td>Apa yang dikerjakan sistem</td><td>Seberapa baik sistem mengerjakannya</td></tr>
+          <tr><td>Contoh</td><td>Device mengirim suhu dan kelembapan ke satu topic MQTT</td><td>Pengiriman berselang 10 detik dan tetap berlanjut setelah Wi-Fi pulih</td></tr>
+          <tr><td>Cara memeriksa</td><td>Dijalankan sekali, lalu dilihat apakah hasilnya muncul</td><td>Diukur atau diganggu dengan sengaja, lalu diamati tanggapannya</td></tr>
+          <tr><td>Bila diabaikan</td><td>Ada bagian sistem yang tidak pernah dibuat</td><td>Sistem jalan saat didemokan lalu diam-diam berhenti</td></tr>
+        </tbody>
+        </table>
+      </div>
+      <p>Tulislah setiap kebutuhan sebagai satu kalimat bernomor dengan awalan yang membedakan jenisnya, misalnya F-1 sampai F-5 untuk fungsional dan N-1 sampai N-4 untuk non-fungsional. Nomor itu dipakai sepanjang proyek: pada rencana pengujian, pada catatan kemajuan, dan pada laporan akhir. Rancangan yang baik dapat dinilai dengan mencentang daftar nomornya, satu per satu.</p>
+      <div class="tip">
+        <strong>Uji kalimat kebutuhan dengan pertanyaan "bagaimana saya membuktikannya".</strong> "Sistem harus andal" tidak dapat dibuktikan, sedangkan "sistem menyambung ulang sendiri dalam waktu paling lama satu menit setelah Wi-Fi pulih" dapat dibuktikan dengan mematikan titik akses dan membaca log seperti pada Pertemuan 12 tentang keamanan dan keandalan. Bila sebuah kebutuhan tidak dapat diuji, ia masih berupa harapan.
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>4. Use Case Singkat: Aktor, Pemicu, Langkah, Hasil</h2>
+      <p>Daftar kebutuhan menyebut isi sistem, tetapi belum bercerita tentang pemakaiannya. <strong>Use case</strong> mengisi kekosongan itu dengan menuliskan satu pemakaian dari sudut pandang orang yang memakainya. Bentuk yang cukup untuk mini project hanya empat baris: aktor, pemicu, langkah, dan hasil.</p>
+      <ul>
+        <li><strong>Aktor</strong> adalah pihak yang berbuat. Ia tidak selalu manusia; penjaga ruangan adalah aktor, dan device yang membaca sensor secara berkala juga aktor.</li>
+        <li><strong>Pemicu</strong> adalah kejadian yang memulai langkah, misalnya penjaga membuka dashboard, atau selang 10 detik terlewati.</li>
+        <li><strong>Langkah</strong> adalah urutan yang benar-benar terjadi, ditulis singkat dan berurutan, tanpa menyebut nama fungsi di dalam program.</li>
+        <li><strong>Hasil</strong> adalah keadaan akhir yang dapat dilihat, misalnya nilai terbaru tampil di dashboard, atau kipas menyala dan statusnya berubah.</li>
+      </ul>
+      <p>Dua sampai tiga use case sudah memadai untuk mini project, dan sebaiknya salah satunya adalah pemakaian yang mengirim perintah dari pengguna ke device, bukan hanya pemantauan. Use case yang seluruhnya berupa pemantauan menandakan rancangan Anda belum memakai arah data yang kedua, padahal justru arah itu yang paling sering terlupakan.</p>
+      <div class="mini">
+        <div class="label">Contoh use case: menyalakan kipas secara manual</div>
+        <p><strong>Aktor:</strong> penjaga ruang baca. <strong>Pemicu:</strong> penjaga melihat suhu pada dashboard sudah 31 derajat sementara kipas masih mati karena mode manual sedang aktif.</p>
+        <p><strong>Langkah:</strong> (1) penjaga menekan tombol Kipas Nyala pada dashboard; (2) Node-RED mengirim pesan perintah ke topic perintah; (3) device menerima pesan, memeriksa isinya, lalu menyalakan kipas; (4) device mengirim status terbaru pada pengiriman berikutnya.</p>
+        <p><strong>Hasil:</strong> kipas berputar, dan indikator status kipas pada dashboard berubah menjadi menyala dalam waktu paling lama satu selang pengiriman.</p>
+      </div>
+      <p>Perhatikan bahwa langkah keempat menyebut penundaan yang wajar, bukan menjanjikan perubahan seketika. Menuliskan penundaan itu sejak rancangan mencegah kesalahpahaman ketika prototipe diuji, sebab indikator yang berubah tiga detik kemudian bukan tanda kerusakan.</p>
+    </section>
+    <section class="card">
+      <h2>5. Diagram Blok dan Alur Data</h2>
+      <h3>5.1 Lima blok yang selalu ada</h3>
+      <p>Diagram blok menjawab pertanyaan "terdiri dari apa sistem ini" dengan gambar yang muat dalam satu halaman. Hampir semua sistem IoT tingkat awal dapat digambar sebagai lima blok berurutan, sesuai susunan lapis yang dibahas pada Pertemuan 1 tentang orientasi IoT: <strong>sensor</strong> yang mengubah keadaan fisik menjadi sinyal, <strong>device</strong> yang membaca dan memutuskan, <strong>jaringan</strong> beserta broker yang mengantar pesan, <strong>platform</strong> yang menyimpan dan menggambar, serta <strong>pengguna</strong> yang membaca dan memerintah. Bila sistem Anda memakai aktuator, ia digambar sebagai blok tambahan yang menempel pada device, karena perintahnya tidak melewati jaringan lagi.</p>
+      <p>Aturan menggambarnya sederhana: satu kotak berisi satu peran, dan setiap panah diberi keterangan singkat berupa isi yang lewat, bukan hanya arah. Panah tanpa keterangan adalah sumber kesalahpahaman terbesar pada peer review, sebab pembaca tidak dapat menebak apakah yang mengalir berupa angka mentah, teks siap kirim, atau perintah.</p>
+      <p>Tiga kekeliruan yang paling sering muncul: menggambar Wi-Fi sebagai kotak yang berdiri sendiri padahal ia adalah sarana pada panah, menyatukan device dan platform dalam satu kotak sehingga tidak terlihat mana yang mengambil keputusan, serta melupakan blok pengguna sehingga sistem tampak berbicara kepada dirinya sendiri. Diagram jadi dari contoh dokumen dapat Anda lihat pada Bab 10.</p>
+      <h3>5.2 Alur data dan bentuk payload</h3>
+      <p>Diagram blok memperlihatkan susunan, sedangkan alur data memperlihatkan isi. Untuk setiap panah, tetapkan empat hal: apa yang dikirim, dalam bentuk apa, seberapa sering, dan siapa yang menerimanya. Keempat hal itu ditulis sebagai tabel topic, dan bentuk pesannya ditulis sebagai satu contoh <strong>payload</strong> yang lengkap. Menulis satu contoh payload sejak tahap rancangan menghemat banyak waktu, karena dari situlah nama kolom di berkas riwayat dan nama medan pada dashboard ditentukan.</p>
+      <div class="code"><pre>Topic telemetri  : kelas/iot/ruangbaca/telemetri
+Arah             : device ke platform, tiap 10 detik
+Payload          : {"suhu":29.4,"lembap":62,"kipas":1,"mode":"otomatis"}
+
+Topic perintah   : kelas/iot/ruangbaca/perintah
+Arah             : platform ke device, hanya ketika pengguna menekan tombol
+Payload          : {"kipas":"nyala"}  atau  {"mode":"manual"}</pre></div>
+      <p>Payload di atas memakai bentuk JSON, yaitu pasangan nama dan nilai di dalam tanda kurung kurawal, sehingga satu pesan dapat memuat beberapa besaran sekaligus dan penerima tidak perlu menghitung urutan. Bentuk teks biasa berisi satu angka juga sah dan lebih ringan seperti pada Pertemuan 7 tentang MQTT, tetapi ia menuntut satu topic untuk tiap besaran. Yang perlu Anda putuskan dalam rancangan adalah memilih salah satu dan memakainya secara taat, sebab dashboard dan berkas riwayat mengikuti pilihan tersebut.</p>
+      <h3>5.3 Arah perintah dan pemilik keputusan</h3>
+      <p>Sebagian besar rancangan pemula hanya menggambar satu arah, yaitu dari sensor ke dashboard. Begitu ada aktuator, arah kedua muncul dan menimbulkan satu pertanyaan yang harus dijawab di dalam dokumen: siapa yang memutuskan kipas menyala, device atau pengguna? Jawaban yang aman untuk mini project adalah device memutuskan berdasarkan ambang, sedangkan pengguna dapat mengambil alih lewat mode manual. Dengan demikian sistem tetap bekerja ketika jaringan terputus, karena keputusan tidak bergantung pada dashboard.</p>
+      <div class="table-scroll" tabindex="0">
+        <table>
+        <thead>
+          <tr><th>Arah</th><th>Isi</th><th>Pemicu</th><th>Bila jaringan terputus</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Device ke platform</td><td>Nilai sensor dan status aktuator</td><td>Selang waktu tetap</td><td>Data selang itu hilang, pembacaan tetap berjalan</td></tr>
+          <tr><td>Platform ke device</td><td>Perintah dan penggantian mode</td><td>Tindakan pengguna</td><td>Perintah tidak sampai, ambang otomatis tetap bekerja</td></tr>
+        </tbody>
+        </table>
+      </div>
+    </section>
+    <section class="card">
+      <h2>6. Memilih Komponen dengan Alasan</h2>
+      <p>Pemilihan komponen dinilai bukan dari kecanggihannya, melainkan dari kecocokannya dengan kebutuhan yang sudah Anda tulis. Karena itu setiap pilihan disertai dua keterangan: alasannya, dan alternatif yang tidak dipilih. Menuliskan alternatif tampak seperti pekerjaan tambahan, padahal justru bagian itu yang menolong ketika komponen pilihan ternyata tidak tersedia atau tidak berjalan di simulator, sebab Anda tidak perlu mengulang penelusuran dari awal.</p>
+      <p>Ada empat pertimbangan yang biasanya cukup: besaran yang ingin diukur beserta rentangnya, ketersediaan komponen pada simulator maupun di tangan Anda, kerumitan penyambungan dan pustakanya, serta kesesuaian dengan tegangan kerja device. Pertimbangan terakhir sering terlewat, padahal komponen 5 volt yang disambungkan langsung ke pin ESP32 yang bekerja pada 3,3 volt adalah penyebab kerusakan yang tidak terlihat di simulator.</p>
+      <div class="table-scroll" tabindex="0">
+        <table>
+        <thead>
+          <tr><th>Kebutuhan</th><th>Pilihan</th><th>Alasan</th><th>Alternatif</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Mengukur suhu dan kelembapan ruangan</td><td>DHT22</td><td>Satu komponen untuk dua besaran, tersedia di simulator, pustakanya sederhana</td><td>DHT11 bila ketelitian bukan hal utama, atau DS18B20 bila hanya suhu</td></tr>
+          <tr><td>Membaca sensor dan mengirim data</td><td>ESP32</td><td>Wi-Fi sudah menyatu, dipakai sejak awal mata kuliah, dan didukung simulator</td><td>ESP8266 bila jumlah pin yang dibutuhkan sedikit</td></tr>
+          <tr><td>Mengantar pesan antara device dan platform</td><td>Broker MQTT</td><td>Sesuai untuk pesan kecil dan berkala, serta memisahkan pengirim dari penerima</td><td>Pengiriman HTTP berkala bila hanya satu arah dan jarang</td></tr>
+          <tr><td>Menampilkan nilai terkini dan tren</td><td>Node-RED</td><td>Dashboard dan pencatatan riwayat dapat dibuat tanpa menulis program</td><td>Layanan cloud berkanal bila komputer tidak selalu menyala</td></tr>
+          <tr><td>Menghidupkan kipas</td><td>Modul relay</td><td>Memisahkan arus kipas dari pin device, dan keadaannya mudah dibaca</td><td>LED sebagai pengganti pada simulator, atau transistor untuk kipas arus kecil</td></tr>
+        </tbody>
+        </table>
+      </div>
+      <div class="warn">
+        <strong>Jangan memilih komponen yang belum pernah Anda coba untuk bagian yang paling menentukan.</strong> Bila sebuah sensor baru gagal dibaca, seluruh mini project ikut berhenti. Pakailah komponen yang sudah Anda kenal untuk jalur utama, dan simpan komponen baru sebagai penambahan setelah jalur utama terbukti bekerja.
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>7. Peer Review: Membaca Rancangan Orang Lain</h2>
+      <p>Rancangan yang baru selesai selalu terasa jelas bagi penyusunnya, sebab bagian yang tidak tertulis masih tersimpan di kepalanya. Pembaca lain tidak memiliki simpanan itu, sehingga hanya ia yang dapat menemukan kekosongan tersebut. Itulah gunanya <strong>peer review</strong>: Anda menukar dokumen dengan teman, membacanya sebagai orang yang harus membangun sistem tersebut, lalu menuliskan temuan.</p>
+      <p>Cara membacanya bukan mencari kesalahan ejaan, melainkan mencoba menelusuri satu nilai sensor dari sumbernya sampai ke mata pengguna sambil bertanya di mana penelusuran itu terhenti karena keterangannya tidak ada. Titik berhentinya itulah temuan yang paling berharga.</p>
+      <div class="mini">
+        <div class="label">Daftar periksa peer review</div>
+        <ul>
+          <li>Apakah tujuannya memuat besaran, ambang, dan selang waktu, sehingga dapat dinyatakan tercapai atau tidak?</li>
+          <li>Apakah setiap kebutuhan bernomor dan dapat diuji, atau ada yang masih berupa kata sifat seperti "cepat" dan "andal"?</li>
+          <li>Apakah setiap panah pada diagram blok punya keterangan isi, dan apakah blok pengguna ada?</li>
+          <li>Apakah nama topic, arah, selang waktu, dan contoh payload lengkap dan saling cocok?</li>
+          <li>Apakah setiap komponen punya alasan dan alternatif, dan apakah pilihannya tersedia di simulator?</li>
+          <li>Apakah disebut apa yang terjadi ketika jaringan terputus dan ketika sensor mengirim nilai mustahil?</li>
+        </ul>
+      </div>
+      <p>Masukan ditulis agar dapat dikerjakan. Kalimat "alur datanya kurang jelas" tidak dapat diperbaiki karena tidak menunjuk apa pun, sedangkan "panah dari device ke broker belum menyebut isi pesannya, sebaiknya ditulis payload JSON seperti pada tabel topic" langsung dapat dikerjakan. Sebutkan juga satu bagian yang sudah baik, sebab pembaca perlu tahu bagian mana yang tidak perlu ia ubah.</p>
+      <div class="tip">
+        <strong>Terima masukan sebagai data, bukan penilaian.</strong> Setiap temuan yang muncul pada tahap dokumen adalah pekerjaan membongkar yang tidak perlu Anda lakukan pada tahap prototipe. Anda tidak wajib menerima semua saran, tetapi setiap saran yang ditolak sebaiknya diberi satu baris alasan di dalam dokumen, sehingga keputusannya tercatat.
+      </div>
+    </section>
+    <section class="card">
+      <h2>8. Implementasi Praktis: Menyusun Dokumen Rancangan</h2>
+      <p>Langkah berikut menghasilkan satu dokumen rancangan yang utuh, panjangnya cukup dua sampai tiga halaman. Kerjakan berurutan, karena setiap langkah memakai keluaran langkah sebelumnya. Dokumen contoh pada Bab 10 dapat dipakai sebagai pembanding bentuk, bukan untuk ditiru isinya.</p>
+      <ol class="step">
+        <li>Tulis satu masalah nyata yang Anda temui di sekitar Anda dalam dua kalimat, beserta siapa yang dirugikan oleh masalah itu.</li>
+        <li>Ubah masalah tersebut menjadi satu kalimat tujuan yang memuat besaran, selang waktu, ambang, dan tindakan, lalu periksa dengan pertanyaan pada Bab 2: dapatkah kalimat ini dibuktikan benar atau salah?</li>
+        <li>Turunkan tujuan itu menjadi kebutuhan fungsional bernomor F-1 sampai sekurang-kurangnya F-4, lalu kebutuhan non-fungsional N-1 sampai N-3 yang menyebut selang waktu, tanggapan atas gangguan, dan hal keamanan dasar.</li>
+        <li>Tulis dua use case memakai empat baris pada Bab 4, dan pastikan salah satunya berupa perintah dari pengguna ke device.</li>
+        <li>Gambar diagram blok lima lapis pada kertas atau editor gambar sederhana, beri keterangan pada setiap panah, lalu tambahkan blok aktuator bila ada.</li>
+        <li>Buat tabel topic berisi nama topic, arah, isi, dan selang waktu, lalu tulis satu contoh payload lengkap untuk masing-masing arah.</li>
+        <li>Susun tabel pemilihan komponen dengan empat kolom seperti pada Bab 6, dan tuliskan alternatif meski Anda merasa yakin dengan pilihan pertama.</li>
+        <li>Tukarkan dokumen dengan seorang teman, telaah dokumennya memakai daftar periksa pada Bab 7, tuliskan temuan Anda, lalu perbaiki dokumen sendiri berdasarkan temuan yang Anda terima dan catat satu alasan untuk saran yang Anda tolak.</li>
+      </ol>
+      <p>Bila Anda macet pada langkah kedua karena tujuan terasa sulit diukur, biasanya penyebabnya adalah masalah yang terlalu besar. Persempit sasarannya lebih dahulu, misalnya dari seluruh gedung menjadi satu ruangan, karena satu ruangan sudah cukup untuk mini project dan tetap dapat diperluas kemudian.</p>
+    </section>
+
+    <section class="card">
+      <h2>9. Hasil yang Diharapkan</h2>
+      <p>Setelah kedelapan langkah dijalankan, Anda memiliki satu dokumen rancangan yang memuat tujuh bagian: masalah dan tujuan terukur, kebutuhan fungsional bernomor, kebutuhan non-fungsional bernomor, dua use case singkat, diagram blok berketerangan, tabel topic beserta contoh payload, dan tabel pemilihan komponen. Selain itu Anda memegang catatan temuan dari teman beserta keterangan mana yang Anda kerjakan. Ujian kelayakannya satu: orang lain yang membaca dokumen itu dapat menyebutkan komponen apa yang perlu disiapkan dan pesan apa yang mengalir ke mana, tanpa bertanya kepada Anda.</p>
+      <h3>9.1 Jika hasilnya tidak seperti itu</h3>
+      <div class="table-scroll" tabindex="0">
+        <table>
+        <thead>
+          <tr><th>Gejala</th><th>Kemungkinan penyebab</th><th>Yang perlu diperiksa</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Tujuan tidak dapat dinyatakan tercapai atau tidak</td><td>Belum ada besaran atau ambang, hanya kata sifat</td><td>Tabel rumusan pada Bab 2, lalu tambahkan unsur yang hilang</td></tr>
+          <tr><td>Kebutuhan terasa berulang dan bertumpuk</td><td>Kebutuhan fungsional dan non-fungsional tercampur dalam satu kalimat</td><td>Pisahkan memakai tabel pembanding pada Bab 3, satu kalimat satu nomor</td></tr>
+          <tr><td>Teman salah membaca diagram blok Anda</td><td>Panah tanpa keterangan isi, atau Wi-Fi digambar sebagai kotak</td><td>Aturan menggambar pada Bab 5, bandingkan dengan diagram pada Bab 10</td></tr>
+          <tr><td>Bentuk payload berubah-ubah antarbagian dokumen</td><td>Contoh payload ditulis ulang di beberapa tempat</td><td>Tabel topic pada Bab 5, tetapkan satu contoh dan rujuk dari bagian lain</td></tr>
+          <tr><td>Tidak ada yang dapat ditelaah teman selain ejaan</td><td>Dokumen masih berupa daftar keinginan tanpa angka dan tanpa nama topic</td><td>Ulangi langkah 2, 3, dan 6 pada Bab 8 sebelum peer review diulang</td></tr>
+        </tbody>
+        </table>
+      </div>
+    </section>
+    <section class="card">
+      <h2>10. Contoh Dokumen Rancangan Lengkap</h2>
+      <p>Berikut satu dokumen rancangan yang sudah selesai, dengan kasus yang sama seperti contoh pada bab-bab sebelumnya. Tabel topic pada Bab 5 dan tabel pemilihan komponen pada Bab 6 adalah bagian 6 dan bagian 7 dari dokumen ini, sehingga keduanya tidak diulang di sini. Panjangnya sengaja tidak berlebihan; yang dituntut adalah kelengkapan, bukan ketebalan.</p>
+      <h3>10.1 Bagian 1 sampai 3: identitas, tujuan, dan kebutuhan</h3>
+      <div class="mini">
+        <div class="label">Dokumen rancangan mini project</div>
+        <p><strong>Judul:</strong> Pemantau dan Pengendali Suhu Ruang Baca. <strong>Penyusun:</strong> nama Anda. <strong>Ruang lingkup:</strong> satu ruangan, satu titik pengukuran, satu kipas, dijalankan pada simulator Wokwi dan Node-RED di komputer sendiri.</p>
+        <p><strong>Masalah:</strong> ruang baca menjadi panas pada siang hari, dan kipas baru dinyalakan setelah pengunjung mengeluh. Tidak ada catatan yang memperlihatkan jam berapa ruangan paling panas, sehingga tidak ada dasar untuk mengatur jadwal.</p>
+        <p><strong>Tujuan terukur:</strong> suhu dan kelembapan ruang baca terpantau setiap 10 detik, tercatat sebagai riwayat harian, dan kipas menyala otomatis ketika suhu melewati 30 derajat serta mati ketika suhu turun di bawah 29 derajat.</p>
+        <p><strong>Kebutuhan fungsional:</strong> (F-1) device membaca suhu dan kelembapan setiap 10 detik; (F-2) device mengirim hasil pembacaan beserta status kipas ke topic telemetri; (F-3) device menyalakan kipas ketika suhu melewati ambang atas dan mematikannya di bawah ambang bawah; (F-4) dashboard menampilkan nilai terkini, status kipas, dan grafik tren; (F-5) pengguna dapat mengambil alih kendali kipas lewat mode manual dari dashboard.</p>
+        <p><strong>Kebutuhan non-fungsional:</strong> (N-1) selang pengiriman tidak memakai <code>delay()</code> sehingga pembacaan tidak terhenti; (N-2) device menyambung ulang sendiri paling lama satu menit setelah jaringan pulih; (N-3) nilai di luar rentang -10 sampai 60 derajat ditolak dan dicatat, tidak dikirim; (N-4) kredensial disimpan sebagai tetapan terpisah dan tidak ikut dibagikan bersama kode.</p>
+      </div>
+      <h3>10.2 Bagian 4: use case singkat</h3>
+      <div class="mini">
+        <div class="label">UC-1 memantau kondisi ruangan</div>
+        <p><strong>Aktor:</strong> penjaga ruang baca. <strong>Pemicu:</strong> penjaga membuka dashboard pada awal jam kerja. <strong>Langkah:</strong> (1) penjaga membuka halaman dashboard; (2) dashboard menampilkan nilai terakhir yang diterima broker; (3) penjaga melihat grafik tren dua jam terakhir. <strong>Hasil:</strong> penjaga mengetahui suhu terkini, status kipas, dan arah perubahan suhu.</p>
+      </div>
+      <div class="mini">
+        <div class="label">UC-2 menyalakan kipas secara manual</div>
+        <p>Ditulis lengkap pada Bab 4, dengan tambahan satu catatan pada dokumen ini: mode manual berlaku sampai penjaga mengembalikannya ke mode otomatis, dan mode yang sedang aktif selalu ikut dikirim di dalam payload telemetri agar dashboard tidak menampilkan keadaan yang keliru.</p>
+      </div>
+      <h3>10.3 Bagian 5: diagram blok</h3>
+      <div class="svgbox" tabindex="0">
+        <svg viewBox="0 0 960 265" width="100%" height="265" role="img" aria-label="Diagram blok sistem pemantau suhu ruang baca">
+          <defs>
+            <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+              <path d="M 0 0 L 10 5 L 0 10 z" fill="#2563eb" />
+            </marker>
+            <marker id="ar2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+              <path d="M 0 0 L 10 5 L 0 10 z" fill="#b45309" />
+            </marker>
+          </defs>
+          <g stroke="#2563eb">
+            <rect x="8" y="66" width="150" height="72" rx="12" fill="#eef4ff" />
+            <rect x="205" y="66" width="150" height="72" rx="12" fill="#dbeafe" />
+            <rect x="402" y="66" width="156" height="72" rx="12" fill="#eef4ff" />
+            <rect x="605" y="66" width="150" height="72" rx="12" fill="#eef4ff" />
+            <rect x="802" y="66" width="150" height="72" rx="12" fill="#dbeafe" />
+            <rect x="8" y="170" width="150" height="56" rx="12" fill="#fff8eb" stroke="#b45309" />
+          </g>
+          <g text-anchor="middle" font-size="14" font-weight="bold" fill="#1f2937">
+            <text x="83" y="95">Sensor</text>
+            <text x="280" y="95">Device</text>
+            <text x="480" y="95">Jaringan</text>
+            <text x="680" y="95">Platform</text>
+            <text x="877" y="95">Pengguna</text>
+            <text x="83" y="194">Aktuator</text>
+          </g>
+          <g text-anchor="middle" font-size="13" fill="#5b6472">
+            <text x="83" y="116">DHT22</text>
+            <text x="280" y="116">ESP32</text>
+            <text x="480" y="116">Wi-Fi dan broker MQTT</text>
+            <text x="680" y="116">Node-RED</text>
+            <text x="877" y="116">penjaga ruang baca</text>
+            <text x="83" y="213">kipas lewat relay</text>
+          </g>
+          <g text-anchor="middle" font-size="12" fill="#5b6472">
+            <text x="180" y="50">angka mentah</text>
+            <text x="378" y="50">payload JSON tiap 10 detik</text>
+            <text x="581" y="50">topic telemetri</text>
+            <text x="778" y="50">grafik dan status</text>
+            <text x="580" y="232">perintah dan penggantian mode lewat topic perintah</text>
+          </g>
+          <g fill="none" stroke="#2563eb" stroke-width="2" marker-end="url(#ar)">
+            <line x1="158" y1="102" x2="199" y2="102" />
+            <line x1="355" y1="102" x2="396" y2="102" />
+            <line x1="558" y1="102" x2="599" y2="102" />
+            <line x1="755" y1="102" x2="796" y2="102" />
+            <path d="M 877 138 L 877 240 L 280 240 L 280 143" stroke-dasharray="6 4" />
+            <path d="M 240 138 L 240 196 L 163 196" stroke="#b45309" marker-end="url(#ar2)" />
+          </g>
+        </svg>
+      </div>
+      <p>Garis utuh menandai jalan data yang berjalan terus-menerus, sedangkan garis putus-putus menandai jalan perintah yang hanya terpakai ketika pengguna bertindak. Panah oranye ke aktuator digambar tidak melewati jaringan, karena keputusan menyalakan kipas diambil di dalam device.</p>
+      <h3>10.4 Bagian 6 dan 7: alur data dan pemilihan komponen</h3>
+      <p>Kedua bagian ini berbentuk tabel dan sudah tampil utuh sebagai contoh pada Bab 5 dan Bab 6. Di dalam dokumen sungguhan keduanya diletakkan berurutan setelah diagram blok, dengan satu tambahan kalimat penutup yang menyebut batasan yang disadari: prototipe dijalankan pada simulator sehingga kipas diwakili LED, dan riwayat disimpan di komputer sendiri sehingga data hilang bila berkasnya terhapus.</p>
+      <h3>10.5 Penjelasan bagian per bagian</h3>
+      <ul>
+        <li><strong>Ruang lingkup pada bagian 1</strong> ditulis lebih dahulu justru untuk membatasi pekerjaan. Satu ruangan dan satu titik pengukuran adalah janji yang dapat dipenuhi dalam satu pertemuan berikutnya.</li>
+        <li><strong>Dua ambang pada tujuan,</strong> yaitu 30 derajat untuk menyala dan 29 derajat untuk mati, bukan salah tulis. Bila keduanya sama, kipas akan menyala dan mati berulang kali di sekitar angka itu. Jarak antara dua ambang inilah yang menahan pergantian yang terlalu sering.</li>
+        <li><strong>Nomor F dan N</strong> dipakai kembali sebagai rencana pengujian: setiap nomor diuji sendiri, misalnya N-2 diuji dengan memutus jaringan lalu mengukur berapa lama sambungan kembali, sedangkan N-3 diuji dengan menitipkan nilai mustahil seperti pada Pertemuan 12 tentang keamanan dan keandalan.</li>
+        <li><strong>Medan <code>mode</code> di dalam payload telemetri</strong> ada karena dashboard tidak boleh menebak keadaan device. Tanpa medan itu, tombol pada dashboard dapat menampilkan mode manual sementara device sudah kembali otomatis setelah dinyalakan ulang.</li>
+        <li><strong>Batasan yang disadari</strong> ditulis di dalam dokumen, bukan disembunyikan. Rancangan yang menyebut batasannya lebih mudah dipercaya daripada rancangan yang menjanjikan semuanya berjalan sempurna.</li>
+      </ul>
+      <p>Dokumen sepanjang ini sudah memadai sebagai bekal membangun. Pada Pertemuan 14, rancangan inilah yang diwujudkan menjadi prototipe, dan bagian yang paling sering perlu disesuaikan bukan diagramnya, melainkan angka ambang serta selang pengiriman setelah dicoba di ruangan yang sesungguhnya.</p>
+    </section>
+    <section class="card">
+      <h2>11. Ringkasan Materi</h2>
+      <ul>
+        <li>Perancangan memindahkan pekerjaan ke tempat yang paling murah, sebab memindahkan kotak pada diagram jauh lebih ringan daripada membongkar rangkaian dan program yang sudah jadi.</li>
+        <li>Masalah diubah menjadi tujuan terukur yang memuat besaran, selang waktu, ambang, dan tindakan, sehingga akhir pekerjaan dapat dinyatakan tercapai atau tidak.</li>
+        <li>Kebutuhan fungsional menyebut apa yang dikerjakan sistem, kebutuhan non-fungsional menyebut seberapa baik; keduanya ditulis bernomor dan harus dapat diuji.</li>
+        <li>Use case singkat berisi aktor, pemicu, langkah, dan hasil, dan sebaiknya salah satunya memuat perintah dari pengguna ke device.</li>
+        <li>Diagram blok memperlihatkan susunan lima lapis dengan setiap panah berketerangan isi, sedangkan alur data memperlihatkan nama topic, arah, selang waktu, dan contoh payload.</li>
+        <li>Setiap komponen disertai alasan dan alternatif, dan rancangan ditelaah teman memakai daftar periksa agar kekosongan yang tidak terlihat oleh penyusunnya ditemukan sebelum dibangun.</li>
+      </ul>
+    </section>
+
+    <section class="card">
+      <h2>12. Latihan Pemahaman</h2>
+      <p>Jawab lebih dahulu tanpa membuka kunci, lalu bandingkan.</p>
+      <details>
+        <summary>1. Kebutuhan "sistem harus cepat menanggapi perintah" termasuk jenis apa, dan mengapa ia belum layak dipakai?</summary>
+        <p>Ia kebutuhan non-fungsional, karena menyebut seberapa baik bukan apa yang dikerjakan. Ia belum layak dipakai karena tidak memuat angka, sehingga tidak ada yang dapat diuji. Bentuk yang layak misalnya "kipas berubah keadaan paling lama satu selang pengiriman setelah tombol ditekan".</p>
+      </details>
+      <details>
+        <summary>2. Mengapa Wi-Fi sebaiknya tidak digambar sebagai kotak tersendiri pada diagram blok?</summary>
+        <p>Karena satu kotak mewakili satu peran, sedangkan Wi-Fi adalah sarana yang dipakai pada panah. Menggambarnya sebagai kotak membuat pembaca mencari perangkat yang sesungguhnya tidak ada, dan menyembunyikan pertanyaan yang lebih penting, yaitu isi apa yang lewat di panah itu.</p>
+      </details>
+      <details>
+        <summary>3. Mengapa keputusan menyalakan kipas sebaiknya berada di device, bukan di dashboard?</summary>
+        <p>Karena dashboard bergantung pada jaringan. Bila keputusan ada di dashboard, kipas berhenti bekerja tepat ketika sambungan terputus, padahal suhu ruangan tidak ikut berhenti naik. Dashboard tetap berguna sebagai pengambil alih lewat mode manual.</p>
+      </details>
+      <p>Lima pertanyaan reflektif berikut dijawab dengan kalimat sendiri: (1) masalah nyata apa di sekitar Anda yang paling layak dijadikan mini project, dan siapa yang dirugikan olehnya; (2) ambang dan selang waktu apa yang Anda pilih beserta dasarnya; (3) kebutuhan non-fungsional mana yang paling mungkin gagal dipenuhi pada prototipe Anda; (4) komponen mana pada rancangan Anda yang paling berisiko tidak tersedia, dan apa alternatifnya; (5) temuan peer review mana yang paling mengubah rancangan Anda, dan mengapa Anda tidak melihatnya sendiri.</p>
+    </section>
+    <section class="card">
+      <h2>13. Tugas Latihan Pertemuan 13</h2>
+      <p>Susun dokumen rancangan mini project Anda sendiri mengikuti kedelapan langkah pada Bab 8, lalu tukarkan dengan seorang teman untuk ditelaah. Yang dinilai bukan kerapian tampilan dokumen, melainkan apakah rancangan itu dapat dibangun oleh orang lain tanpa bertanya kepada Anda.</p>
+      <ul>
+        <li>Dokumen rancangan berisi tujuh bagian: masalah dan tujuan terukur, kebutuhan fungsional bernomor, kebutuhan non-fungsional bernomor, dua use case singkat, diagram blok berketerangan, tabel topic beserta contoh payload, dan tabel pemilihan komponen empat kolom.</li>
+        <li>Lembar temuan peer review yang Anda tulis untuk rancangan teman, memakai daftar periksa pada Bab 7, memuat sekurang-kurangnya tiga temuan yang dapat dikerjakan dan satu bagian yang sudah baik.</li>
+        <li>Daftar perbaikan pada dokumen Anda sendiri setelah menerima temuan, ditambah satu baris alasan bagi setiap saran yang Anda putuskan tidak dipakai.</li>
+      </ul>
+      <div class="table-scroll" tabindex="0">
+        <table>
+        <thead>
+          <tr><th>Aspek</th><th>Bobot</th><th>Kriteria nilai penuh</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Tujuan terukur dan kebutuhan</td><td>30%</td><td>Tujuan memuat besaran, selang waktu, ambang, dan tindakan; kebutuhan bernomor, terpisah jenisnya, dan setiap butir dapat diuji</td></tr>
+          <tr><td>Diagram blok dan alur data</td><td>30%</td><td>Lima blok lengkap beserta aktuator bila ada, setiap panah berketerangan isi, tabel topic cocok dengan contoh payload</td></tr>
+          <tr><td>Pemilihan komponen</td><td>20%</td><td>Setiap komponen disertai alasan yang mengacu pada kebutuhan dan satu alternatif yang masuk akal</td></tr>
+          <tr><td>Peer review dan tindak lanjut</td><td>20%</td><td>Temuan untuk teman jelas dan dapat dikerjakan, serta perbaikan sendiri tercatat beserta alasan bagi saran yang tidak dipakai</td></tr>
+        </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>14. Checkpoint Evaluasi Pertemuan 13</h2>
+      <p>Pertemuan ini dianggap tuntas bila butir berikut dapat Anda lakukan sendiri. Daftar ini sekaligus dipakai sebagai pemeriksaan diri sebelum tugas dikumpulkan.</p>
+      <div class="mini">
+        <div class="label">Target minimal pertemuan ini</div>
+        <p>Ada satu dokumen rancangan mini project yang memuat tujuan terukur, kebutuhan bernomor, diagram blok berketerangan, alur data beserta contoh payload, dan tabel pemilihan komponen, dan dokumen itu sudah pernah ditelaah seorang teman.</p>
+      </div>
+      <div class="table-scroll" tabindex="0">
+        <table>
+        <thead>
+          <tr><th>Yang diperiksa</th><th>Cara memastikan sendiri</th><th>Bila belum tercapai</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Kebutuhan sudah dirumuskan dan dapat diuji</td><td>Ambil satu butir secara acak lalu sebutkan cara membuktikannya pada prototipe; bila tidak dapat disebutkan, butir itu belum layak</td><td>Baca ulang Bab 2 dan Bab 3, lalu perbaiki butir yang masih berupa kata sifat</td></tr>
+          <tr><td>Diagram blok dan alur data dapat dijelaskan</td><td>Jelaskan diagram Anda kepada teman dalam dua menit tanpa membuka catatan, dan pastikan ia dapat menyebut isi setiap panah</td><td>Baca ulang Bab 5, lalu bandingkan bentuknya dengan diagram pada Bab 10</td></tr>
+          <tr><td>Pemilihan komponen disertai alasan</td><td>Untuk setiap baris tabel komponen, sebutkan kebutuhan yang dilayaninya dan satu alternatif yang Anda tolak</td><td>Baca ulang Bab 6, terutama empat pertimbangan pemilihan</td></tr>
+          <tr><td>Peer review sudah dijalankan</td><td>Periksa apakah ada lembar temuan dari teman dan daftar perbaikan Anda, bukan hanya percakapan lisan</td><td>Baca ulang Bab 7, lalu ulangi penelaahan memakai daftar periksanya</td></tr>
+        </tbody>
+        </table>
+      </div>
+      <p class="footer-note">Pertemuan ini adalah persiapan langsung menuju CP-4 pada Pertemuan 16, setelah CP-1 pada Pertemuan 4, CP-2 pada Pertemuan 8, dan CP-3 pada Pertemuan 12. Tugas latihan mingguan berbobot 20 persen dari nilai akhir, sedangkan mini project yang dirancang di sini berbobot 20 persen tersendiri.</p>
+    </section>
+
+    <section class="card">
+      <h2>15. Referensi Praktis</h2>
+      <dl class="gloss">
+        <dt>Draw.io — <code>diagrams.net</code></dt>
+        <dd>Alat gambar diagram yang dapat dipakai tanpa pemasangan dan menyimpan berkas ke komputer sendiri. Dipakai untuk menggambar diagram blok pada Bab 5 dan Bab 10.</dd>
+        <dt>Template diagram arsitektur IoT — topik pencarian</dt>
+        <dd>Telusuri dengan kata kunci <code>IoT architecture layers</code>, <code>IoT block diagram template</code>, dan <code>sensor to cloud diagram</code>. Hasilnya memperkaya cara Anda menyusun lima blok pada Bab 5.</dd>
+        <dt>Studi kasus penerapan IoT — topik pencarian</dt>
+        <dd>Telusuri dengan kata kunci <code>smart room monitoring</code>, <code>smart farming IoT</code>, dan <code>energy monitoring IoT</code>. Bacaan seperti ini menolong ketika Anda mencari masalah nyata pada Bab 2 dan menimbang komponen pada Bab 6.</dd>
+      </dl>
+      <p class="footer-note">Alamat sumber ditulis sebagai nama domain karena struktur halaman sebuah situs berubah dari waktu ke waktu, sehingga tautan langsung cepat menjadi tidak berlaku.</p>
+    </section>
+    <footer class="pagenum">
+      <span class="pagenum-seri">Materi Pertemuan 13</span>
+      <span class="pagenum-no">Halaman 13 dari 16</span>
+    </footer>
+  </div>
+</body>
+</html>

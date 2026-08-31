@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Materi Pertemuan 3 - Input Analog dan Sensor Virtual</title>
+  <link rel="stylesheet" href="assets/materi.css" />
+</head>
+<body>
+  <div class="wrap">
+    <section class="hero">
+      <span class="badge">Pertemuan 3</span>
+      <h1>Input Analog dan Pembacaan Sensor Virtual</h1>
+      <p class="lead">Materi ini membahas perbedaan digital dan analog, penggunaan <code>analogRead()</code>, pembacaan potensiometer atau LDR virtual, pemantauan data lewat serial monitor, serta implementasi smart light sederhana berbasis threshold.</p>
+      <div>
+        <span class="pill">Digital vs Analog</span>
+        <span class="pill">analogRead()</span>
+        <span class="pill">LDR Virtual</span>
+        <span class="pill">Potensiometer</span>
+        <span class="pill">Serial Monitor</span>
+        <span class="pill">Smart Light</span>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Capaian Pembelajaran Pertemuan 3</h2>
+      <div class="grid two">
+        <div class="mini">
+          <div class="label">Yang dipahami</div>
+          <ul>
+            <li>Perbedaan data digital dan data analog.</li>
+            <li>Makna fungsi <code>analogRead()</code> pada ESP32.</li>
+            <li>Peran sensor virtual seperti potensiometer dan LDR dalam simulasi.</li>
+            <li>Fungsi serial monitor untuk melihat data pembacaan sensor.</li>
+          </ul>
+        </div>
+        <div class="mini">
+          <div class="label">Yang dapat dilakukan</div>
+          <ul>
+            <li>Membaca nilai sensor analog virtual secara konsisten.</li>
+            <li>Menampilkan data pembacaan ke serial monitor.</li>
+            <li>Menggunakan nilai sensor sebagai dasar keputusan program.</li>
+            <li>Membuat smart light sederhana: LED terang saat cahaya rendah.</li>
+          </ul>
+        </div>
+      </div>
+      <p>Fokus Pertemuan 3 adalah perbedaan digital vs analog, penggunaan <code>analogRead()</code>, pembacaan potensiometer/LDR virtual, serial monitor, serta perubahan perilaku LED berdasarkan nilai sensor. Target minimumnya adalah Anda mampu membaca data sensor virtual dan memakainya sebagai dasar keputusan.</p>
+    </section>
+
+    <section class="card">
+      <h2>1. Memahami Data Digital dan Data Analog</h2>
+      <p>Pada pertemuan sebelumnya, pembahasan banyak berfokus pada input-output digital. Data digital bersifat diskrit, biasanya direpresentasikan dalam dua keadaan, misalnya <strong>HIGH/LOW</strong>, <strong>1/0</strong>, atau <strong>nyala/mati</strong>. Pada Pertemuan 3, ruang lingkup diperluas ke data analog, yaitu data yang nilainya dapat berubah secara bertahap dalam rentang tertentu.</p>
+      <p>Perbedaan ini sangat penting dalam IoT karena banyak kondisi dunia nyata tidak hadir dalam dua nilai tegas. Intensitas cahaya, suhu, kelembapan, dan level suara umumnya berubah secara kontinu. Agar device dapat memahami perubahan itu, sistem perlu membaca data analog dan mengubahnya menjadi nilai numerik yang dapat diolah program.</p>
+      <div class="analogy">
+        <strong>Analogi dunia nyata:</strong> data digital seperti saklar lampu di rumah yang hanya punya dua keadaan: hidup atau mati. Data analog seperti keran air. Keran tidak hanya punya dua keadaan, tetapi bisa dibuka sedikit, sedang, atau penuh. Artinya, nilainya bertingkat dan lebih halus daripada sekadar dua pilihan.</div>
+
+      <h3>1.1 Ciri-ciri data digital</h3>
+      <ul>
+        <li>Hanya memiliki sedikit keadaan yang jelas, umumnya dua.</li>
+        <li>Cocok untuk tombol, switch, sensor gerak sederhana, dan status on/off.</li>
+        <li>Mudah diuji dengan logika if-else yang sederhana.</li>
+      </ul>
+
+      <h3>1.2 Ciri-ciri data analog</h3>
+      <ul>
+        <li>Memiliki rentang nilai, bukan hanya dua keadaan.</li>
+        <li>Cocok untuk menggambarkan perubahan lingkungan yang bertahap.</li>
+        <li>Biasanya perlu pembacaan numerik dan kadang perlu threshold untuk pengambilan keputusan.</li>
+      </ul>
+
+      <div class="svgbox" tabindex="0">
+        <svg viewBox="0 0 980 260" width="100%" role="img" aria-label="Perbandingan sinyal digital dan analog">
+          <rect x="30" y="35" width="420" height="180" rx="18" fill="#dbeafe" stroke="#2563eb"/>
+          <rect x="530" y="35" width="420" height="180" rx="18" fill="#dcfce7" stroke="#15803d"/>
+          <text x="240" y="70" text-anchor="middle" font-size="26" font-weight="700" fill="#1f2937">Digital</text>
+          <text x="740" y="70" text-anchor="middle" font-size="26" font-weight="700" fill="#1f2937">Analog</text>
+          <polyline points="80,170 80,110 170,110 170,170 260,170 260,110 350,110 350,170 400,170" fill="none" stroke="#1d4ed8" stroke-width="6"/>
+          <path d="M580 170 C620 60, 690 60, 730 170 S840 280, 900 110" fill="none" stroke="#15803d" stroke-width="6"/>
+          <text x="240" y="205" text-anchor="middle" font-size="16" fill="#374151">Nilai tegas: 0 atau 1</text>
+          <text x="740" y="205" text-anchor="middle" font-size="16" fill="#374151">Nilai berubah bertahap</text>
+        </svg>
+      </div>
+
+      <h3>1.3 Mengapa data analog penting dalam IoT?</h3>
+      <p>Banyak sistem IoT dibuat untuk memahami kondisi lingkungan. Jika hanya memakai data digital, informasi yang diperoleh bisa terlalu kasar. Misalnya, “gelap” dan “tidak gelap” memang berguna, tetapi mengetahui seberapa terang ruangan akan jauh lebih kaya untuk pengambilan keputusan. Dengan data analog, sistem dapat menentukan respon yang lebih cerdas, misalnya menyalakan LED samar saat agak gelap dan lebih terang saat sangat gelap.</p>
+    </section>
+
+    <section class="card">
+      <h2>2. Konsep Pembacaan Analog pada ESP32</h2>
+      <p>Pada ESP32, pembacaan analog umumnya dilakukan dengan fungsi <code>analogRead(pin)</code>. Fungsi ini membaca tegangan atau sinyal pada pin analog tertentu, lalu mengubahnya menjadi angka digital yang dapat diproses oleh program. Inilah jembatan antara dunia fisik yang kontinu dan dunia komputasi yang berbasis angka.</p>
+      <p>Hasil pembacaan analog bukan langsung berupa kata “terang” atau “gelap”, melainkan angka. Programlah yang kemudian memberi makna pada angka tersebut. Misalnya, nilai di bawah threshold tertentu dapat diartikan sebagai kondisi gelap.</p>
+      <div class="analogy">
+        <strong>Analogi dunia nyata:</strong> <code>analogRead()</code> seperti petugas yang mengubah tinggi air pada tabung ukur menjadi angka pada lembar laporan. Tinggi air itu bersifat fisik dan kontinu, tetapi supaya bisa dianalisis, harus diubah dulu menjadi angka.</div>
+
+      <h3>2.1 Alur pembacaan analog</h3>
+      <ol>
+        <li>Sensor menghasilkan sinyal yang berubah-ubah sesuai kondisi lingkungan.</li>
+        <li>ESP32 membaca sinyal itu pada pin tertentu.</li>
+        <li>Fungsi <code>analogRead()</code> mengembalikan nilai numerik.</li>
+        <li>Program menampilkan atau memproses nilai itu.</li>
+        <li>Jika diperlukan, program mengambil keputusan berdasarkan threshold.</li>
+      </ol>
+
+      <div class="svgbox" tabindex="0">
+        <svg viewBox="0 0 1040 260" width="100%" role="img" aria-label="Alur pembacaan analog pada ESP32">
+          <rect x="30" y="90" width="170" height="90" rx="18" fill="#fef3c7" stroke="#b45309"/>
+          <rect x="245" y="90" width="180" height="90" rx="18" fill="#dbeafe" stroke="#2563eb"/>
+          <rect x="470" y="90" width="180" height="90" rx="18" fill="#dcfce7" stroke="#15803d"/>
+          <rect x="695" y="90" width="160" height="90" rx="18" fill="#ede9fe" stroke="#6d28d9"/>
+          <rect x="900" y="90" width="110" height="90" rx="18" fill="#fee2e2" stroke="#dc2626"/>
+          <text x="115" y="125" text-anchor="middle" font-size="24" font-weight="700">Sensor</text>
+          <text x="115" y="150" text-anchor="middle" font-size="16">LDR / pot</text>
+          <text x="335" y="125" text-anchor="middle" font-size="24" font-weight="700">Pin Analog</text>
+          <text x="335" y="150" text-anchor="middle" font-size="16">menerima sinyal</text>
+          <text x="560" y="125" text-anchor="middle" font-size="24" font-weight="700">analogRead()</text>
+          <text x="560" y="150" text-anchor="middle" font-size="16">ubah jadi angka</text>
+          <text x="775" y="125" text-anchor="middle" font-size="24" font-weight="700">Program</text>
+          <text x="775" y="150" text-anchor="middle" font-size="16">bandingkan nilai</text>
+          <text x="955" y="125" text-anchor="middle" font-size="22" font-weight="700">Aksi</text>
+          <text x="955" y="150" text-anchor="middle" font-size="16">LED</text>
+          <line x1="200" y1="135" x2="245" y2="135" stroke="#2563eb" stroke-width="4"/><polygon points="245,135 231,127 231,143" fill="#2563eb"/>
+          <line x1="425" y1="135" x2="470" y2="135" stroke="#2563eb" stroke-width="4"/><polygon points="470,135 456,127 456,143" fill="#2563eb"/>
+          <line x1="650" y1="135" x2="695" y2="135" stroke="#2563eb" stroke-width="4"/><polygon points="695,135 681,127 681,143" fill="#2563eb"/>
+          <line x1="855" y1="135" x2="900" y2="135" stroke="#2563eb" stroke-width="4"/><polygon points="900,135 886,127 886,143" fill="#2563eb"/>
+        </svg>
+      </div>
+
+      <h3>2.2 Threshold sebagai dasar keputusan</h3>
+      <p>Dalam banyak kasus, nilai analog tidak hanya ditampilkan, tetapi dipakai untuk keputusan. Misalnya, jika nilai sensor di bawah 500 maka LED dinyalakan. Nilai 500 ini disebut threshold, yaitu batas yang digunakan program untuk membedakan kondisi. Konsep threshold sangat penting karena ia menjadi jembatan dari data numerik menuju aksi nyata.</p>
+      <div class="analogy">
+        <strong>Analogi dunia nyata:</strong> threshold seperti batas nilai kelulusan. Angka hasil ujian adalah data mentah. Ketika ditetapkan bahwa 75 adalah batas lulus, angka-angka itu baru bisa dipakai untuk keputusan lulus atau belum.</div>
+    </section>
+
+    <section class="card">
+      <h2>3. Sensor Virtual yang Digunakan pada Pertemuan 3</h2>
+      <p>Sensor virtual yang disorot pada pertemuan ini adalah <strong>potensiometer</strong> dan <strong>LDR</strong>. Keduanya sangat cocok untuk pembelajaran awal karena mudah diamati perubahan nilainya. Potensiometer membantu memahami konsep perubahan manual yang halus, sedangkan LDR membantu memahami hubungan cahaya dengan nilai sensor.</p>
+
+      <h3>3.1 Potensiometer virtual</h3>
+      <p>Potensiometer virtual biasanya memiliki penggeser atau knob yang dapat diubah manual. Ketika posisinya berubah, nilai analog yang dibaca ESP32 juga berubah. Ini memudahkan Anda melihat bahwa satu sensor dapat menghasilkan rentang nilai, bukan hanya dua status.</p>
+      <div class="analogy">
+        <strong>Analogi dunia nyata:</strong> potensiometer seperti knop volume pada speaker. Volume tidak hanya “diam” atau “keras”, tetapi dapat diatur bertahap dari kecil ke besar.</div>
+
+      <h3>3.2 LDR virtual</h3>
+      <p>LDR atau Light Dependent Resistor adalah sensor yang berubah sesuai intensitas cahaya. Dalam simulasi, Anda dapat mengubah tingkat pencahayaan virtual dan melihat bagaimana angka sensor ikut berubah. Sensor ini sangat relevan untuk contoh smart light karena secara alami berkaitan dengan terang dan gelap.</p>
+      <div class="analogy">
+        <strong>Analogi dunia nyata:</strong> LDR seperti mata manusia. Saat lingkungan sangat terang, mata menerima cahaya lebih banyak. Saat lingkungan gelap, respons mata juga berubah. Dalam sistem elektronik, perubahan itu diterjemahkan menjadi perubahan nilai sensor.</div>
+
+      <h3>3.3 Mengapa memakai sensor virtual lebih dulu?</h3>
+      <ul>
+        <li>Anda dapat fokus memahami logika pembacaan tanpa direpotkan pemasangan hardware fisik.</li>
+        <li>Perubahan nilai dapat diamati dengan cepat dan berulang.</li>
+        <li>Eksperimen threshold menjadi lebih aman dan mudah.</li>
+      </ul>
+    </section>
+
+    <section class="card">
+      <h2>4. Serial Monitor sebagai Jendela Data Sensor</h2>
+      <p>Saat belajar pembacaan sensor, Anda perlu melihat hasil baca secara langsung. Di sinilah serial monitor berperan. Serial monitor adalah tampilan teks yang menunjukkan data yang dikirim dari program ke komputer atau simulator. Dengan alat ini, Anda dapat melihat apakah sensor benar-benar menghasilkan angka, apakah nilainya berubah, dan apakah logika keputusan berjalan sesuai dugaan.</p>
+      <p>Serial monitor sangat penting dalam debugging dasar. Sebelum menyalahkan sensor atau rangkaian, langkah pertama yang paling masuk akal adalah melihat data mentahnya di serial monitor.</p>
+      <div class="analogy">
+        <strong>Analogi dunia nyata:</strong> serial monitor seperti panel check-up pada kendaraan. Sebelum memperbaiki mesin, teknisi melihat indikator dan data diagnostik terlebih dahulu. Data itu membantu memahami apa yang sedang terjadi di dalam sistem.</div>
+
+      <h3>4.1 Fungsi serial monitor dalam praktik</h3>
+      <ul>
+        <li>Menampilkan nilai sensor secara real-time.</li>
+        <li>Membantu menguji konsistensi data.</li>
+        <li>Mempermudah menentukan threshold yang masuk akal.</li>
+        <li>Menjadi alat debugging untuk memeriksa alur program.</li>
+      </ul>
+    </section>
+
+    <section class="card">
+      <h2>5. Implementasi Praktis: Smart Light Berbasis LDR Virtual</h2>
+      <p>Tugas latihan pertemuan ini adalah membuat simulasi <strong>smart light</strong> berbasis LDR virtual, dengan perilaku LED terang saat cahaya rendah. Ini adalah latihan yang sangat baik karena menggabungkan pembacaan analog, serial monitor, threshold, dan output LED dalam satu contoh yang konkret.</p>
+
+      <h3>5.1 Ide sistem</h3>
+      <p>Sistem membaca nilai cahaya dari LDR virtual. Jika kondisi ruangan gelap, LED dinyalakan. Jika cukup terang, LED dimatikan. Secara konseptual, ini adalah contoh sederhana dari otomasi berbasis sensor.</p>
+      <div class="svgbox" tabindex="0">
+        <svg viewBox="0 0 1020 260" width="100%" role="img" aria-label="Diagram smart light berbasis LDR virtual">
+          <rect x="40" y="90" width="180" height="90" rx="18" fill="#fef3c7" stroke="#b45309"/>
+          <rect x="270" y="90" width="180" height="90" rx="18" fill="#dbeafe" stroke="#2563eb"/>
+          <rect x="500" y="90" width="180" height="90" rx="18" fill="#dcfce7" stroke="#15803d"/>
+          <rect x="730" y="90" width="220" height="90" rx="18" fill="#fee2e2" stroke="#dc2626"/>
+          <text x="130" y="124" text-anchor="middle" font-size="24" font-weight="700">LDR</text>
+          <text x="130" y="150" text-anchor="middle" font-size="16">baca cahaya</text>
+          <text x="360" y="124" text-anchor="middle" font-size="24" font-weight="700">ESP32</text>
+          <text x="360" y="150" text-anchor="middle" font-size="16">analogRead()</text>
+          <text x="590" y="124" text-anchor="middle" font-size="24" font-weight="700">Threshold</text>
+          <text x="590" y="150" text-anchor="middle" font-size="16">gelap / terang</text>
+          <text x="840" y="124" text-anchor="middle" font-size="24" font-weight="700">LED</text>
+          <text x="840" y="150" text-anchor="middle" font-size="16">nyala saat gelap</text>
+          <line x1="220" y1="135" x2="270" y2="135" stroke="#2563eb" stroke-width="4"/><polygon points="270,135 256,127 256,143" fill="#2563eb"/>
+          <line x1="450" y1="135" x2="500" y2="135" stroke="#2563eb" stroke-width="4"/><polygon points="500,135 486,127 486,143" fill="#2563eb"/>
+          <line x1="680" y1="135" x2="730" y2="135" stroke="#2563eb" stroke-width="4"/><polygon points="730,135 716,127 716,143" fill="#2563eb"/>
+        </svg>
+      </div>
+
+      <h3>5.2 Menyiapkan lingkungan kerja di simulator</h3>
+      <p>Seluruh praktik pertemuan ini dikerjakan di simulator <strong>Wokwi</strong>, alat yang sama seperti pada Pertemuan 2 tentang dasar ESP32 dan GPIO, sehingga tidak ada perangkat fisik yang perlu disiapkan. Ada dua rangkaian yang dibangun: potensiometer agar rentang nilai analog terlihat utuh, lalu smart light dengan modul LDR. Kode untuk keduanya sama, yaitu contoh pada Bab 6, jadi bacalah bab ini dan Bab 6 secara berdampingan.</p>
+      <div class="tip">
+        <strong>Tidak ada yang perlu diinstal.</strong> Wokwi berjalan langsung di browser. Bedanya dengan pertemuan sebelumnya, kali ini <strong>Serial Monitor</strong> ikut dipakai karena yang diamati bukan hanya LED, melainkan juga angka hasil pembacaan sensor.
+      </div>
+      <ol class="step">
+        <li>Buka <strong>wokwi.com</strong> di browser, pilih <strong>New Project</strong>, lalu pilih board <strong>ESP32</strong>.</li>
+        <li>Tekan tanda tambah (<strong>+</strong>) pada panel rangkaian untuk membuka daftar komponen. Dari daftar inilah potensiometer, modul LDR, LED, dan resistor diambil.</li>
+        <li>Untuk menyambung dua kaki komponen, klik kaki pertama lalu klik kaki kedua sehingga terbentuk satu garis kabel di antara keduanya.</li>
+        <li>Kenali tab <code>diagram.json</code> di atas panel rangkaian. Isi panel rangkaian tersimpan sebagai berkas teks di tab itu, dan dipakai sebagai jalan cepat memasang rangkaian.</li>
+        <li>Jalankan simulasi dengan tombol berbentuk segitiga hijau. Setelah itu <strong>Serial Monitor</strong> muncul di bawah panel kode dan angka pembacaan terbit berulang di sana.</li>
+      </ol>
+      <p>Kedua praktik memakai pemetaan pin yang sama, mengikuti nomor pin pada contoh kode Bab 6.</p>
+      <div class="table-scroll" tabindex="0">
+        <table>
+        <thead>
+          <tr><th>Komponen</th><th>Kaki ke ESP32</th><th>Pin ESP32</th><th>Nama di program</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Potensiometer (Praktik 1)</td><td><code>SIG</code>, <code>VCC</code>, <code>GND</code></td><td>GPIO 34</td><td><code>ldrPin</code></td></tr>
+          <tr><td>Modul LDR (Praktik 2)</td><td><code>AO</code>, <code>VCC</code>, <code>GND</code></td><td>GPIO 34</td><td><code>ldrPin</code></td></tr>
+          <tr><td>LED dengan resistor 220 Ω</td><td>kaki panjang ke resistor, kaki pendek ke <code>GND</code></td><td>GPIO 2</td><td><code>ledPin</code></td></tr>
+        </tbody>
+        </table>
+      </div>
+      <div class="warn">
+        <strong>Tidak semua pin dapat membaca analog.</strong> Pada ESP32 hanya sebagian pin yang dapat dipakai untuk <code>analogRead()</code>, jadi sensor tidak boleh dipindah ke pin sembarangan. GPIO 34 juga termasuk pin yang hanya bisa menjadi input, sehingga LED tidak boleh disambungkan ke sana: pin itu tidak dapat mengeluarkan tegangan dan LED tidak akan menyala walaupun programnya benar. LED tetap memakai GPIO 2 seperti pada Bab 6.
+      </div>
+
+      <h3>5.3 Praktik 1: Potensiometer sebagai sumber nilai analog</h3>
+      <p>Praktik pertama sengaja memakai potensiometer, bukan LDR. Posisi knob dapat Anda ubah dari ujung terkecil sampai ujung terbesar, sehingga seluruh rentang angka yang dihasilkan <code>analogRead()</code> terlihat utuh dan pilihan threshold lebih mudah ditentukan. Rangkaian LED dan kodenya sama dengan praktik berikutnya; yang berbeda hanya sumber sinyal pada pin analog.</p>
+      <p><strong>Komponen yang perlu ditambahkan:</strong> satu potensiometer, satu LED, dan satu resistor bernilai 220 Ω. Ketiganya diambil dari daftar komponen pada panel rangkaian.</p>
+      <div class="svgbox" tabindex="0">
+        <svg viewBox="0 25 700 300" width="100%" role="img" aria-label="Rangkaian potensiometer: kaki VCC ke pin 3V3 ESP32, kaki tengah SIG ke GPIO 34, kaki GND ke pin GND, sedangkan LED dari GPIO 2 melalui resistor 220 ohm lalu kaki pendeknya ke pin GND">
+          <rect x="30" y="40" width="170" height="270" rx="14" fill="#dcfce7" stroke="#15803d" stroke-width="2"/>
+          <text x="115" y="96" text-anchor="middle" font-size="22" font-weight="700">ESP32</text>
+          <text x="194" y="143" text-anchor="end" font-size="14" font-weight="700" fill="#6d28d9">3V3</text>
+          <text x="194" y="183" text-anchor="end" font-size="14" font-weight="700" fill="#15803d">GPIO 34</text>
+          <text x="194" y="223" text-anchor="end" font-size="14" font-weight="700" fill="#111827">GND</text>
+          <text x="194" y="268" text-anchor="end" font-size="14" font-weight="700" fill="#15803d">GPIO 2</text>
+          <text x="194" y="308" text-anchor="end" font-size="14" font-weight="700" fill="#111827">GND</text>
+          <rect x="360" y="112" width="180" height="130" rx="12" fill="#ede9fe" stroke="#6d28d9" stroke-width="2"/>
+          <text x="450" y="172" text-anchor="middle" font-size="17" font-weight="700">Potensiometer</text>
+          <text x="450" y="196" text-anchor="middle" font-size="13" fill="#374151">knob digeser manual</text>
+          <line x1="200" y1="138" x2="360" y2="138" stroke="#6d28d9" stroke-width="4"/>
+          <text x="272" y="131" text-anchor="middle" font-size="13" font-weight="700" fill="#6d28d9">VCC</text>
+          <line x1="200" y1="178" x2="360" y2="178" stroke="#15803d" stroke-width="4"/>
+          <text x="272" y="171" text-anchor="middle" font-size="13" font-weight="700" fill="#15803d">SIG</text>
+          <line x1="200" y1="218" x2="360" y2="218" stroke="#111827" stroke-width="4"/>
+          <text x="272" y="211" text-anchor="middle" font-size="13" font-weight="700" fill="#111827">GND</text>
+          <line x1="200" y1="263" x2="300" y2="263" stroke="#15803d" stroke-width="4"/>
+          <rect x="300" y="243" width="100" height="40" rx="8" fill="#fef3c7" stroke="#b45309" stroke-width="2"/>
+          <text x="350" y="269" text-anchor="middle" font-size="15" font-weight="700">220 Ω</text>
+          <line x1="400" y1="263" x2="546" y2="263" stroke="#15803d" stroke-width="4"/>
+          <circle cx="580" cy="263" r="34" fill="#fee2e2" stroke="#dc2626" stroke-width="2"/>
+          <text x="580" y="269" text-anchor="middle" font-size="16" font-weight="700">LED</text>
+          <line x1="614" y1="263" x2="640" y2="263" stroke="#111827" stroke-width="4"/>
+          <line x1="640" y1="263" x2="640" y2="303" stroke="#111827" stroke-width="4"/>
+          <line x1="640" y1="303" x2="200" y2="303" stroke="#111827" stroke-width="4"/>
+        </svg>
+      </div>
+      <p>Sambungannya terbagi menjadi dua kelompok. Kelompok pertama adalah sisi sensor: <strong>kaki VCC potensiometer ke pin 3V3</strong>, <strong>kaki tengah SIG ke GPIO 34</strong>, dan <strong>kaki GND ke pin GND</strong>. Kelompok kedua adalah sisi keluaran: <strong>GPIO 2 → resistor 220 Ω → kaki panjang LED</strong>, lalu <strong>kaki pendek LED → GND</strong>. Kaki tengah adalah satu-satunya kaki potensiometer yang membawa nilai berubah; dua kaki di sisinya hanya memberi tegangan acuan.</p>
+
+      <details>
+        <summary>Rangkaian Praktik 1 dalam bentuk <code>diagram.json</code></summary>
+        <p>Buka tab <code>diagram.json</code>, hapus seluruh isinya lebih dahulu, lalu tempelkan kode di bawah secara utuh. Rangkaian akan langsung terbentuk sesuai gambar di atas.</p>
+        <div class="code"><pre>{
+  "version": 1,
+  "author": "Materi IoT Pertemuan 3",
+  "editor": "wokwi",
+  "parts": [
+    { "type": "board-esp32-devkit-c-v4", "id": "esp", "top": 0, "left": 0, "attrs": {} },
+    { "type": "wokwi-potentiometer", "id": "pot1", "top": -80, "left": 150, "attrs": {} },
+    { "type": "wokwi-led", "id": "led1", "top": 60, "left": 220, "attrs": { "color": "red" } },
+    { "type": "wokwi-resistor", "id": "r1", "top": 110, "left": 140, "attrs": { "value": "220" } }
+  ],
+  "connections": [
+    [ "pot1:VCC", "esp:3V3", "violet", [ "v0" ] ],
+    [ "pot1:SIG", "esp:34", "green", [ "v0" ] ],
+    [ "pot1:GND", "esp:GND.1", "black", [ "v0" ] ],
+    [ "esp:2", "r1:1", "green", [ "v0" ] ],
+    [ "r1:2", "led1:A", "green", [ "v0" ] ],
+    [ "led1:C", "esp:GND.2", "black", [ "v0" ] ]
+  ]
+}</pre></div>
+        <p>Bila panel rangkaian justru menjadi kosong, biasanya ada tanda kurung atau koma yang ikut terhapus.</p>
+      </details>
+      <ol class="step">
+        <li>Buat satu project ESP32 baru, lalu pasang rangkaian seperti gambar di atas atau tempelkan <code>diagram.json</code> yang tersedia.</li>
+        <li>Hapus seluruh isi panel kode, lalu tempelkan contoh kode dari Bab 6 apa adanya.</li>
+        <li>Periksa bahwa <code>const int ldrPin = 34;</code> menunjuk pin yang tersambung ke kaki SIG dan <code>const int ledPin = 2;</code> menunjuk pin yang tersambung ke resistor. Nama <code>ldrPin</code> tetap dibiarkan walaupun yang terpasang potensiometer, karena pin yang dibaca sama.</li>
+        <li>Jalankan simulasi, biarkan beberapa detik, lalu baca angka di Serial Monitor tanpa menyentuh knob.</li>
+        <li>Geser knob perlahan dari satu ujung ke ujung yang lain dengan menahan klik tetikus. Catat angka terkecil dan angka terbesar yang muncul, lalu perhatikan pada posisi knob mana LED berpindah keadaan.</li>
+        <li>Hentikan simulasi, ubah <code>int threshold = 2000;</code> menjadi <code>int threshold = 1000;</code>, jalankan kembali, lalu geser knob seperti tadi dan bandingkan posisi peralihan LED dengan pengamatan sebelumnya.</li>
+      </ol>
+      <p><strong>Hasil yang harus terlihat:</strong> Serial Monitor menampilkan baris <code>Nilai LDR:</code> diikuti angkanya, terbit berulang. Angka itu bergerak halus mengikuti knob, dari sekitar 0 pada satu ujung sampai mendekati 4095 pada ujung yang lain, bukan melompat antara dua nilai saja. LED menyala selama angka itu berada di bawah 2000 dan mati begitu angkanya melewati batas tersebut, sehingga titik peralihan LED dapat ditemukan berulang kali pada posisi knob yang hampir sama. Setelah threshold menjadi 1000, angka untuk posisi knob yang sama tidak berubah, tetapi LED baru menyala pada posisi knob yang lebih rendah.</p>
+      <div class="warn">
+        <strong>Angka yang tidak berubah hampir selalu soal sambungan, bukan soal kode.</strong> Bila angka di Serial Monitor mentok di 0 atau di nilai tertinggi walaupun knob digeser, periksa tiga hal: VCC ke 3V3, GND ke GND, dan kaki yang masuk ke GPIO 34 adalah kaki tengah SIG. Pin analog yang tidak tersambung ke apa pun tetap menghasilkan angka, sehingga mudah dikira pembacaan sensor.
+      </div>
+
+      <h3>5.4 Langkah praktik</h3>
+      <p>Praktik kedua adalah smart light itu sendiri. Sumber sinyal pada GPIO 34 diganti dari potensiometer menjadi modul LDR, sedangkan pin LED dan kodenya tidak berubah, sehingga terlihat bahwa satu program yang sama dapat dipakai untuk sensor berbeda. Bedanya, nilai sensor kini tidak Anda tentukan lewat knob, melainkan melalui tingkat cahaya yang diterima sensor.</p>
+      <p><strong>Komponen yang perlu ditambahkan:</strong> satu modul LDR. LED dan resistor 220 Ω dari Praktik 1 dipakai kembali apa adanya, sedangkan potensiometernya dilepas karena GPIO 34 hanya boleh menerima satu sumber sinyal.</p>
+      <div class="svgbox" tabindex="0">
+        <svg viewBox="0 25 700 300" width="100%" role="img" aria-label="Rangkaian smart light: kaki VCC modul LDR ke pin 3V3 ESP32, keluaran AO ke GPIO 34, kaki GND ke pin GND, keluaran DO tidak dipakai; LED dari GPIO 2 melalui resistor 220 ohm lalu kaki pendeknya ke pin GND">
+          <rect x="30" y="40" width="170" height="270" rx="14" fill="#dcfce7" stroke="#15803d" stroke-width="2"/>
+          <text x="115" y="96" text-anchor="middle" font-size="22" font-weight="700">ESP32</text>
+          <text x="194" y="143" text-anchor="end" font-size="14" font-weight="700" fill="#6d28d9">3V3</text>
+          <text x="194" y="183" text-anchor="end" font-size="14" font-weight="700" fill="#15803d">GPIO 34</text>
+          <text x="194" y="223" text-anchor="end" font-size="14" font-weight="700" fill="#111827">GND</text>
+          <text x="194" y="268" text-anchor="end" font-size="14" font-weight="700" fill="#15803d">GPIO 2</text>
+          <text x="194" y="308" text-anchor="end" font-size="14" font-weight="700" fill="#111827">GND</text>
+          <rect x="360" y="106" width="180" height="142" rx="12" fill="#ede9fe" stroke="#6d28d9" stroke-width="2"/>
+          <text x="450" y="164" text-anchor="middle" font-size="17" font-weight="700">Modul LDR</text>
+          <text x="450" y="190" text-anchor="middle" font-size="13" fill="#374151">keluaran AO dipakai</text>
+          <text x="450" y="212" text-anchor="middle" font-size="13" fill="#374151">keluaran DO dibiarkan</text>
+          <line x1="200" y1="138" x2="360" y2="138" stroke="#6d28d9" stroke-width="4"/>
+          <text x="272" y="131" text-anchor="middle" font-size="13" font-weight="700" fill="#6d28d9">VCC</text>
+          <line x1="200" y1="178" x2="360" y2="178" stroke="#15803d" stroke-width="4"/>
+          <text x="272" y="171" text-anchor="middle" font-size="13" font-weight="700" fill="#15803d">AO</text>
+          <line x1="200" y1="218" x2="360" y2="218" stroke="#111827" stroke-width="4"/>
+          <text x="272" y="211" text-anchor="middle" font-size="13" font-weight="700" fill="#111827">GND</text>
+          <line x1="200" y1="263" x2="300" y2="263" stroke="#15803d" stroke-width="4"/>
+          <rect x="300" y="243" width="100" height="40" rx="8" fill="#fef3c7" stroke="#b45309" stroke-width="2"/>
+          <text x="350" y="269" text-anchor="middle" font-size="15" font-weight="700">220 Ω</text>
+          <line x1="400" y1="263" x2="546" y2="263" stroke="#15803d" stroke-width="4"/>
+          <circle cx="580" cy="263" r="34" fill="#fee2e2" stroke="#dc2626" stroke-width="2"/>
+          <text x="580" y="269" text-anchor="middle" font-size="16" font-weight="700">LED</text>
+          <line x1="614" y1="263" x2="640" y2="263" stroke="#111827" stroke-width="4"/>
+          <line x1="640" y1="263" x2="640" y2="303" stroke="#111827" stroke-width="4"/>
+          <line x1="640" y1="303" x2="200" y2="303" stroke="#111827" stroke-width="4"/>
+        </svg>
+      </div>
+      <p>Sambungan LED tidak berubah, yaitu tetap <strong>GPIO 2 → resistor 220 Ω → kaki panjang LED</strong> dan <strong>kaki pendek LED → GND</strong>. Yang berubah hanya sisi sensornya: <strong>kaki VCC modul LDR ke pin 3V3</strong>, <strong>kaki GND ke pin GND</strong>, dan <strong>keluaran AO ke GPIO 34</strong>. Modul LDR memiliki dua keluaran: AO berisi nilai bertingkat sesuai cahaya yang diterima, sedangkan DO hanya berisi dua keadaan hasil keputusan modul itu sendiri. Yang dipakai di sini adalah AO, karena nilai bertingkat itulah yang dibaca <code>analogRead()</code>. Keluaran DO dibiarkan tidak tersambung.</p>
+
+      <details>
+        <summary>Rangkaian Praktik 2 dalam bentuk <code>diagram.json</code></summary>
+        <p>Seperti pada praktik sebelumnya, buka tab <code>diagram.json</code>, hapus seluruh isinya lebih dahulu, lalu tempelkan kode di bawah secara utuh.</p>
+        <div class="code"><pre>{
+  "version": 1,
+  "author": "Materi IoT Pertemuan 3",
+  "editor": "wokwi",
+  "parts": [
+    { "type": "board-esp32-devkit-c-v4", "id": "esp", "top": 0, "left": 0, "attrs": {} },
+    { "type": "wokwi-photoresistor-sensor", "id": "ldr1", "top": -80, "left": 150, "attrs": {} },
+    { "type": "wokwi-led", "id": "led1", "top": 60, "left": 220, "attrs": { "color": "red" } },
+    { "type": "wokwi-resistor", "id": "r1", "top": 110, "left": 140, "attrs": { "value": "220" } }
+  ],
+  "connections": [
+    [ "ldr1:VCC", "esp:3V3", "violet", [ "v0" ] ],
+    [ "ldr1:AO", "esp:34", "green", [ "v0" ] ],
+    [ "ldr1:GND", "esp:GND.1", "black", [ "v0" ] ],
+    [ "esp:2", "r1:1", "green", [ "v0" ] ],
+    [ "r1:2", "led1:A", "green", [ "v0" ] ],
+    [ "led1:C", "esp:GND.2", "black", [ "v0" ] ]
+  ]
+}</pre></div>
+        <p>Pada daftar sambungan di atas tidak ada baris untuk keluaran DO, dan itu memang disengaja.</p>
+      </details>
+      <p>Gambaran besar pengerjaannya adalah sebagai berikut.</p>
+      <ol>
+        <li>Buka proyek ESP32 di Wokwi dan tambahkan LDR virtual serta LED.</li>
+        <li>Hubungkan LDR ke pin analog yang sesuai dan LED ke pin output.</li>
+        <li>Tulis program untuk membaca nilai sensor menggunakan <code>analogRead()</code>.</li>
+        <li>Tampilkan nilai sensor ke serial monitor.</li>
+        <li>Tentukan threshold, lalu gunakan logika <code>if-else</code> untuk mengendalikan LED.</li>
+        <li>Ubah intensitas cahaya virtual dan amati perubahan pada serial monitor dan LED.</li>
+      </ol>
+
+      <p>Diuraikan menjadi langkah di simulator, urutan tersebut menjadi seperti berikut.</p>
+      <ol class="step">
+        <li>Buka project Praktik 1, lepas potensiometer dari GPIO 34, lalu tambahkan modul LDR dari daftar komponen. Bila Anda ingin menyimpan hasil Praktik 1 apa adanya, buat project baru dan tempelkan <code>diagram.json</code> di atas.</li>
+        <li>Sambungkan <strong>VCC ke 3V3</strong>, <strong>GND ke GND</strong>, dan <strong>AO ke GPIO 34</strong>. Pastikan hanya satu kabel yang masuk ke GPIO 34.</li>
+        <li>Pastikan panel kode memuat contoh kode Bab 6, lalu cocokkan kembali <code>ldrPin</code> dan <code>ledPin</code> dengan pin yang benar-benar tersambung.</li>
+        <li>Jalankan simulasi, lalu klik gambar modul LDR untuk memunculkan penggeser tingkat cahaya.</li>
+        <li>Turunkan cahaya sampai LED menyala, lalu naikkan kembali sampai LED mati. Catat angka yang tercetak di Serial Monitor pada kedua kondisi itu.</li>
+        <li>Bandingkan kedua angka tadi dengan <code>int threshold = 2000;</code>. Hentikan simulasi, ganti angka itu dengan nilai di antara kedua catatan Anda, jalankan kembali, lalu turunkan dan naikkan lagi cahaya virtual untuk memastikan titik peralihan LED ikut bergeser.</li>
+      </ol>
+      <p><strong>Hasil yang harus terlihat:</strong> Serial Monitor menampilkan baris <code>Nilai LDR:</code> beserta angkanya secara berulang. Ketika cahaya virtual diturunkan, angka itu mengecil dan LED menyala; ketika cahaya dinaikkan kembali, angka membesar dan LED mati. Peralihan terjadi di sekitar nilai threshold, bukan di sembarang posisi penggeser, dan tetap konsisten ketika pengujian diulang. Setelah threshold diganti dengan angka hasil pengamatan sendiri, LED berpindah keadaan pada tingkat cahaya yang berbeda dari sebelumnya.</p>
+      <div class="warn">
+        <strong>Angka yang hanya berpindah antara dua nilai ekstrem.</strong> Gejala ini muncul bila yang tersambung ke GPIO 34 adalah keluaran DO, bukan AO. DO sudah berupa keputusan dua keadaan dari modulnya sendiri, sehingga nilai bertingkat tidak lagi terlihat dan mengubah threshold hampir tidak berpengaruh. Pindahkan ujung kabel itu ke AO, lalu jalankan ulang simulasi.
+      </div>
+
+      <h3>5.5 Hubungan praktik dengan teori</h3>
+      <p>Pada contoh ini, teori analog tidak berhenti pada angka. Angka sensor diterjemahkan menjadi keputusan. Inilah esensi banyak sistem IoT: data dibaca, lalu data dipakai untuk aksi. LDR menyediakan input, ESP32 memproses, threshold memberi aturan keputusan, dan LED menjadi output yang bisa diamati langsung.</p>
+    </section>
+
+    <section class="card">
+      <h2>6. Contoh Kode Smart Light dan Penjelasan Terperinci</h2>
+      <p>Berikut contoh program sederhana untuk membaca LDR virtual, menampilkan nilainya ke serial monitor, lalu menyalakan LED ketika kondisi dianggap gelap. Struktur kode ini sesuai dengan target Pertemuan 3 karena memuat pembacaan sensor analog, serial monitor, threshold, dan perubahan perilaku LED.</p>
+      <div class="code"><pre>const int ldrPin = 34;
+const int ledPin = 2;
+int threshold = 2000;
+
+void setup() {
+  Serial.begin(115200);
+  pinMode(ledPin, OUTPUT);
+}
+
+void loop() {
+  int sensorValue = analogRead(ldrPin);
+
+  Serial.print("Nilai LDR: ");
+  Serial.println(sensorValue);
+
+  if (sensorValue < threshold) {
+    digitalWrite(ledPin, HIGH);
+  } else {
+    digitalWrite(ledPin, LOW);
+  }
+
+  delay(500);
+}</pre></div>
+
+      <h3>6.1 Gambaran umum kode</h3>
+      <p>Kode di atas bekerja dengan urutan berikut. Pertama, program menentukan pin untuk sensor dan LED. Kedua, program menyiapkan serial monitor dan mode pin output. Ketiga, pada setiap pengulangan, program membaca nilai sensor, mencetak nilainya, membandingkan dengan threshold, lalu menentukan apakah LED harus menyala atau mati.</p>
+
+      <h3>6.2 Penjelasan baris per baris</h3>
+      <div class="table-scroll" tabindex="0">
+        <table>
+        <thead>
+          <tr><th>Potongan kode</th><th>Fungsi</th><th>Kaitan dengan teori</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>const int ldrPin = 34;</code></td>
+            <td>Menentukan pin analog yang dipakai untuk membaca LDR.</td>
+            <td>Menunjukkan bahwa sensor perlu dihubungkan ke jalur input yang tepat pada device.</td>
+          </tr>
+          <tr>
+            <td><code>const int ledPin = 2;</code></td>
+            <td>Menentukan pin output untuk LED.</td>
+            <td>Mewakili aktuator sederhana yang akan dikendalikan oleh program.</td>
+          </tr>
+          <tr>
+            <td><code>int threshold = 2000;</code></td>
+            <td>Menentukan batas keputusan antara kondisi gelap dan terang.</td>
+            <td>Menghubungkan data numerik dengan logika keputusan.</td>
+          </tr>
+          <tr>
+            <td><code>Serial.begin(115200);</code></td>
+            <td>Mengaktifkan komunikasi serial dengan baud rate 115200.</td>
+            <td>Membuka jalur agar data sensor bisa dilihat di serial monitor.</td>
+          </tr>
+          <tr>
+            <td><code>pinMode(ledPin, OUTPUT);</code></td>
+            <td>Menyatakan bahwa pin LED dipakai sebagai output.</td>
+            <td>Menghubungkan teori input-output dengan implementasi device.</td>
+          </tr>
+          <tr>
+            <td><code>int sensorValue = analogRead(ldrPin);</code></td>
+            <td>Membaca nilai analog dari LDR dan menyimpannya ke variabel.</td>
+            <td>Inti dari pembacaan sensor analog pada pertemuan ini.</td>
+          </tr>
+          <tr>
+            <td><code>Serial.print(...)</code> dan <code>Serial.println(...)</code></td>
+            <td>Menampilkan label dan nilai sensor ke serial monitor.</td>
+            <td>Membantu observasi data mentah dan debugging.</td>
+          </tr>
+          <tr>
+            <td><code>if (sensorValue &lt; threshold)</code></td>
+            <td>Membandingkan nilai sensor dengan batas yang telah ditentukan.</td>
+            <td>Menunjukkan bagaimana angka analog dipakai untuk keputusan.</td>
+          </tr>
+          <tr>
+            <td><code>digitalWrite(ledPin, HIGH);</code></td>
+            <td>Menyalakan LED saat kondisi gelap terpenuhi.</td>
+            <td>Mengubah hasil pembacaan menjadi aksi pada aktuator.</td>
+          </tr>
+          <tr>
+            <td><code>digitalWrite(ledPin, LOW);</code></td>
+            <td>Mematikan LED saat kondisi terang.</td>
+            <td>Menunjukkan adanya dua perilaku output berdasarkan data sensor.</td>
+          </tr>
+          <tr>
+            <td><code>delay(500);</code></td>
+            <td>Memberi jeda 500 milidetik sebelum pembacaan berikutnya.</td>
+            <td>Membantu serial monitor lebih mudah dibaca dan mencegah output terlalu cepat.</td>
+          </tr>
+        </tbody>
+        </table>
+      </div>
+
+      <h3>6.3 Bagaimana kode ini terhubung dengan teori?</h3>
+      <p>Teori digital dan analog terlihat jelas pada program ini. Nilai dari LDR bersifat analog karena berubah dalam rentang angka. Namun keputusan LED bersifat digital karena output akhirnya hanya dua keadaan: nyala atau mati. Jadi, program ini memperlihatkan bagaimana data analog dari dunia nyata dapat diterjemahkan menjadi aksi digital yang sederhana.</p>
+      <p>Fungsi <code>analogRead()</code> menjadi titik inti karena di sanalah sinyal sensor diubah menjadi angka. Sementara itu, serial monitor menunjukkan data mentahnya, dan blok <code>if-else</code> menunjukkan bagaimana angka tersebut dimaknai oleh sistem.</p>
+
+      <h3>6.4 Apa yang perlu diamati saat menjalankan kode?</h3>
+      <ul>
+        <li>Apakah nilai sensor di serial monitor berubah saat intensitas cahaya virtual diubah?</li>
+        <li>Apakah LED berubah sesuai aturan threshold?</li>
+        <li>Apakah threshold 2000 sudah sesuai, atau perlu disesuaikan dengan hasil simulasi?</li>
+      </ul>
+      <p>Bagian terakhir ini penting karena nilai threshold tidak selalu sama untuk setiap simulasi atau sensor. Anda perlu melihat data nyata di serial monitor, lalu memilih batas yang paling masuk akal. Ini melatih keterampilan observasi, bukan sekadar menyalin kode.</p>
+    </section>
+
+    <section class="card">
+      <h2>7. Ringkasan Materi</h2>
+      <ul>
+        <li>Data digital hanya memiliki sedikit keadaan tegas, sedangkan data analog memiliki rentang nilai yang berubah bertahap.</li>
+        <li>Pada ESP32, pembacaan analog dilakukan menggunakan <code>analogRead()</code>.</li>
+        <li>Potensiometer dan LDR virtual membantu memahami perilaku sensor analog secara visual dan interaktif.</li>
+        <li>Serial monitor berfungsi untuk menampilkan data sensor, mengecek konsistensi, dan membantu debugging.</li>
+        <li>Threshold dipakai untuk mengubah angka sensor menjadi keputusan, misalnya LED menyala saat kondisi dianggap gelap.</li>
+        <li>Latihan smart light menghubungkan teori pembacaan analog dengan otomasi sederhana berbasis sensor.</li>
+      </ul>
+      <p class="footer-note">Materi Pertemuan 3 ini berfokus pada perbedaan digital vs analog, <code>analogRead()</code>, potensiometer/LDR virtual, serial monitor, pembacaan data sensor, dan perubahan perilaku LED berdasarkan nilai input.</p>
+    </section>
+
+    <section class="card">
+      <h2>8. Latihan Pemahaman</h2>
+      <h3>8.1 Pertanyaan konsep</h3>
+      <ol>
+        <li>Jelaskan perbedaan utama antara data digital dan data analog.</li>
+        <li>Mengapa banyak sensor lingkungan menghasilkan data analog?</li>
+        <li>Apa fungsi <code>analogRead()</code> dalam program ESP32?</li>
+        <li>Mengapa serial monitor penting saat belajar membaca sensor?</li>
+        <li>Apa fungsi threshold dalam sistem smart light?</li>
+      </ol>
+
+      <h3>8.2 Latihan praktik kecil</h3>
+      <ul>
+        <li>Ubah nilai <code>threshold</code> dan amati kapan LED menyala atau mati.</li>
+        <li>Ganti LDR virtual dengan potensiometer virtual, lalu lihat bagaimana perilaku LED berubah saat knob digeser.</li>
+        <li>Tambahkan satu baris <code>Serial.println("Lampu ON");</code> atau <code>Serial.println("Lampu OFF");</code> untuk melihat status keputusan program.</li>
+      </ul>
+
+      <div class="analogy">
+        <strong>Analogi dunia nyata:</strong> latihan ini seperti mengatur sensor otomatis pada lampu teras rumah. Jika batasnya terlalu sensitif, lampu bisa menyala terlalu cepat. Jika batasnya terlalu rendah, lampu baru menyala saat sudah terlalu gelap. Karena itu, pengamatan data dan penentuan threshold harus dilakukan dengan cermat.</div>
+    </section>
+
+    <section class="card">
+      <h2>9. Tugas Latihan Pertemuan 3</h2>
+      <p>Ada satu tugas latihan untuk pertemuan ini, yaitu membuat simulasi smart light berbasis LDR virtual dengan perilaku LED menyala lebih terang ketika cahaya yang terbaca rendah. Langkah teknis pengerjaannya sudah dibahas pada Bab 5 dan contoh kodenya ada pada Bab 6, sehingga bagian ini tidak mengulanginya. Yang dijelaskan di sini adalah rumusan tugas, apa yang harus Anda kumpulkan, dan bagaimana pekerjaan Anda dinilai.</p>
+
+      <h3>9.1 Rumusan tugas</h3>
+      <p>Buat satu proyek simulasi berisi LDR virtual dan LED. Program harus membaca nilai cahaya dengan <code>analogRead()</code>, menampilkan nilai itu ke Serial Monitor, lalu memakai sebuah threshold untuk menentukan perilaku LED. Ketika cahaya yang terbaca rendah, LED harus menyala; ketika cahaya cukup, LED harus mati. Ikuti urutan langkah pada Bab 5.4 dan gunakan contoh kode Bab 6 sebagai titik awal, bukan sebagai jawaban akhir, karena nilai threshold pada contoh itu belum tentu cocok dengan rangkaian yang Anda susun sendiri.</p>
+      <p>Bentuk minimal yang dinilai adalah LED dengan dua keadaan, yaitu menyala saat gelap dan mati saat terang, sebagaimana logika <code>if-else</code> pada Bab 6. Perilaku menyala <em>lebih terang</em> secara bertahap membutuhkan pengaturan tingkat keluaran melalui PWM, yang baru diperkenalkan pada Pertemuan 4. Karena itu, gradasi terang LED bersifat pengembangan opsional pada tugas ini dan hanya dihitung sebagai nilai tambah bila dua keadaan dasarnya sudah berjalan benar.</p>
+
+      <h3>9.2 Yang harus dikumpulkan</h3>
+      <p>Ada tiga hal yang dikumpulkan dan ketiganya dinilai bersama, karena masing-masing membuktikan bagian yang berbeda dari pekerjaan Anda.</p>
+      <ol>
+        <li>Kode program yang Anda jalankan, lengkap dengan pin yang dipakai untuk LDR dan LED. Kode harus dapat dikompilasi dan dijalankan tanpa error.</li>
+        <li>Tangkapan layar Serial Monitor yang memperlihatkan nilai sensor berubah. Satu tangkapan layar dengan angka yang seragam tidak cukup, karena tidak membuktikan bahwa sensor benar-benar terbaca. Ambil tangkapan layar yang memuat beberapa baris pembacaan pada intensitas cahaya berbeda, atau dua tangkapan layar pada kondisi gelap dan terang.</li>
+        <li>Nilai threshold yang Anda pilih beserta alasan pemilihannya. Alasan itu harus merujuk pada angka yang benar-benar Anda amati di Serial Monitor, misalnya rentang nilai saat cahaya penuh dan rentang nilai saat cahaya diturunkan, lalu menjelaskan mengapa batas yang Anda ambil berada di antara keduanya. Alasan berupa pernyataan bahwa nilai itu diambil dari contoh di materi tidak diterima.</li>
+      </ol>
+
+      <h3>9.3 Rubrik penilaian</h3>
+      <div class="table-scroll" tabindex="0">
+        <table>
+        <thead>
+          <tr><th>Aspek</th><th>Bobot</th><th>Kriteria nilai penuh</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Pembacaan sensor dan tampilan Serial Monitor</td><td>30%</td><td>Nilai sensor tercetak dengan label yang jelas, terbit berulang dengan jeda yang membuatnya terbaca, dan berubah ketika intensitas cahaya virtual diubah.</td></tr>
+          <tr><td>Threshold dan alasan pemilihannya</td><td>30%</td><td>Threshold ditulis sebagai variabel tersendiri, benar-benar dipakai pada pembandingan di dalam program, dan alasannya dijelaskan dengan menyebut rentang nilai yang teramati pada kondisi gelap maupun terang.</td></tr>
+          <tr><td>Perilaku LED terhadap nilai sensor</td><td>25%</td><td>LED menyala saat nilai cahaya rendah dan mati saat cahaya cukup, dan peralihannya tetap konsisten ketika pengujian diulang beberapa kali.</td></tr>
+          <tr><td>Kelengkapan dan kejelasan pengumpulan</td><td>15%</td><td>Kode, tangkapan layar, dan penjelasan threshold dikumpulkan lengkap, saling sesuai, serta pin yang dipakai disebutkan dan cocok dengan rangkaian pada simulasi.</td></tr>
+        </tbody>
+        </table>
+      </div>
+      <p class="footer-note">Bobot terbesar tugas ini tidak jatuh pada kode, melainkan pada bukti pengamatan dan alasan pemilihan threshold. Alasannya sederhana: kode smart light dapat disalin, tetapi menentukan batas keputusan yang tepat hanya mungkin dilakukan oleh orang yang benar-benar melihat datanya sendiri.</p>
+    </section>
+
+    <section class="card">
+      <h2>10. Checkpoint Evaluasi Pertemuan 3</h2>
+      <p>Pertemuan 3 dianggap tuntas bila tiga hal berikut sudah dapat Anda lakukan. Ketiganya sudah dibahas di materi ini, jadi daftar ini sekaligus dipakai sebagai pemeriksaan diri sebelum Anda melanjutkan ke pertemuan berikutnya.</p>
+      <div class="mini">
+        <div class="label">Target minimal pertemuan ini</div>
+        <ul>
+          <li>Mampu membaca data sensor virtual sehingga nilainya muncul dan berubah sesuai kondisi.</li>
+          <li>Mampu memakai data tersebut sebagai dasar pengambilan keputusan di dalam program, bukan hanya menampilkannya.</li>
+        </ul>
+      </div>
+      <div class="table-scroll" tabindex="0">
+        <table>
+        <thead><tr><th>Yang diperiksa</th><th>Cara memastikan sendiri</th><th>Bila belum tercapai</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>Data sensor tampil konsisten di Serial Monitor</td>
+            <td>Jalankan program Anda, biarkan beberapa detik, lalu ubah intensitas cahaya virtual perlahan seperti pada langkah terakhir Bab 5.4. Angka harus terbit berulang dengan label yang terbaca dan ikut berubah mengikuti perubahan cahaya, bukan berhenti atau muncul sebagai karakter acak.</td>
+            <td>Baca ulang Bab 4 tentang fungsi Serial Monitor, lalu periksa baris <code>Serial.begin(115200)</code> dan <code>delay(500)</code> pada tabel Bab 6.2, terutama kesesuaian baud rate dan jeda antar pembacaan.</td>
+          </tr>
+          <tr>
+            <td>Ada threshold yang benar-benar dipakai di dalam program</td>
+            <td>Telusuri kode Anda dan pastikan variabel threshold muncul dua kali, yaitu saat ditetapkan nilainya dan saat dibandingkan di dalam <code>if</code>. Setelah itu ubah nilainya seperti pada latihan pertama Bab 8.2. Bila titik peralihan LED ikut bergeser, berarti threshold memang dipakai, bukan hanya dituliskan.</td>
+            <td>Kembali ke Bab 2.2 tentang threshold sebagai dasar keputusan, lalu cocokkan dengan baris pembandingan pada tabel Bab 6.2 dan pertanyaan pengamatan pada Bab 6.4.</td>
+          </tr>
+          <tr>
+            <td>LED berubah sesuai nilai input</td>
+            <td>Ubah cahaya virtual sampai nilai sensor melewati threshold dari dua arah, yaitu dari terang ke gelap dan sebaliknya. LED harus menyala saat nilai cahaya rendah dan mati saat cahaya cukup. Tambahkan baris <code>Serial.println("Lampu ON")</code> seperti pada latihan ketiga Bab 8.2 agar Anda dapat memastikan cabang keputusan mana yang sedang dijalankan.</td>
+            <td>Baca ulang Bab 5.1 dan Bab 5.5 tentang hubungan sensor, threshold, dan aksi, lalu periksa dua baris <code>digitalWrite()</code> pada tabel Bab 6.2 beserta penjelasan Bab 6.3.</td>
+          </tr>
+        </tbody>
+        </table>
+      </div>
+      <p class="footer-note">Ketiga butir ini adalah bekal langsung untuk checkpoint besar pertama, CP-1, yang jatuh pada Pertemuan 4 dan menguji penguasaan GPIO, hubungan sensor dengan aktuator, serta logika dasar. Checkpoint besar berikutnya berada pada Pertemuan 8 sebagai CP-2, Pertemuan 12 sebagai CP-3, dan Pertemuan 16 sebagai CP-4. Perlu Anda ingat juga bahwa tugas latihan mingguan, termasuk tugas pada Bab 9, berbobot 20 persen dari nilai akhir, sehingga menuntaskan bagian yang belum tercapai sekarang lebih baik daripada menundanya.</p>
+    </section>
+
+    <section class="card">
+      <h2>11. Referensi Praktis</h2>
+      <p>Tiga sumber berikut adalah rujukan lanjutan untuk materi Pertemuan 3. Sebagian besar isinya berbahasa Inggris, tetapi bagian yang Anda perlukan sekarang pendek dan banyak memuat angka serta gambar rangkaian. Sebaiknya sumber ini dibaca setelah praktik selesai, bukan sebelum, agar istilah di dalamnya sudah punya bentuk nyata dan mudah Anda kenali.</p>
+
+      <h3>11.1 Arduino Reference: analogRead() — <code>docs.arduino.cc</code></h3>
+      <p>Halaman resmi ini menjelaskan cara kerja <code>analogRead()</code> yang menjadi inti Bab 2 dan baris terpenting pada tabel Bab 6.2, termasuk bahwa fungsi itu mengembalikan angka, bukan satuan fisik. Perhatikan bahwa rentang nilai yang disebutkan di sana mengacu pada board Arduino klasik, sedangkan pembacaan pada ESP32 secara bawaan memakai resolusi yang lebih tinggi. Perbedaan inilah yang membuat threshold contoh pada Bab 6 bernilai ribuan dan sekaligus alasan mengapa Bab 6.4 meminta Anda memeriksa sendiri apakah nilai itu masih cocok.</p>
+
+      <h3>11.2 Wokwi sensor examples — <code>wokwi.com</code></h3>
+      <p>Situs ini menyediakan proyek contoh yang memakai sensor virtual, termasuk potensiometer dan LDR yang dibahas pada Bab 3.1 dan Bab 3.2. Bila nilai sensor Anda tidak berubah sama sekali, membandingkan sambungan pada proyek contoh dengan rangkaian yang Anda susun pada Bab 5.4 biasanya lebih cepat menemukan penyebabnya daripada memeriksa kode berulang kali.</p>
+
+      <h3>11.3 Random Nerd Tutorials: ESP32 ADC basics — <code>randomnerdtutorials.com</code></h3>
+      <p>Tutorial ini membahas pembacaan analog pada ESP32 secara lebih rinci, mulai dari resolusi hasil pembacaan, pin mana saja yang dapat dipakai untuk pembacaan analog, sampai kenyataan bahwa hubungan antara tegangan masuk dan angka keluar tidak selalu lurus sempurna. Bacaan ini menjelaskan mengapa pin 34 dipilih pada contoh kode Bab 6 dan mengapa penentuan threshold pada Bab 5 lebih baik didasarkan pada pengamatan data daripada perhitungan di atas kertas.</p>
+
+      <p class="footer-note">Alamat di atas ditulis sebagai nama domain, bukan tautan langsung ke halaman tertentu, karena struktur halaman situs semacam ini berubah dari waktu ke waktu. Cari judul yang disebutkan di atas dari halaman utama masing-masing situs.</p>
+    </section>
+    <footer class="pagenum">
+      <span class="pagenum-seri">Materi Pertemuan 3</span>
+      <span class="pagenum-no">Halaman 3 dari 16</span>
+    </footer>
+  </div>
+</body>
+</html>

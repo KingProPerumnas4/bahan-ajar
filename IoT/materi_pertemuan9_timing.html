@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Materi Pertemuan 9 - Pengaturan Waktu Pengiriman Data dan Penyusunan Payload</title>
+  <link rel="stylesheet" href="assets/materi.css" />
+</head>
+<body>
+<div class="wrap">
+  <header class="hero">
+    <span class="badge">Pertemuan 9</span>
+    <h1>Pengaturan Waktu Pengiriman Data dan Penyusunan Payload</h1>
+    <p class="lead">Sistem hasil UTS praktik sudah bekerja, tetapi biasanya masih mengirim data setiap putaran program dan memakai <code>delay()</code> yang menghentikan segalanya. Pertemuan ini memperbaiki dua hal itu: mengatur kapan data layak dikirim, dan menyusun isi kiriman agar rapi serta mudah dibaca penerima.</p>
+    <p>
+      <span class="pill">interval pembacaan</span>
+      <span class="pill">millis()</span>
+      <span class="pill">payload terstruktur</span>
+      <span class="pill">timestamp sederhana</span>
+      <span class="pill">polling dan event-driven</span>
+    </p>
+    <p class="notice">Yang perlu siap: proyek simulator hasil Pertemuan 8, klien MQTT untuk berlangganan topik Anda, dan akses ke log serial. Tidak ada pemasangan perangkat lunak baru; seluruh perubahan dilakukan pada program yang sudah berjalan sehingga Anda dapat membandingkan keadaan sebelum dan sesudahnya.</p>
+  </header>
+  <section class="card">
+    <h2>Capaian Pembelajaran Pertemuan 9</h2>
+    <div class="grid two">
+      <div class="mini">
+        <div class="label">Yang dipahami</div>
+        <ul>
+          <li>Alasan pengiriman data perlu dijadwalkan, bukan dilakukan sesering mungkin.</li>
+          <li>Sebab <code>delay()</code> merugikan dan cara <code>millis()</code> menggantikannya.</li>
+          <li>Perbedaan polling dan event-driven serta situasi yang cocok untuk masing-masing.</li>
+          <li>Bagian-bagian payload yang baik: nama field, satuan, dan penanda waktu.</li>
+        </ul>
+      </div>
+      <div class="mini">
+        <div class="label">Yang dapat dilakukan</div>
+        <ul>
+          <li>Menjadwalkan dua pekerjaan dengan jeda berbeda tanpa menghentikan program.</li>
+          <li>Menerapkan ambang perubahan agar data hanya dikirim ketika berarti.</li>
+          <li>Menyusun payload JSON sederhana beserta penanda waktu relatif.</li>
+          <li>Membandingkan jumlah kiriman sebelum dan sesudah perbaikan dari log serial.</li>
+        </ul>
+      </div>
+    </div>
+    <p>Fokus pertemuan ini adalah interval pembacaan sensor, penggunaan <code>millis()</code>, penyusunan payload, penanda waktu sederhana, serta perbedaan polling dan event-driven. Materinya melanjutkan sistem yang sudah Anda bangun, jadi tidak ada rangkaian baru yang dirakit.</p>
+  </section>
+  <section class="card">
+    <h2>1. Mengapa Jeda Pengiriman Perlu Diatur</h2>
+    <p>Program yang mengirim data setiap putaran <code>loop()</code> dapat menghasilkan puluhan kiriman per detik. Di simulator hal itu hanya membuat log serial berlarian, tetapi pada perangkat sungguhan akibatnya nyata: baterai cepat habis karena radio Wi-Fi bagian paling haus daya, kuota terpakai untuk isi yang sama berulang-ulang, dan broker publik dapat memutus perangkat yang dianggap membanjiri lalu lintas.</p>
+    <p>Di sisi penerima akibatnya juga terasa: grafik dari data yang terlalu rapat sulit dibaca. Ribuan titik dalam satu menit menutupi bentuk perubahan yang justru ingin dilihat, dan penyimpanan di sisi penerima terisi oleh angka yang hampir seluruhnya sama. Pertanyaannya bukan seberapa cepat perangkat bisa mengirim, melainkan seberapa sering penerima benar-benar perlu tahu.</p>
+    <p>Ada satu alasan lagi yang jarang disadari pemula. Setiap pengiriman MQTT bukan hanya satu paket berisi angka Anda; di dalamnya ada nama topik, keterangan pesan, dan lalu lintas balasan dari broker. Untuk payload sepanjang belasan karakter, bagian pembungkus itu bisa lebih besar daripada datanya sendiri. Mengirim seratus kali data yang sama karena itu jauh lebih mahal daripada yang terlihat di log serial.</p>
+    <div class="analogy">Bandingkan dua penjaga gudang. Yang pertama menelepon atasannya setiap sepuluh detik untuk melaporkan bahwa suhu masih normal. Yang kedua menelepon setiap kali suhu berubah cukup jauh, ditambah satu laporan singkat tiap jam sebagai tanda dirinya masih berjaga. Keduanya sama-sama rajin, tetapi hanya laporan yang kedua berguna dan tidak melelahkan.</div>
+    <p>Aturan praktisnya: pilih jeda dari kebutuhan penerima. Suhu ruangan berubah lambat sehingga jeda beberapa detik atau bahkan semenit sudah memadai. Sebaliknya tombol dan sensor gerak harus diperiksa cepat, tetapi yang dikirim tetap hanya peristiwanya, bukan hasil setiap pemeriksaan.</p>
+  </section>
+  <section class="card">
+    <h2>2. delay() dan Kerugiannya</h2>
+    <p>Anda memakai <code>delay(2000)</code> sejak pertemuan awal karena bentuknya sederhana: program berhenti dua detik, lalu lanjut. Masalahnya kata "berhenti" berlaku untuk segalanya. Selama <code>delay()</code> berjalan, program tidak dapat membaca tombol, memeriksa pesan MQTT yang masuk, atau memperbarui apa pun.</p>
+    <p>Akibatnya terasa begitu program punya lebih dari satu pekerjaan. LED tanda hidup berkedip tersendat, tombol yang ditekan saat program menunggu tidak terbaca, dan pada Pertemuan 10 nanti perintah dari dasbor bisa terlewat karena <code>mqtt.loop()</code> tidak dipanggil cukup sering.</p>
+    <p>Sebabnya ada pada cara papan menjalankan program Anda. <code>loop()</code> bukan sesuatu yang berjalan sendiri sambil menunggu; ia sebuah fungsi yang dipanggil berulang-ulang, dan selama satu pemanggilan belum selesai tidak ada baris lain yang mendapat kesempatan. <code>delay()</code> bekerja dengan berputar di tempat sampai waktunya habis, jadi papan sebenarnya tetap sibuk penuh, hanya saja kesibukannya tidak menghasilkan apa pun. Semua pekerjaan lain menunggu di belakangnya.</p>
+    <div class="table-scroll" tabindex="0">
+      <table>
+      <tr><th>Aspek</th><th><code>delay()</code></th><th><code>millis()</code></th></tr>
+      <tr><td>Yang terjadi pada program</td><td>Berhenti total sampai waktunya habis.</td><td>Terus berjalan; program hanya memeriksa apakah waktunya sudah tiba.</td></tr>
+      <tr><td>Jumlah pekerjaan</td><td>Praktis satu pekerjaan dengan satu irama.</td><td>Beberapa pekerjaan dengan jeda berbeda-beda.</td></tr>
+      <tr><td>Reaksi terhadap masukan</td><td>Masukan yang datang saat menunggu terlewat.</td><td>Masukan tetap terbaca karena <code>loop()</code> tidak pernah berhenti.</td></tr>
+      </table>
+    </div>
+    <div class="warn">Jangan menyimpulkan bahwa <code>delay()</code> selalu salah. Untuk jeda sangat singkat, misalnya menahan buzzer 50 milidetik, atau untuk menunggu di dalam <code>setup()</code>, <code>delay()</code> masih wajar. Yang perlu dihindari adalah <code>delay()</code> panjang di dalam <code>loop()</code>.</div>
+  </section>
+  <section class="card">
+    <h2>3. millis() dan Pola Penjadwalan Tanpa Berhenti</h2>
+    <p>Fungsi <code>millis()</code> mengembalikan jumlah milidetik sejak papan mulai berjalan. Nilainya tidak pernah Anda atur sendiri, hanya dibaca. Dengan mencatat kapan sebuah pekerjaan terakhir dilakukan, program dapat menghitung sendiri apakah jedanya sudah terlampaui, tanpa perlu berhenti menunggu.</p>
+    <div class="code"><pre>unsigned long waktuTerakhir = 0;
+const unsigned long jeda = 2000;   // 2000 milidetik = 2 detik
+
+void loop() {
+  unsigned long sekarang = millis();
+  if (sekarang - waktuTerakhir &gt;= jeda) {
+    waktuTerakhir = sekarang;      // catat waktunya, lalu kerjakan tugasnya
+    // ... pekerjaan yang dijadwalkan diletakkan di sini
+  }
+  // baris di luar blok if tetap dijalankan setiap putaran
+}</pre></div>
+    <p>Variabel penyimpan waktu harus bertipe <code>unsigned long</code>, yaitu bilangan bulat tanpa tanda negatif bermuatan besar. Dengan <code>int</code>, nilainya meluap setelah sekitar 32 detik dan jadwal Anda kacau. <code>millis()</code> sendiri kembali ke nol setelah kurang lebih 49,7 hari; pola pengurangan <code>sekarang - waktuTerakhir</code> tetap benar melewati titik itu, sedangkan <code>millis() &gt;= waktuTerakhir + jeda</code> tidak. Itulah alasan bentuk pengurangan dipakai di mana-mana.</p>
+    <p>Alasan pengurangan itu tetap benar layak dipahami sekali saja, karena setelah itu Anda tidak akan ragu lagi. Bilangan tanpa tanda tidak mengenal hasil negatif; bila pengurangannya jatuh di bawah nol, hasilnya melompat ke ujung atas jangkauan. Kebetulan sifat itulah yang menolong. Misalkan pencacah berputar ulang tepat setelah waktu terakhir dicatat: <code>sekarang</code> bernilai kecil, <code>waktuTerakhir</code> bernilai sangat besar, dan pengurangan keduanya justru menghasilkan jarak waktu yang sebenarnya, bukan angka aneh. Bentuk penjumlahan tidak punya keberuntungan ini, karena <code>waktuTerakhir + jeda</code> sendiri sudah meluap sebelum dibandingkan, sehingga syaratnya bisa tidak pernah terpenuhi dan pekerjaan Anda berhenti selamanya.</p>
+    <p>Perhatikan pula satu baris yang mudah terlupa, yaitu <code>waktuTerakhir = sekarang;</code> di dalam blok <code>if</code>. Tanpa baris itu catatan waktu tidak pernah maju, syarat pemeriksaan menjadi selalu benar, dan pekerjaan yang seharusnya berjadwal berjalan setiap putaran seperti tidak punya jeda sama sekali. Letaknya sengaja di awal blok agar tetap terpasang meski pekerjaan di bawahnya nanti Anda tambah panjang.</p>
+    <div class="tip">Bacalah <code>millis()</code> satu kali di awal <code>loop()</code> dan simpan di variabel <code>sekarang</code>, agar semua penjadwalan pada putaran itu memakai acuan waktu yang sama.</div>
+  </section>
+  <section class="card">
+    <h2>4. Dua Jeda yang Berbeda: Membaca dan Mengirim</h2>
+    <p>Membaca sensor dan mengirim data adalah dua pekerjaan berbeda dan tidak harus seirama. Membaca itu murah, hanya mengambil angka dari pin. Mengirim itu mahal karena melibatkan radio, sambungan, dan penerima di ujung lain. Wajar bila program membaca setiap dua detik tetapi mengirim jauh lebih jarang.</p>
+    <p>Penentu paling berguna adalah besar perubahan. Bila nilai baru hanya berbeda sedikit dari nilai yang terakhir dikirim, kiriman itu tidak menambah informasi. Selisih minimal yang dianggap berarti disebut ambang perubahan atau deadband. Dengan ambang 0,5 derajat, pembacaan 27,14 lalu 27,33 tidak dikirim, sedangkan 28,05 dikirim karena selisihnya melewati ambang.</p>
+    <p>Memilih besar ambang selalu berupa pertukaran, dan tidak ada angka yang benar untuk semua kasus. Ambang yang terlalu kecil membuat derau kecil pada sensor terhitung sebagai perubahan, sehingga kiriman kembali padat tanpa Anda menambah informasi apa pun. Ambang yang terlalu besar membuat perubahan yang sesungguhnya penting tertahan, dan penerima baru tahu suhu naik setelah kenaikannya jauh. Cara paling jujur menentukannya adalah melihat data Anda sendiri: perhatikan berapa besar nilai bergoyang ketika keadaan sebenarnya diam, lalu pasang ambang sedikit di atas goyangan itu.</p>
+    <p>Pembanding yang dipakai juga penting. Yang dibandingkan adalah nilai yang terakhir <em>dikirim</em>, bukan nilai yang terakhir <em>dibaca</em>. Bila yang dipakai nilai terakhir dibaca, kenaikan lambat sebesar 0,1 derajat setiap dua detik tidak akan pernah melewati ambang, padahal dalam sepuluh menit suhu sudah naik jauh dan penerima tidak diberi tahu apa pun.</p>
+    <p>Satu hal harus dijaga: penerima tidak boleh bingung membedakan "nilai tidak berubah" dengan "perangkat mati". Karena itu tambahkan pengiriman wajib berkala, misalnya sekali setiap satu menit, meski nilainya tetap. Kiriman itu berfungsi sebagai tanda perangkat masih hidup.</p>
+    <div class="analogy">Seperti pengukur air di rumah. Petugas tidak perlu datang setiap jam untuk memberitahu bahwa angkanya belum berubah, tetapi ia tetap datang setiap bulan walaupun rumah sedang kosong, supaya tercatat bahwa pemeriksaannya benar-benar dilakukan.</div>
+  </section>
+  <section class="card">
+    <h2>5. Polling dan Event-Driven</h2>
+    <p>Ada dua cara program mengetahui keadaan dunia luar. Polling berarti program memeriksa sendiri secara berkala: setiap dua detik ia membaca sensor, entah ada perubahan atau tidak. Event-driven berarti program bertindak ketika sesuatu terjadi: tombol ditekan, pesan MQTT masuk, atau nilai melewati ambang.</p>
+    <div class="table-scroll" tabindex="0">
+      <table>
+      <tr><th>Aspek</th><th>Polling</th><th>Event-driven</th></tr>
+      <tr><td>Pemicu</td><td>Jadwal waktu yang Anda tetapkan.</td><td>Peristiwa dari luar atau perubahan nilai.</td></tr>
+      <tr><td>Cocok untuk</td><td>Nilai yang berubah perlahan dan perlu dipantau terus, seperti suhu atau kelembapan.</td><td>Kejadian jarang tetapi penting, seperti penekanan tombol atau perintah masuk.</td></tr>
+      <tr><td>Kelemahan</td><td>Perubahan yang terjadi di antara dua pemeriksaan bisa terlewat, dan beban kirimannya tetap walau keadaan tidak berubah.</td><td>Bila peristiwanya sangat cepat atau bergetar, satu kejadian dapat terbaca berkali-kali, dan beban kiriman naik turun tak terduga.</td></tr>
+      </table>
+    </div>
+    <p>Dalam praktik, sistem kecil biasanya memakai keduanya. Sensor dibaca dengan polling karena nilainya perlu diikuti, tetapi pengirimannya dipicu peristiwa berupa perubahan yang melewati ambang.</p>
+    <p>Perlu Anda sadari bahwa event-driven pada papan seperti ESP32 sering tetap dibangun di atas polling. Program memeriksa keadaan tombol atau kotak pesan MQTT setiap putaran <code>loop()</code>, lalu bertindak hanya bila ada yang berubah. Yang membuatnya terasa event-driven bukan cara memeriksanya, melainkan cara menanggapinya: pekerjaan dilakukan sekali per peristiwa, bukan sekali per pemeriksaan. Karena itu pemeriksaan yang sering justru menjadi syarat agar peristiwa singkat tidak terlewat, dan itu mustahil selama <code>loop()</code> masih dibekukan <code>delay()</code>.</p>
+    <div class="tip">Pola gabungan yang paling sering dipakai: polling untuk membaca, event untuk mengirim, ditambah satu kiriman berkala sebagai tanda hidup. Ketiganya dipakai pada contoh program Bab 9.</div>
+  </section>
+  <section class="card">
+    <h2>6. Menyusun Payload yang Rapi</h2>
+    <p>Payload adalah isi pesan yang dikirim. Pada Pertemuan 8 payload Anda mungkin baru berupa satu angka, misalnya <code>36.02</code>. Bentuk itu bekerja, tetapi penerima harus menebak: angka apa ini, satuannya apa, dari perangkat mana, dan diukur kapan.</p>
+    <p>Karena itu bungkus data dalam JSON sederhana, yaitu pasangan nama dan nilai di antara kurung kurawal. Bentuknya dapat dibaca manusia sekaligus dimengerti hampir semua penerima, termasuk Node-RED pada pertemuan berikutnya.</p>
+    <p>Ada bentuk lain yang lebih hemat, misalnya menulis nilai berurutan dipisahkan koma. Bentuk itu memang lebih pendek, tetapi maknanya bergantung pada urutan: menyisipkan satu nilai baru di tengah akan menggeser arti semua nilai sesudahnya, dan penerima yang belum diperbarui salah membaca tanpa memberi tanda apa pun. JSON menyebut nama tiap nilai, sehingga penambahan field baru tidak merusak penerima yang lama, dan itulah sebab bentuk ini lebih dipilih meski beberapa belas karakter lebih panjang.</p>
+    <div class="code"><pre>{"perangkat":"esp32-nim12345","suhu_c":28.05,"uptime_ms":10214,"alasan":"berubah"}</pre></div>
+    <p>Beberapa kebiasaan penamaan membuat payload seperti itu tetap enak dipakai. Pakai huruf kecil dengan garis bawah, tanpa spasi maupun tanda baca. Sertakan satuan pada namanya, seperti <code>suhu_c</code> atau <code>uptime_ms</code>, sehingga tidak ada yang perlu menerka apakah angkanya derajat Celsius atau Fahrenheit. Pertahankan nama itu selamanya: mengganti <code>suhu_c</code> menjadi <code>temp</code> di tengah jalan akan mematahkan semua penerima yang sudah bekerja. Tulis angka tanpa tanda kutip, karena angka yang dikirim sebagai teks memaksa penerima mengubahnya lagi.</p>
+    <div class="warn">Jangan memasukkan nama lengkap, nomor telepon, atau apa pun yang bersifat pribadi ke dalam payload. Broker publik dapat dibaca siapa saja, dan payload biasanya tersimpan di sisi penerima lebih lama daripada yang Anda duga.</div>
+  </section>
+  <section class="card">
+    <h2>7. Penanda Waktu Sederhana dan Batasannya</h2>
+    <p>Penerima sering perlu tahu kapan sebuah nilai diukur. Cara termurah adalah mengirim nilai <code>millis()</code> apa adanya sebagai field <code>uptime_ms</code>. Angka itu bukan jam dinding, melainkan lama papan sudah berjalan, tetapi kegunaannya tetap besar: penerima dapat menghitung jarak waktu antar kiriman dan mengenali papan yang baru menyala ulang karena angkanya kembali kecil.</p>
+    <p>Yang tidak dapat dilakukan papan adalah menyebut tanggal dan jam yang sebenarnya. ESP32 tidak memiliki jam bertahan baterai, sehingga saat menyala ia tidak tahu hari ini tanggal berapa. Waktu absolut selalu harus datang dari luar, dan tabel berikut merangkum pilihan yang ada.</p>
+    <p>Batas <code>uptime_ms</code> perlu Anda ketahui sejak awal supaya tidak salah menyimpulkan. Pertama, angkanya kembali ke nol setiap papan menyala ulang, jadi ia hanya bermakna sebagai jarak waktu di dalam satu masa hidup papan, bukan sebagai tanggal. Kedua, pencacahnya berputar ulang setelah sekitar 49,7 hari, sehingga penerima yang menghitung selisih dua nilai harus siap menemukan angka yang mengecil. Ketiga, dua perangkat yang berbeda tidak dapat dibandingkan lewat <code>uptime_ms</code>, karena masing-masing menghitung dari saat menyala sendiri-sendiri. Semua keterbatasan itu hilang begitu waktu dibubuhkan oleh penerima.</p>
+    <div class="table-scroll" tabindex="0">
+      <table>
+      <tr><th>Pilihan</th><th>Cara mendapatkannya</th><th>Yang perlu diingat</th></tr>
+      <tr><td>Waktu relatif dari <code>millis()</code></td><td>Kirim <code>uptime_ms</code> di dalam payload.</td><td>Paling sederhana dan selalu tersedia, tetapi kembali ke nol setiap papan menyala ulang.</td></tr>
+      <tr><td>Waktu absolut dari sumber luar</td><td>Papan mengambil waktu dari layanan waktu jaringan setelah tersambung internet.</td><td>Menambah pustaka dan menuntut sambungan; belum diperlukan pada tugas pertemuan ini.</td></tr>
+      <tr><td>Waktu dibubuhkan penerima</td><td>Penerima mencatat jam kedatangan pesan.</td><td>Cukup akurat untuk pemantauan biasa dan tidak menambah beban perangkat.</td></tr>
+      </table>
+    </div>
+    <div class="tip">Untuk tugas pertemuan ini, kirim <code>uptime_ms</code> dan biarkan penerima yang mencatat jam kedatangan. Sebutkan pilihan itu beserta alasannya di laporan Anda, karena kesadaran akan batasan waktu perangkat termasuk yang dinilai.</div>
+  </section>
+  <section class="card">
+    <h2>8. Implementasi Praktis: Memperbaiki Proyek UTS</h2>
+    <p>Langkah berikut mengubah proyek Pertemuan 8 secara bertahap. Simpan salinan proyek lama lebih dulu, karena tugas pertemuan ini meminta perbandingan jumlah kiriman sebelum dan sesudah perbaikan.</p>
+    <p>Kerjakan satu langkah sekali jalan dan uji setiap kali, jangan menumpuk empat perubahan lalu menjalankannya sekaligus. Alasannya sederhana: bila tiga hal diubah bersamaan dan hasilnya salah, Anda tidak tahu perubahan mana yang bersalah, sehingga waktu habis untuk menduga-duga. Urutan di bawah juga tidak sembarang. Pengukuran pembanding diambil paling awal karena setelah program diubah, keadaan lama tidak dapat diulang lagi. Sesudah itu <code>delay()</code> dihapus lebih dahulu supaya papan bebas mengerjakan beberapa hal, baru penyaringan pengiriman dan bentuk payload dikerjakan di atas dasar yang sudah bersih.</p>
+
+    <h3>8.1 Rangkaian yang harus terpasang</h3>
+    <p>Seluruh pekerjaan bab ini dikerjakan di simulator Wokwi, alat yang sama seperti pertemuan sebelumnya, sehingga tidak ada perangkat yang perlu dirakit secara fisik. Yang dibangun adalah versi baru program Anda di atas rangkaian yang sudah ada: satu potensiometer sebagai sumber nilai suhu, satu LED penanda yang harus berkedip rata, dan pengiriman MQTT yang dijadwalkan dengan <code>millis()</code>. Rangkaiannya dipasang lebih dahulu, sebab tanpa potensiometer nilai yang dibaca tidak dapat Anda ubah sendiri dan penyaringan ambang tidak akan pernah terlihat bekerja.</p>
+    <p><strong>Komponen yang perlu ditambahkan:</strong> tidak ada. Rangkaian proyek UTS Pertemuan 8 dipakai kembali apa adanya, yaitu potensiometer yang kaki tengahnya menuju GPIO 34 serta LED dengan resistor 220 Ω pada GPIO 2; ketiganya sudah terpasang di proyek lama Anda dan tidak ada satu pun komponen baru pada pertemuan ini. Bila proyek Pertemuan 8 Anda juga memuat buzzer, biarkan saja terpasang karena program pertemuan ini tidak membacanya. Yang berubah hanya kodenya.</p>
+    <div class="svgbox" tabindex="0">
+      <svg viewBox="0 40 700 280" width="100%" role="img" aria-label="Rangkaian Pertemuan 9: pin GPIO 2 pada ESP32 tersambung ke resistor 220 ohm lalu ke kaki panjang LED, kaki pendek LED kembali ke GND, sedangkan kaki tengah potensiometer tersambung ke GPIO 34 dan kedua kaki sisinya ke 3V3 serta GND">
+        <rect x="30" y="55" width="170" height="240" rx="14" fill="#dcfce7" stroke="#15803d" stroke-width="2"/>
+        <text x="115" y="100" text-anchor="middle" font-size="22" font-weight="700">ESP32</text>
+        <text x="115" y="124" text-anchor="middle" font-size="14" fill="#374151">board virtual</text>
+        <text x="194" y="150" text-anchor="end" font-size="15" font-weight="700" fill="#15803d">GPIO 2</text>
+        <text x="194" y="191" text-anchor="end" font-size="15" font-weight="700" fill="#111827">GND</text>
+        <text x="194" y="229" text-anchor="end" font-size="15" font-weight="700" fill="#6d28d9">GPIO 34</text>
+        <text x="194" y="277" text-anchor="end" font-size="15" font-weight="700" fill="#6d28d9">3V3</text>
+        <line x1="200" y1="145" x2="285" y2="145" stroke="#15803d" stroke-width="4"/>
+        <rect x="285" y="125" width="100" height="40" rx="8" fill="#fef3c7" stroke="#b45309" stroke-width="2"/>
+        <text x="335" y="151" text-anchor="middle" font-size="15" font-weight="700">220 Ω</text>
+        <line x1="385" y1="145" x2="456" y2="145" stroke="#15803d" stroke-width="4"/>
+        <circle cx="492" cy="145" r="36" fill="#fee2e2" stroke="#dc2626" stroke-width="2"/>
+        <text x="492" y="151" text-anchor="middle" font-size="16" font-weight="700">LED</text>
+        <line x1="528" y1="145" x2="620" y2="145" stroke="#111827" stroke-width="4"/>
+        <line x1="620" y1="145" x2="620" y2="186" stroke="#111827" stroke-width="4"/>
+        <line x1="620" y1="186" x2="200" y2="186" stroke="#111827" stroke-width="4"/>
+        <line x1="200" y1="224" x2="310" y2="224" stroke="#6d28d9" stroke-width="4"/>
+        <text x="255" y="216" text-anchor="middle" font-size="12" font-weight="700" fill="#6d28d9">SIG</text>
+        <rect x="310" y="196" width="160" height="56" rx="10" fill="#ede9fe" stroke="#6d28d9" stroke-width="2"/>
+        <text x="390" y="221" text-anchor="middle" font-size="16" font-weight="700">Potensiometer</text>
+        <text x="390" y="240" text-anchor="middle" font-size="12" fill="#374151">sumber nilai suhu</text>
+        <line x1="440" y1="186" x2="440" y2="196" stroke="#111827" stroke-width="4"/>
+        <text x="430" y="180" text-anchor="end" font-size="12" font-weight="700" fill="#111827">GND</text>
+        <line x1="200" y1="272" x2="390" y2="272" stroke="#6d28d9" stroke-width="4"/>
+        <line x1="390" y1="252" x2="390" y2="272" stroke="#6d28d9" stroke-width="4"/>
+        <text x="300" y="264" text-anchor="middle" font-size="12" font-weight="700" fill="#6d28d9">VCC</text>
+      </svg>
+    </div>
+    <p>Urutan sambungannya ada empat: <strong>GPIO 2 → resistor 220 Ω → kaki panjang LED</strong>, <strong>kaki pendek LED → GND</strong>, <strong>kaki tengah potensiometer → GPIO 34</strong>, lalu <strong>kedua kaki sisi potensiometer → 3V3 dan GND</strong>. GPIO 34 tidak boleh diganti sembarang pin: pada ESP32 hanya sebagian pin yang mampu membaca tegangan analog, dan pin 34 termasuk pin yang hanya bisa menjadi input sehingga tidak dapat dipakai untuk LED. Kedua nomor itu wajib sama dengan <code>sensorPin</code> dan <code>ledPin</code> pada program Bab 9; bila salah satu Anda ubah di rangkaian, angkanya di program harus diubah mengikutinya.</p>
+    <details>
+      <summary>Rangkaian pertemuan ini dalam bentuk <code>diagram.json</code></summary>
+      <p>Bila Anda memulai dari project baru dan tidak ingin menebak susunannya, buka tab <code>diagram.json</code> di atas panel rangkaian, hapus seluruh isinya, tempelkan kode di bawah secara utuh, lalu kembali ke panel rangkaian. Hasilnya sama dengan gambar di atas.</p>
+      <div class="code"><pre>{
+  "version": 1,
+  "author": "Materi IoT Pertemuan 9",
+  "editor": "wokwi",
+  "parts": [
+    { "type": "board-esp32-devkit-c-v4", "id": "esp", "top": 0, "left": 0, "attrs": {} },
+    { "type": "wokwi-led", "id": "led1", "top": -60, "left": 140, "attrs": { "color": "red" } },
+    { "type": "wokwi-resistor", "id": "r1", "top": 40, "left": 130, "attrs": { "value": "220" } },
+    { "type": "wokwi-potentiometer", "id": "pot1", "top": 130, "left": 130, "attrs": {} }
+  ],
+  "connections": [
+    [ "esp:2", "r1:1", "green", [ "v0" ] ],
+    [ "r1:2", "led1:A", "green", [ "v0" ] ],
+    [ "led1:C", "esp:GND.1", "black", [ "v0" ] ],
+    [ "esp:34", "pot1:SIG", "violet", [ "v0" ] ],
+    [ "pot1:VCC", "esp:3V3", "red", [ "v0" ] ],
+    [ "pot1:GND", "esp:GND.2", "black", [ "v0" ] ]
+  ]
+}</pre></div>
+      <p>Bila panel rangkaian menjadi kosong setelah tempelan itu, biasanya ada tanda kurung atau koma yang ikut terhapus. Tempelkan ulang seluruh isinya, jangan hanya sebagian.</p>
+    </details>
+    <div class="warn">Periksa kaki tengah potensiometer lebih dahulu bila nilai suhu tampak macet. Kaki tengah yang belum tersambung ke GPIO 34 membuat <code>analogRead()</code> memberi angka tetap, sehingga suhu terbaca terus 20,00 atau 45,00 derajat dan tidak ada baris "lewati" maupun kiriman baru yang berubah, betapa pun potensiometer diputar. Gejalanya mudah dikira kesalahan ambang, padahal penyebabnya ada di rangkaian.</div>
+    <h3>8.2 Langkah pengerjaan</h3>
+    <ol class="step">
+      <li>Buka simulator, lalu pastikan rangkaian bagian 8.1 benar-benar terpasang: kaki tengah potensiometer pada <strong>GPIO 34</strong>, serta LED dan resistor 220 Ω pada <strong>GPIO 2</strong>. Bila Anda memulai dari project baru, tempelkan <code>diagram.json</code> bagian 8.1 lebih dahulu.</li>
+      <li>Jalankan proyek lama selama satu menit dengan klien MQTT berlangganan topik Anda, lalu catat berapa pesan yang masuk. Angka ini menjadi pembanding.</li>
+      <li>Salin proyek itu menjadi proyek baru, misalnya <code>P9-Timing-NIM</code>, dan kerjakan semua perubahan di sana.</li>
+      <li>Tambahkan konstanta jeda dan variabel <code>unsigned long</code> penyimpan waktu terakhir membaca, mengirim, dan mengedipkan LED. Hapus <code>delay(2000)</code> dari akhir <code>loop()</code>, lalu pindahkan pembacaan sensor ke dalam blok pemeriksaan <code>millis()</code> berjeda 2000 milidetik.</li>
+      <li>Tambahkan pekerjaan kedua berupa LED yang berkedip setiap 500 milidetik. Kedipan yang teratur membuktikan program tidak lagi berhenti menunggu.</li>
+      <li>Tambahkan variabel penyimpan nilai yang terakhir dikirim beserta ambang perubahan, kirim data hanya bila selisihnya mencapai ambang, dan tambahkan pengiriman wajib setiap 60000 milidetik agar penerima tetap mendapat kabar meski nilainya tidak berubah.</li>
+      <li>Ganti isi kiriman dari satu angka menjadi payload JSON berisi penanda perangkat, nilai bersatuan, <code>uptime_ms</code>, dan alasan pengiriman.</li>
+      <li>Cetak dua jenis baris pada log serial: satu saat data dikirim beserta payloadnya, satu lagi saat pengiriman dilewati beserta selisihnya. Log inilah bukti penyaringan bekerja.</li>
+      <li>Bila hasil rakitan Anda sendiri belum berjalan, hapus seluruh isi panel kode lalu tempelkan program lengkap Bab 9 apa adanya sebagai pembanding. Periksa bahwa <code>sensorPin</code> tetap 34 dan <code>ledPin</code> tetap 2, sama dengan rangkaian bagian 8.1.</li>
+      <li>Jalankan satu menit lagi dengan pengaturan sensor yang mirip percobaan pertama, catat jumlah pesan yang masuk, lalu bandingkan dengan angka pembanding tadi.</li>
+      <li>Buka Serial Monitor dan pastikan kecepatannya 115200, sama dengan angka pada <code>Serial.begin()</code>. Biarkan program berjalan sekitar setengah menit tanpa menyentuh potensiometer, lalu kenali dua jenis baris yang muncul: baris <code>kirim</code> yang memuat payload utuh beserta <code>uptime_ms</code>, dan baris <code>lewati</code> yang memuat <code>suhu=</code> beserta selisihnya.</li>
+      <li>Hitung selang waktu pengiriman dari log itu sendiri, jangan dari perkiraan. Ambil dua baris <code>kirim</code> yang berurutan, kurangkan <code>uptime_ms</code> yang belakang dengan yang depan, lalu bagi 1000 untuk mendapat detik. Hasilnya adalah jeda pengiriman yang sungguh terjadi.</li>
+      <li>Buktikan pembacaan tetap berjalan meski pengiriman jarang: hitung berapa baris <code>lewati</code> yang muncul di antara kedua baris <code>kirim</code> tadi. Jumlah itu ditambah satu, lalu dikalikan 2000 milidetik, harus mendekati selisih <code>uptime_ms</code> yang baru Anda hitung. Kesesuaian keduanya berarti sensor tetap dibaca setiap dua detik sepanjang waktu diam itu, dan yang dijarangkan hanya pengirimannya.</li>
+      <li>Sebagai variasi, hentikan simulasi lalu ubah satu nilai saja: <code>jedaWajib</code> dari 60000 menjadi 10000. Jalankan kembali tanpa menyentuh potensiometer dan ulangi kedua perhitungan di atas. Selisih <code>uptime_ms</code> antar baris <code>kirim</code> kini sekitar 10000 dengan alasan <code>berkala</code>, dan baris <code>lewati</code> di antaranya tinggal sekitar empat. Kembalikan nilainya menjadi 60000 sesudah percobaan ini.</li>
+    </ol>
+
+    <h3>8.3 Hasil yang diharapkan</h3>
+    <ul>
+      <li>LED berkedip rata setiap setengah detik walau pembacaan dan pengiriman berjalan.</li>
+      <li>Log serial menampilkan baris "lewati" ketika nilai hampir sama, dan baris berisi payload ketika nilai berubah cukup jauh.</li>
+      <li>Jumlah pesan per menit jauh lebih sedikit daripada proyek lama, perubahan penting tetap terkirim, dan klien MQTT menerima payload JSON yang utuh.</li>
+      <li>Bila sensor dibiarkan diam lebih dari satu menit, tetap muncul satu kiriman beralasan berkala.</li>
+      <li>Selisih dua nilai <code>uptime_ms</code> pada baris kirim yang berurutan mendekati kelipatan 2000 milidetik, karena pengiriman hanya mungkin terjadi pada saat sensor dibaca.</li>
+      <li>Di antara dua baris kirim selalu ada baris "lewati" yang jumlahnya cocok dengan selisih waktu itu, sehingga terlihat bahwa pembacaan tidak ikut dijarangkan.</li>
+    </ul>
+    <p><strong>Hasil yang harus terlihat:</strong> LED di panel rangkaian berganti keadaan setiap setengah detik sehingga kedipannya rata, dan Serial Monitor pada 115200 memunculkan satu baris baru tepat setiap dua detik. Selama potensiometer tidak diputar, hampir semua baris itu berbunyi "lewati" dengan nilai <code>suhu=</code> yang hanya bergeser di angka desimal. Begitu potensiometer diputar cukup jauh, baris berikutnya berganti menjadi baris kirim beralasan <code>berubah</code>, dan payload yang sama persis muncul di klien MQTT. Setelah <code>jedaWajib</code> diubah menjadi 10000, baris kirim beralasan <code>berkala</code> muncul kira-kira setiap sepuluh detik walau potensiometer dibiarkan diam, dengan sekitar empat baris "lewati" di antaranya; selisih <code>uptime_ms</code> dibagi 2000 memberi angka lima, yaitu empat pembacaan yang dilewati ditambah satu pembacaan yang mengirim, dan di situlah terbukti bahwa jedanya benar-benar berubah tanpa pembacaan ikut dijarangkan.</p>
+
+    <h3>8.4 Jika hasilnya tidak seperti itu</h3>
+    <div class="table-scroll" tabindex="0">
+      <table>
+      <tr><th>Gejala</th><th>Kemungkinan penyebab</th><th>Yang perlu diperiksa</th></tr>
+      <tr><td>LED berkedip tersendat</td><td>Masih ada <code>delay()</code> panjang di dalam <code>loop()</code>.</td><td>Cari seluruh <code>delay()</code>; sisakan hanya yang sangat singkat atau yang berada di <code>setup()</code>.</td></tr>
+      <tr><td>Data tidak pernah terkirim</td><td>Ambang terlalu besar, atau nilai awal pembanding mirip pembacaan.</td><td>Turunkan ambang, dan buat nilai pembanding awal sengaja mustahil agar kiriman pertama selalu terjadi.</td></tr>
+      <tr><td>Data terkirim terus seperti sebelumnya</td><td>Blok pengiriman berada di luar pemeriksaan ambang, atau nilai terkirim tidak diperbarui.</td><td>Pastikan variabel penyimpan nilai terkirim diperbarui tepat setelah pengiriman.</td></tr>
+      <tr><td>Jadwal tidak wajar setelah beberapa saat</td><td>Variabel waktu bertipe <code>int</code> sehingga cepat meluap.</td><td>Ubah semua variabel waktu dan konstanta jeda menjadi <code>unsigned long</code>.</td></tr>
+      <tr><td>Penerima menganggap payload rusak</td><td>Tanda kutip di dalam teks JSON belum diberi garis miring, atau penyangga teks terlalu kecil.</td><td>Periksa setiap <code>\"</code> pada teks format dan besarkan penyangga bila payload terpotong.</td></tr>
+      </table>
+    </div>
+    <p>Bila macet, kembalikan proyek ke langkah terakhir yang berhasil lalu ulangi satu perubahan saja. Anda juga boleh meminta bantuan; sebutkan langkah yang sudah berhasil dan dua baris log terakhir, karena keterangan itu mempercepat pencarian penyebab.</p>
+  </section>
+  <section class="card">
+    <h2>9. Program Lengkap dan Penjelasan Baris per Baris</h2>
+    <p>Program berikut menjalankan tiga pekerjaan tanpa pernah berhenti menunggu: mengedipkan LED setiap setengah detik, membaca sensor setiap dua detik, dan mengirim payload JSON hanya ketika nilainya berubah cukup jauh atau sudah lama tidak ada kabar. Sumber nilai suhu masih potensiometer pada pin 34 seperti Pertemuan 8, sehingga Anda dapat mengubah nilainya sendiri untuk menguji ambang.</p>
+    <p>Bacalah program ini dengan satu pertanyaan di kepala: pada satu putaran <code>loop()</code>, apa saja yang mungkin dikerjakan dan apa yang dilewati? Jawabannya hampir selalu "sedikit sekali". Sebagian besar putaran hanya memeriksa tiga syarat waktu, mendapati ketiganya belum tiba, lalu selesai. Justru karena setiap putaran sangat murah itulah papan sempat menanggapi apa pun yang datang. Pola inilah yang nanti Anda pakai lagi di Pertemuan 10, ketika perintah dari dasbor harus ditangkap di tengah pekerjaan lain.</p>
+    <div class="code"><pre>#include &lt;WiFi.h&gt;
+#include &lt;PubSubClient.h&gt;
+
+const char* ssid       = "Wokwi-GUEST";
+const char* password   = "";
+const char* mqttServer = "broker.hivemq.com";
+const int   mqttPort   = 1883;
+const char* topikData  = "iot/kelasA/nim12345/suhu";
+
+const int sensorPin = 34;   // potensiometer sebagai sumber nilai suhu
+const int ledPin    = 2;    // LED penanda program tetap berjalan
+
+const unsigned long jedaBaca  = 2000;    // jeda membaca sensor
+const unsigned long jedaKedip = 500;     // jeda kedip LED
+const unsigned long jedaWajib = 60000;   // batas lama tanpa pengiriman
+const float ambangKirim = 0.5;           // selisih minimal agar data dikirim
+
+unsigned long waktuBacaTerakhir  = 0;
+unsigned long waktuKedipTerakhir = 0;
+unsigned long waktuKirimTerakhir = 0;
+float suhuTerkirim = -999.0;   // nilai mustahil, agar kiriman pertama selalu terjadi
+bool  ledNyala     = false;
+
+WiFiClient espClient;
+PubSubClient mqtt(espClient);
+
+float bacaSuhu() {
+  int nilaiAdc = analogRead(sensorPin);
+  return 20.0 + (nilaiAdc / 4095.0) * 25.0;   // 0..4095 menjadi 20..45 derajat
+}
+
+void kirimData(float suhu, const char* alasan) {
+  char payload[128];
+  snprintf(payload, sizeof(payload),
+           "{\"perangkat\":\"esp32-nim12345\",\"suhu_c\":%.2f,"
+           "\"uptime_ms\":%lu,\"alasan\":\"%s\"}",
+           suhu, millis(), alasan);
+  mqtt.publish(topikData, payload);
+  Serial.print("kirim  -&gt; "); Serial.println(payload);
+}
+
+void hubungkanBroker() {
+  while (!mqtt.connected()) {
+    if (mqtt.connect("esp32-p9-nim12345")) {
+      Serial.println("broker MQTT tersambung");
+    } else {
+      Serial.print("gagal, kode "); Serial.println(mqtt.state());
+      delay(2000);
+    }
+  }
+}
+
+void setup() {
+  Serial.begin(115200);
+  pinMode(ledPin, OUTPUT);
+  WiFi.begin(ssid, password);
+  while (WiFi.status() != WL_CONNECTED) { delay(500); }
+  Serial.print("Wi-Fi tersambung, IP: "); Serial.println(WiFi.localIP());
+  mqtt.setServer(mqttServer, mqttPort);
+}
+
+void loop() {
+  if (!mqtt.connected()) hubungkanBroker();
+  mqtt.loop();
+
+  unsigned long sekarang = millis();
+
+  if (sekarang - waktuKedipTerakhir &gt;= jedaKedip) {
+    waktuKedipTerakhir = sekarang;
+    ledNyala = !ledNyala;
+    digitalWrite(ledPin, ledNyala ? HIGH : LOW);
+  }
+
+  if (sekarang - waktuBacaTerakhir &gt;= jedaBaca) {
+    waktuBacaTerakhir = sekarang;
+
+    float suhu = bacaSuhu();
+    float selisih = fabs(suhu - suhuTerkirim);
+    bool berubah   = selisih &gt;= ambangKirim;
+    bool sudahLama = (sekarang - waktuKirimTerakhir) &gt;= jedaWajib;
+
+    if (berubah || sudahLama) {
+      kirimData(suhu, berubah ? "berubah" : "berkala");
+      suhuTerkirim = suhu;
+      waktuKirimTerakhir = sekarang;
+    } else {
+      Serial.print("lewati -&gt; suhu="); Serial.print(suhu, 2);
+      Serial.print(" selisih hanya "); Serial.println(selisih, 2);
+    }
+  }
+}</pre></div>
+    <h3>9.1 Penjelasan baris per baris</h3>
+    <div class="table-scroll" tabindex="0">
+      <table>
+      <tr><th>Bagian</th><th>Yang dikerjakan</th></tr>
+      <tr><td>Blok <code>#include</code> dan seluruh <code>const</code></td><td>Memuat pustaka Wi-Fi dan MQTT, lalu mengumpulkan semua angka yang mungkin Anda ubah di satu tempat: alamat broker, topik, nomor pin, tiga jeda, dan ambang perubahan. Ketiga jeda bertipe <code>unsigned long</code>, bukan <code>int</code>.</td></tr>
+      <tr><td>Variabel keadaan</td><td>Tiga variabel <code>waktu...Terakhir</code> mencatat kapan masing-masing pekerjaan terakhir dijalankan, sehingga jadwalnya tidak saling mengganggu. <code>suhuTerkirim</code> diisi <code>-999.0</code>, nilai yang mustahil dicapai sensor, agar selisih pada putaran pertama selalu besar dan data pertama pasti terkirim.</td></tr>
+      <tr><td><code>bacaSuhu()</code> dan <code>kirimData()</code></td><td>Fungsi pertama mengubah hasil <code>analogRead()</code> yang bernilai 0 sampai 4095 menjadi suhu 20 sampai 45 derajat; bila memakai sensor lain, hanya fungsi inilah yang diganti. Fungsi kedua menyusun payload JSON dengan <code>snprintf</code> ke penyangga 128 karakter, mengirimkannya ke topik data, lalu mencetak payload yang sama ke log serial. <code>%.2f</code> membatasi dua angka desimal dan <code>%lu</code> dipakai karena <code>millis()</code> bertipe <code>unsigned long</code>. Tanda kutip di dalam teks JSON diberi garis miring agar tidak dianggap penutup teks.</td></tr>
+      <tr><td><code>hubungkanBroker()</code> dan <code>setup()</code></td><td>Menyiapkan serial, mode pin, sambungan Wi-Fi, dan alamat broker. <code>delay()</code> di sini masih wajar karena hanya berjalan saat persiapan, ketika belum ada pekerjaan lain yang menunggu kesempatan. Fungsi penyambung dibuat terpisah dan dipanggil dari <code>loop()</code> supaya sambungan yang terputus di tengah jalan dapat dibangun ulang tanpa memulai program dari awal; itulah sebab pemeriksaan <code>if (!mqtt.connected())</code> berada di baris pertama <code>loop()</code>. Perhatikan bahwa <code>mqtt.setServer()</code> hanya menyimpan alamat dan belum menyambung, sehingga penyambungan sesungguhnya baru terjadi pada putaran pertama <code>loop()</code>.</td></tr>
+      <tr><td>Pembuka <code>loop()</code> dan blok <code>jedaKedip</code></td><td><code>millis()</code> dibaca satu kali ke variabel <code>sekarang</code> supaya semua pemeriksaan pada putaran itu memakai patokan waktu yang sama. Pekerjaan pertama membalik keadaan LED setiap 500 milidetik; kedipan yang rata adalah bukti kasatmata program tidak pernah berhenti menunggu.</td></tr>
+      <tr><td>Blok <code>jedaBaca</code> dan cabang penyaring</td><td>Pekerjaan kedua. Setiap 2000 milidetik sensor dibaca dan selisihnya terhadap nilai terakhir yang dikirim dihitung dengan <code>fabs()</code>, yang mengambil nilai mutlak agar penurunan suhu diperlakukan sama pentingnya dengan kenaikan. Data dikirim bila selisih mencapai ambang atau sudah 60 detik tanpa kabar, lalu nilai terkirim dan waktu kirim diperbarui. Dua pembaruan itu tidak boleh dilupakan: yang pertama memindahkan patokan ambang, yang kedua menyetel ulang hitungan kiriman berkala. Bila tidak, program mencetak baris "lewati" agar Anda tetap melihat sensor sedang dibaca; tanpa baris itu log yang sepi tidak dapat dibedakan dari program yang berhenti bekerja. Alasan pengiriman ikut dikirim di dalam payload sebagai field <code>alasan</code> supaya penerima tahu kiriman itu datang karena ada perubahan atau semata-mata karena sudah waktunya berkabar.</td></tr>
+      </table>
+    </div>
+
+    <h3>9.2 Contoh log serial yang wajar</h3>
+    <p>Log berikut diambil ketika potensiometer diputar sedikit demi sedikit. Pembacaan tetap terjadi setiap dua detik, tetapi pengiriman hanya dua kali.</p>
+    <div class="code"><pre>Wi-Fi tersambung, IP: 10.13.37.2
+broker MQTT tersambung
+kirim  -&gt; {"perangkat":"esp32-nim12345","suhu_c":27.14,"uptime_ms":3412,"alasan":"berubah"}
+lewati -&gt; suhu=27.33 selisih hanya 0.19
+kirim  -&gt; {"perangkat":"esp32-nim12345","suhu_c":28.05,"uptime_ms":9418,"alasan":"berubah"}
+lewati -&gt; suhu=28.11 selisih hanya 0.06</pre></div>
+    <p>Dua baris terakhir memperlihatkan hal penting: setelah 28,05 terkirim, pembanding berpindah ke angka itu, sehingga 28,11 dinilai terhadap 28,05 dan bukan terhadap 27,14. Tanpa pemindahan pembanding, nilai yang naik perlahan akan terus dianggap berubah dan penghematan gagal.</p>
+    <p>Perhatikan juga bahwa nilai <code>uptime_ms</code> pada kiriman pertama sudah 3412, bukan nol. Angka itu adalah waktu yang habis untuk menyambung Wi-Fi dan broker di <code>setup()</code>, jadi selisih antara dua nilai <code>uptime_ms</code> yang berurutan memberi tahu penerima berapa lama jeda sebenarnya antara dua kiriman. Bila suatu saat angka itu kembali mengecil, penerima tahu papan Anda baru menyala ulang.</p>
+    <p>Yang tidak terlihat di log ini juga bermakna: tidak ada baris apa pun yang menumpuk dalam satu waktu lalu diam lama. Baris "lewati" muncul tepat setiap dua detik karena pembacaan tetap berjadwal, dan itulah tanda bahwa penyaringan bekerja pada tahap pengiriman, bukan pada tahap pembacaan.</p>
+  </section>
+  <section class="card">
+    <h2>10. Ringkasan Materi</h2>
+    <ul>
+      <li>Jeda pengiriman perlu diatur karena setiap kiriman memakai energi, kuota, dan sumber daya broker, sementara data terlalu rapat jarang menambah pengetahuan.</li>
+      <li><code>delay()</code> membekukan seluruh program. Ia hanya aman untuk jeda sangat singkat dan untuk persiapan di <code>setup()</code>.</li>
+      <li><code>millis()</code> dipakai dengan membandingkan selisih waktu terhadap catatan terakhir. Variabel waktu bertipe <code>unsigned long</code>, dan bentuk pengurangan itulah yang membuat jadwal tetap benar saat pencacah berputar ulang setelah sekitar 49 hari.</li>
+      <li>Membaca boleh sering karena murah; mengirim disaring dengan ambang perubahan, ditambah kiriman berkala wajib agar diamnya perangkat tidak disalahartikan sebagai mati.</li>
+      <li>Polling memeriksa keadaan secara berjadwal, event-driven bertindak ketika sesuatu terjadi, dan keduanya sering dipakai bersama.</li>
+      <li>Payload rapi berbentuk JSON dengan nama field tetap, satuan jelas, angka tanpa tanda kutip, dan penanda perangkat. <code>uptime_ms</code> memberi waktu relatif; waktu absolut harus datang dari luar.</li>
+    </ul>
+  </section>
+  <section class="card">
+    <h2>11. Latihan Pemahaman</h2>
+
+    <h3>11.1 Cek cepat</h3>
+    <p>Jawab lebih dahulu tanpa membuka bab sebelumnya, lalu buka kuncinya.</p>
+    <ol>
+      <li>Sebuah program memiliki <code>delay(5000)</code> di akhir <code>loop()</code>. Tombol ditekan satu detik setelah <code>delay()</code> mulai berjalan. Apa yang terjadi?
+        <details><summary>Kunci jawaban</summary><p>Penekanan itu tidak diperhatikan saat terjadi. Program membeku dan baru memeriksa tombol setelah lima detik habis, sehingga tekanan singkat bisa terlewat sama sekali.</p></details>
+      </li>
+      <li>Mengapa pola <code>if (sekarang - waktuTerakhir &gt;= jeda)</code> lebih baik daripada <code>if (sekarang &gt;= waktuTerakhir + jeda)</code>?
+        <details><summary>Kunci jawaban</summary><p>Bentuk pengurangan tetap menghasilkan selisih yang benar ketika pencacah <code>millis()</code> berputar kembali ke nol, sedangkan bentuk penjumlahan dapat meluap sehingga syaratnya tidak pernah terpenuhi.</p></details>
+      </li>
+      <li>Ambang perubahan diisi 0,5 derajat dan kiriman berkala wajib dihapus. Perangkat diletakkan di ruangan bersuhu tetap selama dua jam. Apa yang dilihat penerima, dan mengapa itu masalah?
+        <details><summary>Kunci jawaban</summary><p>Penerima tidak menerima apa pun selama dua jam, dan keadaan itu tidak dapat dibedakan dari perangkat yang mati. Kiriman berkala wajib ada supaya diam yang normal tetap terlihat sebagai diam.</p></details>
+      </li>
+    </ol>
+
+    <h3>11.2 Pertanyaan reflektif</h3>
+    <ol>
+      <li>Untuk kasus yang Anda pilih pada Pertemuan 8, berapa jeda pembacaan yang wajar dan apa alasan fisisnya? Bandingkan dengan alasan pada Bab 1.</li>
+      <li>Bila ambang perubahan dibuat terlalu kecil, apa yang terjadi pada jumlah kiriman ketika nilai sensor bergoyang karena derau?</li>
+      <li>Pekerjaan apa lagi selain mengedipkan LED yang mustahil dikerjakan bila <code>loop()</code> masih mengandung <code>delay(2000)</code>?</li>
+      <li>Bagian mana dari program Anda yang bersifat polling dan bagian mana yang lebih dekat ke event-driven? Rujuk tabel Bab 5.</li>
+      <li>Jika penerima ingin menggambar grafik suhu sepanjang hari, keterangan waktu apa yang masih kurang dari payload Anda, dan siapa yang paling tepat melengkapinya menurut Bab 7?</li>
+    </ol>
+  </section>
+  <section class="card">
+    <h2>12. Tugas Latihan Pertemuan 9</h2>
+    <p>Ubah proyek UTS Anda dari Pertemuan 8 sehingga data hanya dikirim ketika terjadi perubahan yang berarti, dengan payload yang lebih rapi. Kerjakan pada salinan proyek agar versi lama tetap ada.</p>
+    <p>Ketentuan wajib: penjadwalan memakai <code>millis()</code> tanpa <code>delay()</code> panjang di <code>loop()</code>; ada satu pekerjaan tambahan berjeda berbeda sebagai bukti program tidak membeku; pengiriman disaring dengan ambang perubahan pilihan Anda dan dilengkapi pengiriman berkala wajib; payload berbentuk JSON dengan penanda perangkat, nilai bersatuan, serta <code>uptime_ms</code>.</p>
+    <p>Yang dikumpulkan:</p>
+    <ul>
+      <li>Berkas program yang sudah diubah, atau tautan proyek simulator beserta nama proyeknya.</li>
+      <li>Kutipan log serial minimal sepuluh baris yang memuat baris terkirim dan terlewat.</li>
+      <li>Tangkapan layar klien MQTT yang menampilkan payload JSON yang diterima.</li>
+      <li>Catatan satu halaman berisi jumlah pesan per menit sebelum dan sesudah perubahan, nilai ambang beserta alasannya, dan satu paragraf tentang polling dan event-driven pada program Anda.</li>
+    </ul>
+    <div class="table-scroll" tabindex="0">
+      <table>
+      <tr><th>Aspek</th><th>Bobot</th><th>Kriteria nilai penuh</th></tr>
+      <tr><td>Penjadwalan dengan <code>millis()</code></td><td>25%</td><td>Tidak ada <code>delay()</code> panjang di <code>loop()</code>, variabel waktu bertipe <code>unsigned long</code>, pekerjaan tambahan berjalan rata.</td></tr>
+      <tr><td>Penyaringan pengiriman</td><td>25%</td><td>Ambang perubahan bekerja, nilai pembanding diperbarui setelah pengiriman, dan kiriman berkala wajib tetap muncul saat nilai diam.</td></tr>
+      <tr><td>Bentuk payload</td><td>20%</td><td>JSON sah dan konsisten, nama field jelas bersatuan, angka tanpa tanda kutip, memuat penanda perangkat dan <code>uptime_ms</code>.</td></tr>
+      <tr><td>Bukti penghematan</td><td>15%</td><td>Jumlah pesan per menit sebelum dan sesudah dicatat pada kondisi sebanding, didukung log dan tangkapan layar.</td></tr>
+      <tr><td>Penjelasan polling dan event-driven</td><td>15%</td><td>Perbedaan keduanya benar dan dikaitkan ke bagian program Anda sendiri, bukan definisi umum.</td></tr>
+      </table>
+    </div>
+  </section>
+  <section class="card">
+    <h2>13. Checkpoint Evaluasi Pertemuan 9</h2>
+    <p>Pertemuan ini dianggap tuntas bila butir berikut dapat Anda lakukan sendiri. Daftar ini sekaligus dipakai sebagai pemeriksaan diri sebelum tugas dikumpulkan.</p>
+    <div class="mini">
+      <div class="label">Target minimal pertemuan ini</div>
+      <p>Pengiriman data menjadi lebih hemat daripada sebelumnya, payload tersusun lebih rapi, dan Anda memahami perbedaan polling dengan event-driven.</p>
+    </div>
+    <div class="table-scroll" tabindex="0">
+      <table>
+      <tr><th>Yang diperiksa</th><th>Cara memastikan sendiri</th><th>Bila belum tercapai</th></tr>
+      <tr><td>Pengiriman lebih hemat daripada versi sebelumnya</td><td>Hitung pesan yang masuk ke klien MQTT selama satu menit pada proyek lama dan proyek baru dengan putaran potensiometer yang mirip, lalu bandingkan seperti pada langkah pengukuran pembanding dan langkah pengukuran ulang di bagian 8.2.</td><td>Baca ulang Bab 4 dan cabang penyaring pada bagian 9.1.</td></tr>
+      <tr><td>Program tidak lagi berhenti menunggu</td><td>Perhatikan LED penanda: kedipannya harus rata setiap setengah detik walau pembacaan dan pengiriman berjalan, sesuai bagian 8.3.</td><td>Baca ulang Bab 2 dan Bab 3, lalu telusuri sisa <code>delay()</code> memakai baris pertama tabel 8.4.</td></tr>
+      <tr><td>Payload rapi dan konsisten</td><td>Salin payload yang diterima klien MQTT dan periksa nama field selalu sama, satuan tercantum, angka tanpa tanda kutip, serta ada <code>uptime_ms</code>.</td><td>Baca ulang Bab 6 dan Bab 7.</td></tr>
+      <tr><td>Dapat menjelaskan polling dan event-driven</td><td>Tunjuk baris program yang berjadwal dan baris yang bertindak karena syarat terpenuhi, lalu jelaskan dengan kalimat sendiri seperti pertanyaan keempat bagian 11.2.</td><td>Baca ulang Bab 5 beserta tabel perbandingannya.</td></tr>
+      </table>
+    </div>
+    <p class="footer-note">Checkpoint besar mata kuliah ini berada di Pertemuan 4 sebagai CP-1, Pertemuan 8 sebagai CP-2, Pertemuan 12 sebagai CP-3, dan Pertemuan 16 sebagai CP-4. Pertemuan 9 bukan checkpoint besar, dan tugas latihan mingguan berbobot 20 persen dari nilai akhir.</p>
+  </section>
+  <section class="card">
+    <h2>14. Referensi Praktis</h2>
+    <dl class="gloss">
+      <dt>Arduino Reference dan tutorial <code>millis()</code> — <code>arduino.cc</code></dt>
+      <dd>Keterangan resmi tipe kembalian <code>millis()</code> beserta contoh menjalankan pekerjaan berkala tanpa <code>delay()</code>. Pendamping Bab 3 saat menyusun pola penjadwalan.</dd>
+      <dt>Panduan payload dan topik MQTT — <code>hivemq.com</code></dt>
+      <dd>Praktik baik penyusunan payload dan penamaan topik, termasuk alasan memilih JSON. Cocok dibaca bersama Bab 6 sebelum menetapkan nama field Anda.</dd>
+      <dt>Pola pengaturan waktu pada sistem tertanam — topik</dt>
+      <dd>Cari dengan kata kunci <code>non-blocking timing arduino</code> dan <code>blink without delay</code> untuk melihat contoh lain menjalankan beberapa pekerjaan berjeda berbeda dalam satu <code>loop()</code>, seperti pada Bab 9.</dd>
+    </dl>
+    <p class="footer-note">Alamat sumber ditulis sebagai nama domain saja karena struktur halaman situs berubah dari waktu ke waktu; menelusuri dari halaman utama atau kotak pencarian situs lebih dapat diandalkan daripada menyalin alamat halaman dalam.</p>
+  </section>
+  <footer class="pagenum">
+    <span class="pagenum-seri">Materi Pertemuan 9</span>
+    <span class="pagenum-no">Halaman 9 dari 16</span>
+  </footer>
+</div>
+</body>
+</html>

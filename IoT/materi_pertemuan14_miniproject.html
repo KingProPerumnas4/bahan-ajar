@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Materi Pertemuan 14 - Implementasi Mini Project di Simulator</title>
+  <link rel="stylesheet" href="assets/materi.css" />
+</head>
+<body>
+  <div class="wrap">
+    <section class="hero">
+      <span class="badge">Pertemuan 14</span>
+      <h1>Implementasi Mini Project di Simulator</h1>
+      <p class="lead">Materi ini membahas cara mengubah rancangan mini project menjadi prototype yang benar-benar berjalan di simulator, yaitu ketika sensor virtual, logika kontrol, pengiriman data melalui MQTT, dan dashboard akhirnya bekerja sebagai satu sistem utuh.</p>
+      <div>
+        <span class="pill">Prototype</span>
+        <span class="pill">Integrasi bertahap</span>
+        <span class="pill">Sensor virtual</span>
+        <span class="pill">Logika kontrol</span>
+        <span class="pill">MQTT</span>
+        <span class="pill">Dashboard</span>
+        <span class="pill">Catatan kemajuan</span>
+      </div>
+      <p class="notice">Yang perlu siap: rancangan yang Anda susun pada Pertemuan 13 tentang perancangan mini project, satu proyek simulator ESP32 di browser, klien MQTT untuk memantau topik, dan Node-RED yang sudah terpasang sejak Pertemuan 10 tentang dashboard. Tidak ada perangkat lunak baru yang perlu dipasang dan tidak ada perangkat keras yang dibutuhkan.</p>
+    </section>
+
+    <section class="card">
+      <h2>Capaian Pembelajaran Pertemuan 14</h2>
+      <div class="grid two">
+        <div class="mini">
+          <div class="label">Yang dipahami</div>
+          <ul>
+            <li>Alasan prototype dibangun lapis demi lapis, bukan dirakit sekaligus lalu diuji sekali di akhir.</li>
+            <li>Cara memecah program menjadi fungsi yang masing-masing punya satu tugas jelas.</li>
+            <li>Prinsip penamaan topik MQTT yang konsisten sehingga aliran data mudah ditelusuri.</li>
+            <li>Peran catatan kemajuan sebagai alat penelusuran kesalahan sekaligus bahan laporan akhir.</li>
+          </ul>
+        </div>
+        <div class="mini">
+          <div class="label">Yang dapat dilakukan</div>
+          <ul>
+            <li>Menyusun prototype bertahap: sensor terbaca dahulu, lalu aktuator, lalu publish, lalu dashboard.</li>
+            <li>Menguji tiap lapisan secara objektif sebelum menambah lapisan berikutnya.</li>
+            <li>Menjalankan logika kontrol berbasis ambang dan mengendalikannya dari dashboard.</li>
+            <li>Menyiapkan permintaan bantuan yang jelas ketika pekerjaan terhenti.</li>
+          </ul>
+        </div>
+      </div>
+      <p>Fokus Pertemuan 14 adalah mewujudkan rancangan menjadi prototype yang berjalan di simulator, lengkap dengan integrasi sensor virtual, MQTT, dan dashboard. Bedanya dengan pertemuan sebelumnya: tidak ada lagi contoh tunggal yang berdiri sendiri. Semua yang pernah Anda kerjakan terpisah harus disatukan, dan pekerjaan menyatukan itulah yang punya kesulitan tersendiri. Mini project simulator berbobot 20 persen dari nilai akhir.</p>
+    </section>
+    <section class="card">
+      <h2>1. Dari Rancangan Menjadi Prototype yang Berjalan</h2>
+      <p>Hasil kerja Pertemuan 13 tentang perancangan mini project masih berupa dokumen: daftar sensor, aktuator, aturan kontrol, daftar topik, dan gambaran dashboard. Dokumen itu belum bisa benar atau salah karena belum pernah dijalankan. Pertemuan ini mengubah statusnya: setiap baris rancangan diterjemahkan menjadi kode, sambungan rangkaian, atau node dashboard, lalu diuji apakah benar-benar berperilaku seperti yang tertulis.</p>
+      <p>Terimalah sejak awal bahwa rancangan hampir selalu berubah sedikit saat diimplementasikan; itu justru tanda implementasi sedang menguji rancangan. Yang tidak boleh terjadi adalah perubahan yang tidak dicatat, sebab laporan akhir harus menjelaskan sistem yang sebenarnya berjalan.</p>
+      <div class="analogy">
+        <strong>Analogi dunia nyata:</strong> rancangan seperti denah rumah. Denah bisa terlihat rapi di kertas, tetapi begitu dinding didirikan, tukang menemukan jalur pipa dan jalur kabel bertemu di titik yang sama, lalu denah disesuaikan. Tidak ada bangunan yang selesai tanpa penyesuaian semacam itu.
+      </div>
+      <h3>1.1 Batas ruang lingkup yang harus dijaga</h3>
+      <p>Target minimal mini project sengaja dibuat sempit: minimal satu sensor, satu aktuator, dan satu dashboard bekerja, data benar-benar bergerak dari perangkat ke platform, dan logika kontrol berjalan sesuai rancangan. Sistem dengan satu sensor yang seluruh jalurnya terbukti bekerja bernilai lebih tinggi daripada sistem dengan empat sensor yang jalur datanya setengah jadi.</p>
+    </section>
+
+    <section class="card">
+      <h2>2. Membangun Lapis demi Lapis, Bukan Sekaligus</h2>
+      <p>Yang paling menentukan keberhasilan pertemuan ini bukan kemampuan menulis kode, melainkan urutan pengerjaan. Susun prototype sedikit demi sedikit dan uji tiap lapisan sebelum menambah lapisan berikutnya. Bila seluruh program ditulis sekaligus lalu angka tidak muncul di dashboard, penyebabnya bisa berada di tujuh tempat sekaligus tanpa petunjuk: pin sensor, nilai ambang, koneksi Wi-Fi, alamat broker, nama topik, bentuk payload, atau sambungan node dashboard. Bila lapisan ditambahkan satu per satu dan tiap lapisan sudah terbukti bekerja, penyebab kerusakan hampir pasti ada pada penambahan terakhir.</p>
+      <div class="analogy">
+        <strong>Analogi dunia nyata:</strong> instalasi listrik rumah dipasang dan diuji per jalur. Tidak ada yang menyambung seluruh rumah lebih dahulu lalu menyalakan sakelar utama sekali untuk mengetahui hasilnya, sebab satu sambungan salah memaksa seluruh rumah diperiksa ulang.
+      </div>
+      <h3>2.1 Urutan integrasi yang disarankan</h3>
+      <div class="table-scroll" tabindex="0">
+        <table>
+        <thead>
+          <tr><th>Tahap</th><th>Yang ditambahkan</th><th>Cara memastikan tahap itu benar</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>1. Sensor terbaca</td><td>Kerangka program dan pembacaan satu sensor virtual ke Serial Monitor.</td><td>Angka yang tampil wajar dan berubah ketika nilai sensor di simulator digeser. Bila nol terus, jangan lanjut.</td></tr>
+          <tr><td>2. Aktuator bergerak</td><td>Satu aktuator dipaksa hidup-mati langsung dari kode, tanpa sensor.</td><td>Aktuator berubah keadaannya di panel rangkaian. Tahap ini memisahkan masalah aktuator dari masalah logika.</td></tr>
+          <tr><td>3. Logika kontrol lokal</td><td>Sensor dan aktuator dihubungkan aturan ambang di dalam perangkat.</td><td>Geser nilai sensor melewati ambang: aktuator berubah tepat di titik itu dan Serial Monitor mencetak alasannya.</td></tr>
+          <tr><td>4. Perangkat masuk jaringan</td><td>Koneksi Wi-Fi dan koneksi broker, belum mengirim data.</td><td>Serial Monitor menampilkan alamat IP dan keterangan broker terhubung, atau kode kesalahannya.</td></tr>
+          <tr><td>5. Data terkirim</td><td>Publish nilai sensor ke topik telemetri secara berkala.</td><td>Klien MQTT dari Pertemuan 7 tentang MQTT menerima payload pada topik yang benar dengan periode tetap.</td></tr>
+          <tr><td>6. Dashboard menampilkan</td><td>Flow Node-RED yang berlangganan topik telemetri.</td><td>Nilai di dashboard sama dengan nilai di klien MQTT. Bila berbeda, masalahnya di penguraian payload.</td></tr>
+          <tr><td>7. Perintah dari dashboard</td><td>Tombol dashboard ke topik perintah, dan perangkat yang berlangganan topik itu.</td><td>Tombol mengubah keadaan aktuator dan Serial Monitor mencetak isi perintah. Data terbukti dua arah.</td></tr>
+        </tbody>
+        </table>
+      </div>
+      <h3>2.2 Satu perubahan sekali waktu, dan simpan versi yang berhasil</h3>
+      <p>Di dalam tiap tahap berlaku aturan yang sama dalam ukuran kecil: ubah satu hal, jalankan, amati, baru ubah hal berikutnya. Cara berpikir ini sudah dilatih pada Pertemuan 5 tentang penggabungan sensor-aktuator dan penelusuran kesalahan. Setiap kali satu tahap terbukti bekerja, simpan salinannya dengan nama seperti <code>miniproject-tahap3-kontrol-lokal</code> sebelum menambah lapisan berikutnya, agar selalu ada titik aman untuk kembali.</p>
+    </section>
+
+    <section class="card">
+      <h2>3. Membagi Program Menjadi Fungsi yang Jelas</h2>
+      <p>Program mini project jauh lebih panjang daripada latihan mingguan sebelumnya. Bila seluruh isinya ditumpuk di dalam <code>loop()</code>, tiga masalah muncul sekaligus: sulit dibaca ulang keesokan hari, sulit dicari letak kesalahannya, dan sulit dijelaskan saat demo akhir. Aturan praktisnya: satu fungsi mengerjakan satu hal, dan namanya adalah kata kerja yang menyebutkan hal itu. Bila Anda sulit memberi nama sebuah fungsi tanpa memakai kata "dan", biasanya fungsi itu mengerjakan dua hal dan sebaiknya dipecah.</p>
+      <div class="table-scroll" tabindex="0">
+        <table>
+        <thead>
+          <tr><th>Fungsi</th><th>Tugas tunggalnya</th><th>Yang sebaiknya tidak dikerjakan di dalamnya</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>bacaSensor()</code></td><td>Mengambil nilai sensor, memeriksa kewajarannya, menyimpannya ke satu variabel.</td><td>Menyalakan aktuator atau mengirim data ke jaringan.</td></tr>
+          <tr><td><code>kendaliOtomatis()</code></td><td>Membandingkan nilai sensor dengan ambang lalu memutuskan keadaan aktuator.</td><td>Membaca ulang sensor, karena nilainya bisa berbeda dari yang dipakai keputusan sebelumnya.</td></tr>
+          <tr><td><code>setKipas()</code></td><td>Mengubah keadaan aktuator dan melaporkan keadaan barunya.</td><td>Mengambil keputusan sendiri tentang perlu tidaknya aktuator berubah.</td></tr>
+          <tr><td><code>kirimTelemetri()</code></td><td>Menyusun payload lalu mem-publish-nya ke topik telemetri.</td><td>Mengubah nilai sensor atau keadaan aktuator.</td></tr>
+          <tr><td><code>saatPerintahMasuk()</code></td><td>Menerjemahkan perintah dari dashboard menjadi tindakan.</td><td>Pekerjaan panjang atau penundaan lama, karena fungsi ini dipanggil saat pesan tiba.</td></tr>
+        </tbody>
+        </table>
+      </div>
+      <div class="tip">
+        <strong>Kaitannya dengan penelusuran kesalahan.</strong> Ketika dashboard berhenti diperbarui, Anda tidak perlu membaca seluruh program. Nilai di Serial Monitor masih berubah berarti <code>bacaSensor()</code> sehat, sehingga pemeriksaan langsung menyempit ke <code>kirimTelemetri()</code> dan koneksi broker.
+      </div>
+    </section>
+    <section class="card">
+      <h2>4. Penamaan Topik MQTT yang Konsisten</h2>
+      <p>Pada mini project, tiap nama topik dipakai di tiga tempat sekaligus: program perangkat, klien MQTT saat pengujian, dan flow dashboard. Satu huruf berbeda di salah satu tempat membuat data seolah hilang tanpa pesan kesalahan, sebab broker tidak pernah mengeluh soal nama topik yang salah; ia hanya meneruskan pesan kepada yang berlangganan nama yang persis sama. Karena itu tentukan pola penamaan sekali di awal, tulis polanya di catatan Anda, lalu ikuti tanpa kecuali:</p>
+      <div class="code"><pre>&lt;nama-proyek&gt;/&lt;id-perangkat&gt;/&lt;besaran-atau-alat&gt;/&lt;arah&gt;
+
+contoh:  miniproject/esp32-01/suhu/data
+         miniproject/esp32-01/kipas/status
+         miniproject/esp32-01/kipas/perintah</pre></div>
+      <div class="table-scroll" tabindex="0">
+        <table>
+        <thead>
+          <tr><th>Topik</th><th>Isi yang dibawa</th><th>Arah</th><th>Yang berlangganan</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>miniproject/esp32-01/suhu/data</code></td><td>Nilai suhu terbaru, berupa angka atau payload JSON berisi beberapa nilai.</td><td>Perangkat ke platform</td><td>Dashboard dan klien MQTT saat pengujian.</td></tr>
+          <tr><td><code>miniproject/esp32-01/kipas/status</code></td><td>Keadaan aktuator saat ini, misalnya <code>ON</code> atau <code>OFF</code>.</td><td>Perangkat ke platform</td><td>Indikator pada dashboard.</td></tr>
+          <tr><td><code>miniproject/esp32-01/kipas/perintah</code></td><td>Permintaan pengguna, misalnya <code>ON</code>, <code>OFF</code>, atau <code>AUTO</code>.</td><td>Platform ke perangkat</td><td>Perangkat ESP32.</td></tr>
+        </tbody>
+        </table>
+      </div>
+      <h3>4.1 Aturan yang membuat topik tetap terkendali</h3>
+      <ul>
+        <li>Pakai huruf kecil semua dan pemisah yang seragam. Bagi broker, <code>Suhu</code> dan <code>suhu</code> adalah dua topik berbeda.</li>
+        <li>Pisahkan topik telemetri dari topik perintah. Bila digabung, perangkat menerima kembali pesan yang ia kirim sendiri dan bisa memicu dirinya berulang-ulang.</li>
+        <li>Sertakan identitas perangkat pada setiap topik. Sekarang Anda memang hanya punya satu perangkat, tetapi tanpa bagian identitas itu penambahan perangkat kedua memaksa seluruh nama topik ditulis ulang di program, di klien penguji, dan di dashboard sekaligus.</li>
+        <li>Hindari spasi serta tanda <code>+</code> dan <code>#</code> di dalam nama topik, sebab kedua tanda itu memiliki arti khusus sebagai pengganti bagian nama ketika berlangganan. Nama yang memakainya bisa menangkap pesan yang tidak Anda maksudkan.</li>
+        <li>Tulis setiap nama topik hanya sekali di dalam program, yaitu sebagai konstanta di bagian atas, lalu rujuk konstanta itu di mana pun topik diperlukan. Nama topik yang diketik ulang di beberapa tempat adalah sumber kesalahan satu huruf yang paling sulit ditemukan, karena program tetap berjalan tanpa keluhan apa pun.</li>
+      </ul>
+      <div class="warn">
+        <strong>Broker publik dipakai bersama banyak orang.</strong> Awalan yang terlalu umum seperti <code>test/suhu</code> hampir pasti sudah dipakai orang lain, sehingga dashboard Anda bisa menampilkan angka dari perangkat yang bukan milik Anda. Pakai awalan unik, misalnya menyertakan nomor identitas Anda, dan jangan mengirim data pribadi melalui broker terbuka. Pertimbangan ini adalah lanjutan Pertemuan 12 tentang keamanan dan keandalan.
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>5. Menyambungkan Dashboard dan Perintah Balik</h2>
+      <p>Dashboard punya dua pekerjaan yang arahnya berlawanan: menampilkan data dari topik telemetri, dan mengubah tekanan tombol menjadi pesan ke topik perintah. Keduanya dibangun serta diuji terpisah, sesuai tahap 6 dan tahap 7 pada Bab 2.1. Cara membangun flow-nya sudah Anda pelajari pada Pertemuan 10 tentang dashboard Node-RED; yang baru di sini hanyalah bahwa flow itu harus cocok dengan payload perangkat Anda sendiri, bukan payload contoh.</p>
+      <div class="tip">
+        <strong>Nama node bisa berbeda antarversi.</strong> Penamaan node dan susunan panel Node-RED tidak selalu sama, dan node dashboard tersedia dalam beberapa generasi. Kenali node dari fungsinya: yang menerima pesan dari broker, yang mengubah teks menjadi objek, dan yang menampilkan nilai pada halaman.
+      </div>
+      <h3>5.1 Ketika kontrol otomatis bertemu perintah manual</h3>
+      <p>Begitu dashboard dapat memerintah, muncul persoalan baru: Anda menekan tombol untuk menyalakan kipas, kipas menyala satu detik, lalu mati sendiri. Itu bukan kerusakan. Logika otomatis melihat suhu masih di bawah ambang, sehingga ia mematikan kipas kembali. Dua pengambil keputusan sedang berebut satu aktuator. Selesaikan dengan menyimpan satu penanda mode di dalam perangkat: perintah manual mengubah mode menjadi manual sehingga logika ambang berhenti ikut campur, sedangkan perintah <code>AUTO</code> menyerahkan kendali kembali kepada aturan ambang.</p>
+      <h3>5.2 Bukti bahwa data benar-benar bergerak</h3>
+      <p>Salah satu butir penilaian adalah data benar-benar bergerak dari perangkat ke platform, bukan sekadar angka yang muncul di dashboard. Angka itu bisa saja berasal dari nilai yang tertinggal, dari data lama yang disimpan broker, atau dari pekerjaan orang lain pada topik yang sama. Cara membuktikannya: geser nilai sensor di simulator, lalu perhatikan apakah angka di dashboard mengikutinya dalam satu periode pengiriman.</p>
+      <p>Bukti itu menjadi lebih kuat bila payload Anda membawa satu nilai yang selalu berubah, misalnya nomor urut pengiriman atau waktu berjalan perangkat dalam detik. Dengan nilai seperti itu, dashboard yang berhenti diperbarui langsung terlihat karena nomornya berhenti bertambah, padahal angka suhu bisa saja kebetulan bernilai sama beberapa kali berturut-turut dan menyembunyikan masalah. Nilai tambahan ini juga berguna saat demo akhir: penguji dapat melihat sendiri bahwa data yang tampil benar-benar baru, tanpa Anda perlu menjelaskannya.</p>
+      <p>Lakukan pembuktian yang sama pada arah sebaliknya. Tekan tombol dashboard, lalu perhatikan Serial Monitor perangkat: pesan perintah yang tercetak di sana adalah bukti bahwa perintah benar-benar menempuh jalur dashboard, broker, dan perangkat. Bila aktuator berubah tetapi tidak ada pesan yang tercetak, yang berubah bukan perangkat Anda, melainkan tampilan pada dashboard saja. Kekeliruan semacam ini paling sering terjadi ketika tombol dashboard diatur menampilkan keadaannya sendiri alih-alih menampilkan keadaan yang dilaporkan perangkat melalui topik status.</p>
+    </section>
+
+    <section class="card">
+      <h2>6. Mencatat Kemajuan dan Meminta Bantuan Ketika Macet</h2>
+      <p>Pekerjaan mini project berjalan beberapa hari, dan ingatan tentang apa saja yang sudah dicoba memburuk lebih cepat daripada dugaan Anda. Catatan kemajuan karena itu bukan formalitas: ia mencegah Anda mengulangi percobaan yang sudah gagal, sekaligus menjadi bahan laporan akhir pada Pertemuan 16 tentang demo akhir dan laporan. Bentuknya cukup satu tabel, diisi tiap kali Anda berhenti bekerja.</p>
+      <div class="table-scroll" tabindex="0">
+        <table>
+        <thead>
+          <tr><th>Tanggal</th><th>Tahap</th><th>Yang dicoba</th><th>Hasil</th><th>Keputusan berikutnya</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>10 Juni</td><td>3, kontrol lokal</td><td>Ambang nyala 30, ambang mati 30.</td><td>Kipas hidup-mati cepat di sekitar nilai 30.</td><td>Beri jarak antara kedua ambang.</td></tr>
+          <tr><td>11 Juni</td><td>6, dashboard</td><td>Angka disambungkan langsung dari node masukan MQTT.</td><td>Yang tampil satu baris teks JSON, bukan angka.</td><td>Tambahkan penguraian payload sebelum node tampilan.</td></tr>
+        </tbody>
+        </table>
+      </div>
+      <h3>6.1 Bila pekerjaan Anda benar-benar terhenti</h3>
+      <p>Akan ada saat ketika satu tahap tidak mau bergerak walaupun sudah diperiksa berulang kali. Itu bagian normal dari pekerjaan membangun sistem, dan pada saat seperti itu Anda boleh meminta bantuan. Yang perlu dihindari hanya dua hal: menunda sampai tenggat sudah dekat, dan meminta bantuan dengan keterangan kabur sehingga penolong harus menebak lebih dahulu. Siapkan tiga hal berikut.</p>
+      <ol class="step">
+        <li><strong>Gejalanya.</strong> Apa yang Anda harapkan, apa yang sebenarnya terjadi, dan pada tahap keberapa. Contoh: "diharapkan angka suhu muncul di dashboard, yang terjadi dashboard tetap kosong, padahal tahap 5 sudah terbukti berhasil".</li>
+        <li><strong>Potongan log terakhir.</strong> Beberapa baris terakhir Serial Monitor, disalin apa adanya termasuk pesan kesalahan dan angka kodenya, bukan diringkas dengan kata sendiri.</li>
+        <li><strong>Bagian yang sudah Anda coba.</strong> Daftar singkat pemeriksaan beserta hasilnya, misalnya "nama topik sudah dibandingkan huruf per huruf, klien MQTT masih menerima data pada topik itu".</li>
+      </ol>
+    </section>
+
+    <section class="card">
+      <h2>7. Implementasi Praktis: Menyusun Prototype Tahap demi Tahap</h2>
+      <p>Bab ini dikerjakan dengan tiga alat sekaligus, ketiganya sudah Anda pakai pada pertemuan sebelumnya: satu proyek simulator ESP32 di browser sebagai tempat rangkaian dan program, klien MQTT untuk memantau isi topik, dan Node-RED untuk dashboard. Yang dibangun adalah prototype pemantau suhu berkipas otomatis seperti pada contoh program Bab 9: suhu dibaca sensor, kipas dinyalakan ketika suhu melewati ambang, nilainya dikirim ke broker, lalu dashboard menampilkannya sekaligus dapat memerintah balik. Rangkaiannya dipasang penuh sejak awal walaupun kodenya ditambah lapis demi lapis mengikuti tahapan Bab 2.1, sehingga tiap lapisan dapat diuji tanpa membongkar rangkaian lagi. Komponen yang belum disentuh kode lapisan pertama cukup dibiarkan terpasang; ia tidak mengganggu apa pun selama pin-nya belum dipakai.</p>
+      <p><strong>Komponen yang perlu ditambahkan:</strong> satu sensor suhu dan kelembapan DHT22 dan satu modul relay sebagai saklar kipas. Keduanya diambil dari daftar komponen pada panel rangkaian melalui tanda tambah, dan tidak ada resistor tambahan yang diperlukan.</p>
+      <div class="svgbox" tabindex="0">
+        <svg viewBox="0 40 620 275" width="100%" role="img" aria-label="Rangkaian prototype: pin GPIO 15 pada ESP32 tersambung ke kaki SDA sensor DHT22, kaki VCC sensor ke pin 3V3, dan kaki GND sensor ke GND, sedangkan pin GPIO 23 tersambung ke kaki IN modul relay, kaki VCC relay ke pin 5V, dan kaki GND relay ke GND">
+          <rect x="28" y="58" width="152" height="234" rx="14" fill="#dcfce7" stroke="#15803d" stroke-width="2"/>
+          <text x="104" y="100" text-anchor="middle" font-size="21" font-weight="700">ESP32</text>
+          <text x="104" y="122" text-anchor="middle" font-size="12" fill="#374151">board virtual</text>
+          <g text-anchor="end" font-size="13" font-weight="700">
+            <text x="174" y="150" fill="#15803d">GPIO 15</text>
+            <text x="174" y="174" fill="#6d28d9">3V3</text>
+            <text x="174" y="198" fill="#111827">GND</text>
+            <text x="174" y="232" fill="#15803d">GPIO 23</text>
+            <text x="174" y="256" fill="#6d28d9">5V</text>
+            <text x="174" y="280" fill="#111827">GND</text>
+          </g>
+          <g stroke-width="4">
+            <line x1="180" y1="146" x2="292" y2="146" stroke="#15803d"/>
+            <line x1="180" y1="170" x2="292" y2="170" stroke="#6d28d9"/>
+            <line x1="180" y1="194" x2="292" y2="194" stroke="#111827"/>
+            <line x1="180" y1="228" x2="292" y2="228" stroke="#15803d"/>
+            <line x1="180" y1="252" x2="292" y2="252" stroke="#6d28d9"/>
+            <line x1="180" y1="276" x2="292" y2="276" stroke="#111827"/>
+          </g>
+          <rect x="292" y="124" width="300" height="86" rx="10" fill="#ede9fe" stroke="#6d28d9" stroke-width="2"/>
+          <text x="462" y="160" text-anchor="middle" font-size="16" font-weight="700">Sensor DHT22</text>
+          <text x="462" y="182" text-anchor="middle" font-size="12" fill="#374151">suhu dan kelembapan</text>
+          <rect x="292" y="214" width="300" height="86" rx="10" fill="#eff6ff" stroke="#2563eb" stroke-width="2"/>
+          <text x="462" y="248" text-anchor="middle" font-size="16" font-weight="700">Modul Relay</text>
+          <text x="462" y="270" text-anchor="middle" font-size="12" fill="#374151">saklar kipas</text>
+          <g font-size="12" fill="#374151">
+            <text x="302" y="150">SDA</text>
+            <text x="302" y="174">VCC</text>
+            <text x="302" y="198">GND</text>
+            <text x="302" y="232">IN</text>
+            <text x="302" y="256">VCC</text>
+            <text x="302" y="280">GND</text>
+          </g>
+        </svg>
+      </div>
+      <p>Sambungannya ada enam, dan seluruh nomor pin diambil dari contoh program Bab 9: <strong>kaki SDA sensor DHT22 ke GPIO 15</strong> mengikuti <code>PIN_DHT</code>, <strong>kaki VCC sensor ke 3V3</strong>, dan <strong>kaki GND sensor ke GND</strong>; lalu <strong>kaki IN modul relay ke GPIO 23</strong> mengikuti <code>PIN_KIPAS</code>, <strong>kaki VCC relay ke 5V</strong>, dan <strong>kaki GND relay ke GND</strong>. Kaki COM, NO, dan NC pada relay dibiarkan kosong karena yang diamati adalah perpindahan saklarnya, bukan beban yang tersambung padanya. Perhatikan bahwa relay mengambil daya dari pin 5V, sedangkan GPIO 23 hanya membawa sinyal kontrol. Nomor pin lain boleh dipakai, tetapi angka pada <code>PIN_DHT</code> dan <code>PIN_KIPAS</code> wajib diubah mengikutinya.</p>
+      <details>
+        <summary>Rangkaian prototype dalam bentuk <code>diagram.json</code></summary>
+        <p>Buka tab <code>diagram.json</code> di atas panel rangkaian, hapus seluruh isinya, lalu tempelkan kode di bawah secara utuh. Rangkaian akan langsung terbentuk seperti gambar di atas tanpa perlu menggeser komponen satu per satu.</p>
+        <div class="code"><pre>{
+  "version": 1,
+  "author": "Materi IoT Pertemuan 14",
+  "editor": "wokwi",
+  "parts": [
+    { "type": "board-esp32-devkit-c-v4", "id": "esp", "top": 0, "left": 0, "attrs": {} },
+    { "type": "wokwi-dht22", "id": "dht1", "top": -80, "left": 150, "attrs": {} },
+    { "type": "wokwi-relay-module", "id": "rly1", "top": 110, "left": 150, "attrs": {} }
+  ],
+  "connections": [
+    [ "esp:15", "dht1:SDA", "green", [ "v0" ] ],
+    [ "dht1:VCC", "esp:3V3", "red", [ "v0" ] ],
+    [ "dht1:GND", "esp:GND.1", "black", [ "v0" ] ],
+    [ "esp:23", "rly1:IN", "green", [ "v0" ] ],
+    [ "rly1:VCC", "esp:5V", "red", [ "v0" ] ],
+    [ "rly1:GND", "esp:GND.2", "black", [ "v0" ] ]
+  ]
+}</pre></div>
+      </details>
+      <p>Urutan berikut dapat Anda ikuti sendiri dari awal sampai prototype berjalan utuh. Jangan lanjut ke langkah berikutnya sebelum bukti pada langkah itu benar-benar terlihat.</p>
+      <ol class="step">
+        <li>Buka proyek simulator ESP32 baru, pasang satu sensor dan satu aktuator sesuai rancangan Anda, lalu catat nomor pin yang benar-benar dipakai di panel rangkaian.</li>
+        <li>Tulis kerangka program yang hanya membaca sensor dan mencetaknya ke Serial Monitor tiap dua detik. Jalankan simulasi dan geser nilai sensor: angka harus mengikuti. Ini tahap 1.</li>
+        <li>Tambahkan <code>pinMode</code> untuk aktuator dan paksa keadaannya berganti tiap dua detik tanpa melibatkan sensor. Setelah perubahan terlihat di panel rangkaian, hapus pemaksaan itu. Ini tahap 2.</li>
+        <li>Tambahkan aturan ambang dengan dua nilai berjarak, misalnya nyala pada 30,0 dan mati pada 28,5. Geser nilai sensor melewati kedua ambang dan pastikan Serial Monitor mencetak alasan tiap perubahan. Ini tahap 3.</li>
+        <li>Tambahkan koneksi Wi-Fi simulator dan koneksi broker, belum mengirim data. Alamat IP dan keterangan broker terhubung harus tercetak. Ini tahap 4.</li>
+        <li>Tambahkan publish berkala ke topik telemetri memakai pembanding <code>millis()</code> dengan periode lima detik, lalu bandingkan isi yang diterima klien MQTT dengan Serial Monitor. Ini tahap 5.</li>
+        <li>Buat flow Node-RED yang berlangganan topik telemetri, uraikan payload JSON, lalu tampilkan sebagai angka dan grafik. Ini tahap 6.</li>
+        <li>Tambahkan tombol dashboard yang mengirim <code>ON</code>, <code>OFF</code>, dan <code>AUTO</code> ke topik perintah, lalu daftarkan perangkat pada topik itu beserta penanda modenya. Ini tahap 7.</li>
+      </ol>
+      <p><strong>Hasil yang harus terlihat:</strong> rangkaiannya sendiri sudah dapat Anda periksa sebelum lapisan berikutnya ditambahkan. Saat simulasi berjalan, mengeklik gambar sensor DHT22 memunculkan penggeser suhu dan kelembapan, dan angka yang Anda geser di situ langsung terbawa ke Serial Monitor pada langkah kedua. Lampu indikator pada modul relay tetap mati sampai <code>setKipas()</code> pertama kali dipanggil dengan keadaan ON, lalu sambungan saklarnya berpindah dari kaki NC ke kaki NO. Keadaan sistem yang utuh sesudah ketujuh tahap selesai diperiksa dengan daftar pada Bab 8.</p>
+      <div class="warn">
+        <strong>Dua kesalahan pemasangan yang paling sering terjadi di sini.</strong> Pertama, kaki VCC atau kaki GND sensor lupa disambung, sehingga Serial Monitor terus mencetak <code>[sensor] pembacaan tidak wajar, diabaikan</code> walaupun nomor pinnya sudah benar; periksa ketiga kaki sensor, bukan hanya kaki SDA. Kedua, kaki VCC modul relay tersambung ke GPIO 23 alih-alih ke 5V, sehingga relay tidak pernah berpindah walaupun keadaan pin sudah berubah dan Serial Monitor sudah mencetak <code>[kipas] ON</code>. Keduanya diperiksa di panel rangkaian, bukan di panel kode.
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>8. Hasil yang Diharapkan</h2>
+      <p>Bila seluruh langkah Bab 7 selesai, keadaan berikut dapat Anda tunjukkan kepada orang lain tanpa perlu mendahuluinya dengan penjelasan bahwa ada bagian yang belum jalan.</p>
+      <ul>
+        <li>Klien MQTT menerima payload pada topik telemetri dengan periode tetap dan isi yang sama dengan Serial Monitor.</li>
+        <li>Dashboard menampilkan angka, indikator keadaan aktuator, dan grafik tren yang bergerak mengikuti nilai sensor.</li>
+        <li>Tombol dashboard mengubah keadaan aktuator dalam hitungan detik, dan perintah <code>AUTO</code> mengembalikan kendali kepada aturan ambang.</li>
+      </ul>
+      <h3>8.1 Jika hasilnya tidak seperti itu</h3>
+      <div class="table-scroll" tabindex="0">
+        <table>
+        <thead><tr><th>Gejala</th><th>Kemungkinan penyebab</th><th>Yang perlu diperiksa</th></tr></thead>
+        <tbody>
+          <tr><td>Nilai sensor tercetak nol atau tidak berupa angka.</td><td>Pin salah, sensor belum diinisialisasi, atau pembacaan terlalu rapat.</td><td>Nomor pin dibanding panel rangkaian, pemanggilan <code>begin()</code>, dan jarak antarpembacaan.</td></tr>
+          <tr><td>Aktuator hidup-mati sangat cepat.</td><td>Ambang nyala dan ambang mati bernilai sama.</td><td>Beri jarak antara kedua ambang, seperti langkah keempat Bab 7.</td></tr>
+          <tr><td>Program berhenti setelah baris pertama dan tidak pernah mencapai <code>[wifi] terhubung</code>.</td><td>Nama jaringan salah, atau kata sandi diisi padahal jaringan simulator tidak memakai kata sandi.</td><td>Tulis nama jaringan tepat seperti yang disediakan simulator dan biarkan kata sandi berupa teks kosong. Fungsi penyambung Wi-Fi memang menunggu sampai berhasil, jadi program yang tampak menggantung di titik ini hampir selalu berarti sambungan belum pernah terjadi.</td></tr>
+          <tr><td>Klien MQTT menerima data, dashboard tetap kosong.</td><td>Topik pada flow tidak sama, atau payload JSON belum diuraikan.</td><td>Nama topik huruf per huruf, dan node pengurai payload pada Bab 5.</td></tr>
+          <tr><td>Data terkirim, tetapi perintah dari dashboard tidak pernah sampai ke perangkat.</td><td>Langganan belum didaftarkan ulang setelah koneksi terputus, nama topik perintah berbeda satu huruf, atau pelayanan pesan masuk tidak dipanggil di setiap putaran.</td><td>Pastikan pendaftaran langganan berada tepat setelah koneksi berhasil, bukan di dalam <code>setup()</code> saja, lalu bandingkan nama topik perintah di kedua sisi. Cetak setiap pesan yang masuk lebih dahulu sebelum memeriksa isinya, sehingga Anda dapat membedakan pesan yang tidak sampai dari pesan yang sampai tetapi tidak dikenali.</td></tr>
+        </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>9. Contoh Program Prototype Lengkap</h2>
+      <p>Program berikut menggabungkan seluruh lapisan Bab 2.1 menjadi satu berkas: pembacaan sensor, logika ambang, pengendalian aktuator, pengiriman data, dan penerimaan perintah dari dashboard. Contohnya memakai sensor suhu DHT22 pada pin 15 dan kipas pada pin 23; ganti nama, pin, dan topik sesuai rancangan Anda sendiri.</p>
+      <p>Cara membaca program sepanjang ini sebaiknya dibalik: mulailah dari <code>loop()</code> di bagian paling bawah. Di sana terlihat seluruh alur kerja sistem dalam sepuluh baris, yaitu menjaga koneksi, melayani pesan masuk, lalu setiap lima detik membaca sensor, memutuskan keadaan aktuator, dan mengirim data. Setelah alur besar itu jelas, barulah naik ke setiap fungsi untuk melihat rinciannya. Membaca dari baris pertama justru membuat Anda menghabiskan perhatian pada deklarasi sebelum mengetahui untuk apa deklarasi itu dipakai.</p>
+      <div class="code"><pre>#include &lt;WiFi.h&gt;
+#include &lt;PubSubClient.h&gt;
+#include "DHT.h"
+
+const int PIN_DHT   = 15;
+const int PIN_KIPAS = 23;
+
+DHT dht(PIN_DHT, DHT22);
+WiFiClient net;
+PubSubClient mqtt(net);
+
+const char* SSID_WIFI   = "Wokwi-GUEST";
+const char* PASS_WIFI   = "";
+const char* SERVER_MQTT = "broker.hivemq.com";
+const int   PORT_MQTT   = 1883;
+
+// daftar topik ditulis satu kali saja
+const char* T_DATA     = "miniproject/esp32-01/suhu/data";
+const char* T_STATUS   = "miniproject/esp32-01/kipas/status";
+const char* T_PERINTAH = "miniproject/esp32-01/kipas/perintah";
+
+const float AMBANG_NYALA = 30.0;
+const float AMBANG_MATI  = 28.5;
+const unsigned long JEDA_KIRIM = 5000;
+
+unsigned long kirimTerakhir = 0;
+float suhuTerakhir = NAN;
+bool  kipasNyala   = false;
+bool  modeManual   = false;
+
+void setKipas(bool nyala) {
+  kipasNyala = nyala;
+  digitalWrite(PIN_KIPAS, nyala ? HIGH : LOW);
+  mqtt.publish(T_STATUS, nyala ? "ON" : "OFF");
+  Serial.print("[kipas] ");
+  Serial.println(nyala ? "ON" : "OFF");
+}
+void saatPerintahMasuk(char* topik, byte* muatan, unsigned int panjang) {
+  char pesan[16];
+  if (panjang &gt; 15) panjang = 15;
+  memcpy(pesan, muatan, panjang);
+  pesan[panjang] = 0;
+  Serial.print("[perintah] ");
+  Serial.println(pesan);
+
+  if (strcmp(pesan, "ON") == 0)        { modeManual = true;  setKipas(true);  }
+  else if (strcmp(pesan, "OFF") == 0)  { modeManual = true;  setKipas(false); }
+  else if (strcmp(pesan, "AUTO") == 0) { modeManual = false; Serial.println("[mode] kembali ke logika ambang"); }
+}
+
+void hubungkanWifi() {
+  WiFi.begin(SSID_WIFI, PASS_WIFI);
+  while (WiFi.status() != WL_CONNECTED) delay(300);
+  Serial.print("[wifi] terhubung, IP ");
+  Serial.println(WiFi.localIP());
+}
+
+void hubungkanBroker() {
+  while (!mqtt.connected()) {
+    String idKlien = "esp32-01-" + String(random(1000, 9999));
+    if (mqtt.connect(idKlien.c_str())) {
+      mqtt.subscribe(T_PERINTAH);
+      Serial.println("[mqtt] broker terhubung, perintah didengarkan");
+    } else {
+      Serial.print("[mqtt] gagal, kode ");
+      Serial.println(mqtt.state());
+      delay(2000);
+    }
+  }
+}
+
+bool bacaSensor() {
+  float nilai = dht.readTemperature();
+  if (isnan(nilai) || nilai &lt; -40 || nilai &gt; 80) {
+    Serial.println("[sensor] pembacaan tidak wajar, diabaikan");
+    return false;
+  }
+  suhuTerakhir = nilai;
+  return true;
+}
+
+void kendaliOtomatis() {
+  if (modeManual) return;
+  if (!kipasNyala &amp;&amp; suhuTerakhir &gt;= AMBANG_NYALA)     setKipas(true);
+  else if (kipasNyala &amp;&amp; suhuTerakhir &lt;= AMBANG_MATI)  setKipas(false);
+}
+void kirimTelemetri() {
+  char muatan[96];
+  snprintf(muatan, sizeof(muatan),
+           "{\"suhu\":%.1f,\"kipas\":\"%s\",\"mode\":\"%s\"}",
+           suhuTerakhir, kipasNyala ? "ON" : "OFF", modeManual ? "MANUAL" : "AUTO");
+  bool terkirim = mqtt.publish(T_DATA, muatan);
+  Serial.print("[kirim] ");
+  Serial.print(muatan);
+  Serial.println(terkirim ? "  -&gt; ok" : "  -&gt; gagal");
+}
+
+void setup() {
+  Serial.begin(115200);
+  pinMode(PIN_KIPAS, OUTPUT);
+  digitalWrite(PIN_KIPAS, LOW);
+  dht.begin();
+  hubungkanWifi();
+  mqtt.setServer(SERVER_MQTT, PORT_MQTT);
+  mqtt.setCallback(saatPerintahMasuk);
+}
+
+void loop() {
+  if (!mqtt.connected()) hubungkanBroker();
+  mqtt.loop();
+
+  unsigned long sekarang = millis();
+  if (sekarang - kirimTerakhir &gt;= JEDA_KIRIM) {
+    kirimTerakhir = sekarang;
+    if (bacaSensor()) {
+      kendaliOtomatis();
+      kirimTelemetri();
+    }
+  }
+}</pre></div>
+      <h3>9.1 Penjelasan baris per baris</h3>
+      <ul>
+        <li>Nomor pin, nama jaringan, alamat broker, dan tiga nama topik ditulis sebagai konstanta di bagian atas, sehingga satu perubahan cukup dilakukan di satu tempat. Inilah pengaman terhadap kesalahan satu huruf yang dibahas pada Bab 4.</li>
+        <li>Tiga baris <code>#include</code> memasukkan pustaka Wi-Fi, pustaka MQTT, dan pustaka sensor. Baris <code>DHT dht(PIN_DHT, DHT22)</code> hanya menyiapkan objek sensor beserta pin dan jenisnya, sedangkan <code>dht.begin()</code> di dalam <code>setup()</code> yang benar-benar memulai komunikasi dengan sensor. Lupa memanggil <code>dht.begin()</code> tidak menimbulkan galat saat program disusun, tetapi pembacaan akan selalu bernilai bukan angka.</li>
+        <li><code>WiFiClient net</code> menjadi saluran jaringan yang dipakai <code>PubSubClient mqtt</code>; objek MQTT tidak berbicara langsung dengan Wi-Fi. Nama <code>Wokwi-GUEST</code> tanpa kata sandi adalah jaringan yang tersedia di dalam simulator.</li>
+        <li><code>AMBANG_NYALA</code> dan <code>AMBANG_MATI</code> sengaja berbeda 1,5 derajat. Jarak itulah yang mencegah kipas hidup-mati berulang di sekitar satu nilai.</li>
+        <li>Empat variabel di bawah daftar konstanta adalah ingatan sistem: waktu pengiriman terakhir, nilai suhu terakhir, keadaan kipas, dan penanda mode manual. Keempatnya ditulis di luar semua fungsi supaya nilainya tetap hidup di antara putaran <code>loop()</code>; variabel yang dideklarasikan di dalam fungsi akan lahir dan mati setiap putaran sehingga tidak dapat mengingat apa pun. <code>suhuTerakhir</code> diberi nilai awal <code>NAN</code>, yaitu penanda bukan angka, supaya nilai nol yang terlihat wajar tidak pernah dianggap sebagai hasil pengukuran sebelum sensor sempat dibaca.</li>
+        <li><code>setKipas()</code> adalah satu-satunya tempat yang mengubah pin aktuator, sekaligus melaporkan keadaan baru ke topik status dan ke Serial Monitor. Karena hanya ada satu jalan keluar, keadaan kipas tidak mungkin berbeda dari yang dilaporkan.</li>
+        <li><code>saatPerintahMasuk()</code> dipanggil pustaka MQTT setiap pesan tiba. Muatan diubah dahulu menjadi teks berakhiran nol karena <code>muatan</code> hanya deretan byte tanpa penutup, dan panjangnya dibatasi agar tidak melewati ukuran penampung. Perintah <code>ON</code> dan <code>OFF</code> menyalakan mode manual, <code>AUTO</code> mematikannya, dan itulah penyelesaian perebutan aktuator pada Bab 5.1.</li>
+        <li><code>hubungkanBroker()</code> memakai id klien acak supaya dua percobaan tidak saling memutus, dan <code>mqtt.subscribe()</code> dipanggil tepat setelah koneksi berhasil karena langganan hilang setiap kali koneksi terputus. <code>mqtt.state()</code> mencetak kode kesalahan yang jauh lebih berguna daripada keterangan "tidak bisa terhubung".</li>
+        <li><code>bacaSensor()</code> menolak nilai bukan angka dan nilai di luar rentang wajar lalu mengembalikan <code>false</code> sehingga pengiriman dilewati, melanjutkan pembahasan Pertemuan 12 tentang keamanan dan keandalan.</li>
+        <li><code>kendaliOtomatis()</code> berhenti seketika bila mode manual aktif, dan memutuskan hanya berdasarkan nilai yang sudah disimpan tanpa membaca sensor lagi.</li>
+        <li><code>kirimTelemetri()</code> menyusun payload JSON dengan <code>snprintf</code> agar panjangnya terkendali; tanda kutip di dalam teks didahului garis miring terbalik. Nilai kembalian <code>publish</code> diperiksa supaya kegagalan pengiriman terlihat.</li>
+        <li><code>setup()</code> memaksa aktuator mati sebelum apa pun berjalan, lalu mendaftarkan alamat broker dan fungsi penerima pesan. <code>loop()</code> menjaga koneksi, memanggil <code>mqtt.loop()</code> agar pesan masuk terlayani, dan memakai pembanding <code>millis()</code> sehingga pengiriman berkala tidak menahan pelayanan perintah.</li>
+      </ul>
+    </section>
+
+    <section class="card">
+      <h2>10. Ringkasan Materi</h2>
+      <ol>
+        <li>Rancangan baru terbukti benar setelah dijalankan; perubahan kecil saat implementasi wajar, asalkan dicatat.</li>
+        <li>Prototype dibangun tujuh tahap berurutan, dan tiap tahap punya bukti objektif sebelum lapisan berikutnya ditambahkan.</li>
+        <li>Program dipecah menjadi fungsi bertugas tunggal supaya mudah dibaca, mudah ditelusuri, dan mudah dijelaskan saat demo.</li>
+        <li>Nama topik ditetapkan satu pola di awal dan ditulis sebagai konstanta, sebab kesalahan satu huruf tidak menghasilkan pesan kesalahan apa pun.</li>
+        <li>Catatan kemajuan mencegah percobaan yang sama diulang; ketika macet, siapkan gejala, log terakhir, dan daftar yang sudah dicoba sebelum meminta bantuan.</li>
+      </ol>
+    </section>
+
+    <section class="card">
+      <h2>11. Latihan Pemahaman</h2>
+      <h3>11.1 Cek cepat</h3>
+      <ol>
+        <li>Urutan pengerjaan mana yang benar: (a) dashboard dahulu lalu sensor, (b) sensor, aktuator, kontrol lokal, jaringan, publish, dashboard, perintah, (c) seluruh program sekaligus lalu diuji sekali di akhir.</li>
+        <li>Lengkapi: ambang nyala dan ambang mati dibuat ______ agar aktuator tidak hidup-mati berulang di sekitar satu nilai.</li>
+        <li>Klien MQTT menerima data, tetapi dashboard tetap kosong. Bagian mana yang paling mungkin salah?</li>
+        <li>Mengapa nama topik ditulis sebagai konstanta di bagian atas program?</li>
+      </ol>
+      <details>
+        <summary>Kunci jawaban</summary>
+        <p>1. (b). 2. berjarak, misalnya 30,0 dan 28,5. 3. Nama topik pada flow atau penguraian payload di dashboard, bukan program perangkat, karena data sudah terbukti sampai ke broker. 4. Agar nama itu hanya ada satu versi dan perubahannya cukup dilakukan di satu baris.</p>
+      </details>
+      <h3>11.2 Pertanyaan reflektif</h3>
+      <ol>
+        <li>Tahap mana yang paling lama Anda selesaikan, dan apa sebenarnya penyebabnya?</li>
+        <li>Bagian rancangan mana yang berubah saat diimplementasikan, dan mengapa perubahan itu perlu?</li>
+        <li>Bila jumlah sensor ditambah dua, bagian program mana yang berubah dan bagian mana yang tetap?</li>
+        <li>Bagaimana Anda membuktikan kepada orang lain bahwa data itu berasal dari perangkat Anda sendiri?</li>
+        <li>Kalau harus memulai ulang, urutan pengerjaan mana yang Anda ubah?</li>
+      </ol>
+    </section>
+
+    <section class="card">
+      <h2>12. Tugas Latihan Pertemuan 14</h2>
+      <p>Selesaikan mini project Anda sampai berjalan utuh di simulator: sensor virtual terbaca, logika kontrol berjalan, data terkirim melalui MQTT, dan dashboard menampilkan data sekaligus dapat mengirim perintah.</p>
+      <p>Yang dikumpulkan:</p>
+      <ul>
+        <li>Berkas program prototype yang berjalan beserta tangkapan layar rangkaian simulator.</li>
+        <li>Tangkapan layar dashboard saat menampilkan data dan saat perintah dikirim.</li>
+        <li>Catatan kemajuan berisi sekurang-kurangnya lima baris kejadian, dan tangkapan layar Serial Monitor yang menunjukkan alasan perubahan aktuator.</li>
+      </ul>
+      <div class="table-scroll" tabindex="0">
+        <table>
+        <thead><tr><th>Aspek</th><th>Bobot</th><th>Kriteria nilai penuh</th></tr></thead>
+        <tbody>
+          <tr><td>Sensor dan aktuator bekerja</td><td>20%</td><td>Nilai sensor wajar dan berubah, aktuator berubah keadaan sesuai keputusan program.</td></tr>
+          <tr><td>Logika kontrol</td><td>20%</td><td>Aturan ambang berjalan dengan dua nilai berjarak dan alasan tiap perubahan tercetak.</td></tr>
+          <tr><td>Aliran data MQTT</td><td>25%</td><td>Publish berkala pada topik berpola konsisten, terbukti diterima klien MQTT.</td></tr>
+          <tr><td>Dashboard dua arah</td><td>25%</td><td>Dashboard menampilkan data dan perintahnya benar-benar mengubah keadaan perangkat.</td></tr>
+          <tr><td>Catatan kemajuan</td><td>10%</td><td>Kejadian ditulis sebagai kenyataan teramati beserta keputusan berikutnya.</td></tr>
+        </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>13. Checkpoint Evaluasi Pertemuan 14</h2>
+      <p>Pertemuan ini dianggap tuntas bila butir berikut dapat Anda lakukan, dan daftar ini sekaligus dipakai sebagai pemeriksaan diri sebelum melanjutkan.</p>
+      <div class="mini">
+        <div class="label">Target minimal pertemuan ini</div>
+        <p>Minimal satu sensor, satu aktuator, dan satu dashboard bekerja; data benar-benar bergerak dari perangkat ke platform; logika kontrol berjalan sesuai rancangan.</p>
+      </div>
+      <div class="table-scroll" tabindex="0">
+        <table>
+        <thead><tr><th>Yang diperiksa</th><th>Cara memastikan sendiri</th><th>Bila belum tercapai</th></tr></thead>
+        <tbody>
+          <tr><td>Prototype berjalan di simulator.</td><td>Jalankan simulasi tanpa menyentuh kode: sensor terbaca dan aktuator berubah sendiri.</td><td>Ulangi langkah 1 sampai 4 pada Bab 7.</td></tr>
+          <tr><td>Data bergerak dari perangkat ke platform.</td><td>Geser nilai sensor, lalu amati klien MQTT dan dashboard mengikuti dalam satu periode kirim.</td><td>Baca ulang Bab 4 dan Bab 5.2.</td></tr>
+          <tr><td>Logika kontrol berjalan.</td><td>Lewati kedua ambang dan pastikan Serial Monitor mencetak alasan tiap perubahan.</td><td>Baca ulang Bab 9.1.</td></tr>
+          <tr><td>Dashboard dapat memerintah.</td><td>Tekan tombol, amati aktuator berubah, lalu kembalikan kendali dengan perintah AUTO.</td><td>Baca ulang Bab 5.1.</td></tr>
+          <tr><td>Kemajuan terdokumentasi.</td><td>Periksa tiap baris catatan punya kolom hasil dan keputusan berikutnya.</td><td>Baca ulang Bab 6.</td></tr>
+        </tbody>
+        </table>
+      </div>
+      <p class="footer-note">Checkpoint besar mata kuliah ini berada pada Pertemuan 4 sebagai CP-1, Pertemuan 8 sebagai CP-2, Pertemuan 12 sebagai CP-3, dan Pertemuan 16 sebagai CP-4. Pertemuan 14 adalah bagian dari perjalanan menuju CP-4, dan tugas latihan mingguan berbobot 20 persen dari nilai akhir.</p>
+    </section>
+
+    <section class="card">
+      <h2>14. Referensi Praktis</h2>
+      <dl class="gloss">
+        <dt>Template proyek Wokwi — <code>wokwi.com</code></dt>
+        <dd>Contoh proyek ESP32 siap jalan beserta berkas diagram rangkaiannya. Pakai untuk mempercepat tahap 1 dan tahap 2 pada Bab 7.</dd>
+        <dt>Contoh flow Node-RED — <code>nodered.org</code></dt>
+        <dd>Kumpulan flow contoh beserta penjelasan tiap node. Rujukan untuk Bab 5 ketika menyusun tampilan dan tombol dashboard.</dd>
+        <dt>Contoh perancangan sistem berbasis MQTT — <code>hivemq.com</code></dt>
+        <dd>Penjelasan pola penamaan topik dan contoh arsitektur publish-subscribe, pendukung Bab 4.</dd>
+      </dl>
+      <p class="footer-note">Alamat sumber ditulis sebagai nama domain karena struktur halaman situs berubah dari waktu ke waktu; cari judul sumbernya di dalam situs tersebut.</p>
+    </section>
+    <footer class="pagenum">
+      <span class="pagenum-seri">Materi Pertemuan 14</span>
+      <span class="pagenum-no">Halaman 14 dari 16</span>
+    </footer>
+  </div>
+</body>
+</html>

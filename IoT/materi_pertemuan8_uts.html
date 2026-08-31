@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Materi Pertemuan 8 - UTS Praktik: Integrasi Sistem IoT Sederhana di Simulator</title>
+  <link rel="stylesheet" href="assets/materi.css" />
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <span class="badge">Pertemuan 8</span>
+    <h1>UTS Praktik: Integrasi Sistem IoT Sederhana di Simulator</h1>
+    <p class="lead">Tujuh pertemuan pertama melatih bagian yang terpisah: membaca sensor, menggerakkan aktuator, mengamati log serial, dan mengirim data lewat HTTP atau MQTT. Pada pertemuan ini keempatnya disatukan menjadi satu sistem kecil yang utuh dan berjalan di simulator, lalu Anda menjelaskan sendiri cara kerjanya.</p>
+    <p>
+      <span class="pill">integrasi sistem</span>
+      <span class="pill">sensor dan aktuator</span>
+      <span class="pill">log serial</span>
+      <span class="pill">pengiriman data</span>
+      <span class="pill">checkpoint CP-2</span>
+    </p>
+    <p class="notice">Yang perlu siap: akun simulator Wokwi yang sudah Anda pakai, koneksi internet, dan arsip proyek latihan Pertemuan 1 sampai 7. Tidak ada pemasangan perangkat lunak baru dan tidak ada perangkat fisik. Pekerjaan boleh sendiri atau berpasangan; bila berpasangan, keduanya harus dapat menjelaskan seluruh program.</p>
+  </header>
+
+  <section class="card">
+    <h2>Capaian Pembelajaran Pertemuan 8</h2>
+    <div class="grid two">
+      <div class="mini">
+        <div class="label">Yang dipahami</div>
+        <ul>
+          <li>Alur data satu arah dari sensor sampai data keluar dari perangkat.</li>
+          <li>Peran aturan logika sebagai penghubung angka sensor dan reaksi aktuator.</li>
+          <li>Fungsi log serial sebagai bukti setiap tahap benar-benar berjalan.</li>
+          <li>Situasi yang cocok untuk MQTT dan yang cocok untuk HTTP.</li>
+        </ul>
+      </div>
+      <div class="mini">
+        <div class="label">Yang dapat dilakukan</div>
+        <ul>
+          <li>Merakit sensor, aktuator, log serial, dan pengiriman data dalam satu program.</li>
+          <li>Menentukan ambang keputusan beserta jarak pengaman agar status tidak berkedip.</li>
+          <li>Membuktikan data sampai ke luar perangkat dari sisi penerima.</li>
+          <li>Menyusun laporan berisi diagram, kutipan log serial, dan penjelasan alur data.</li>
+        </ul>
+      </div>
+    </div>
+    <p>Fokus pertemuan ini adalah integrasi, bukan materi baru. Semua bahan sudah Anda pelajari; yang diuji adalah kemampuan menyatukannya menjadi satu sistem yang berjalan dan dapat Anda pertanggungjawabkan. Pertemuan ini juga menjadi checkpoint besar kedua (CP-2), dan nilainya masuk sebagai UTS praktik berbobot 20 persen dari nilai akhir.</p>
+  </section>
+  <section class="card">
+    <h2>1. Bentuk dan Aturan UTS Praktik Ini</h2>
+    <p>Ujian ini berbentuk kerja praktik. Anda membangun satu sistem IoT kecil di simulator, menjalankannya sampai terlihat bekerja, lalu menyerahkan laporan singkat sebagai bukti. Seluruh pekerjaan dapat diselesaikan dari satu peramban tanpa komponen fisik.</p>
+    <p>Yang dinilai bukan kerumitan rangkaian, melainkan keutuhan alurnya. Satu sensor sederhana yang datanya benar-benar sampai ke penerima lebih bernilai daripada rangkaian ramai yang berhenti di tengah jalan. Karena itu pilih kasus yang Anda kuasai, lalu pastikan setiap tahapnya terbukti berjalan.</p>
+    <p>Kata "integrasi" pada judul pertemuan ini perlu dijelaskan, sebab di sinilah kesulitan sebenarnya berada. Sampai Pertemuan 7 Anda mengerjakan bagian-bagian secara terpisah: membaca sensor pada satu pertemuan, menggerakkan aktuator pada pertemuan lain, mengirim data lewat HTTP, lalu lewat MQTT. Masing-masing sudah pernah berhasil. Menggabungkannya menuntut hal baru, yaitu memastikan bagian yang satu tidak merusak bagian yang lain: penyambungan Wi-Fi memakan waktu sehingga pembacaan tertunda, pin yang dipakai aktuator bisa bertabrakan dengan pin yang dibutuhkan radio, dan kesalahan pengiriman dapat menghentikan seluruh program bila tidak diantisipasi. Kemampuan menjaga semuanya tetap berjalan bersama itulah yang diuji.</p>
+    <p>Karena bobotnya 20 persen dari nilai akhir, kerjakan ujian ini dengan sisa waktu yang cukup untuk menguji, bukan hanya cukup untuk menulis program. Sistem yang berjalan mulus selama setengah menit dan terdokumentasi rapi lebih dihargai daripada sistem bercita-cita tinggi yang hanya berhasil sekali lalu tidak dapat diulang.</p>
+    <div class="tip">Kerjakan dengan urutan menaik: buat dulu sensor terbaca, uji, tambahkan aktuator, uji lagi, baru tambahkan pengiriman data. Menulis seluruh program sekaligus lalu mencari kesalahan di akhir hampir selalu lebih lama, karena Anda tidak tahu bagian mana yang bermasalah.</div>
+  </section>
+
+  <section class="card">
+    <h2>2. Empat Bagian yang Harus Menyatu dalam Satu Program</h2>
+    <p>Sistem yang Anda bangun harus memuat empat bagian berikut sekaligus, dan keempatnya hidup dalam satu berkas program yang sama.</p>
+    <div class="grid two">
+      <div class="mini">
+        <div class="label">1. Sensor sebagai sumber angka</div>
+        <p>Satu masukan yang nilainya berubah saat Anda mengubah keadaan di simulator. Tanpa angka yang berubah, sistem tidak punya apa pun untuk diolah.</p>
+      </div>
+      <div class="mini">
+        <div class="label">2. Aktuator sebagai reaksi</div>
+        <p>Satu keluaran yang bereaksi terhadap angka sensor, misalnya LED atau buzzer, sehingga keputusan program terlihat langsung.</p>
+      </div>
+      <div class="mini">
+        <div class="label">3. Log serial sebagai pengawas</div>
+        <p>Cetakan teks berisi nilai sensor, status, dan keterangan pengiriman. Log inilah yang menunjukkan di tahap mana sistem berhenti.</p>
+      </div>
+      <div class="mini">
+        <div class="label">4. Komunikasi data ke luar</div>
+        <p>Pengiriman nilai ke luar perangkat lewat MQTT atau HTTP. Bagian ini yang membedakan alat elektronik biasa dari sistem IoT.</p>
+      </div>
+    </div>
+    <p>Urutannya searah: sensor menghasilkan angka, aturan logika mengubahnya menjadi status, lalu status itu menggerakkan aktuator dan dikirim ke luar perangkat. Log serial menempel di sepanjang alur sebagai pengawas.</p>
+    <div class="analogy">Bayangkan penjaga suhu ruang server. Ia melihat termometer (sensor), memutuskan aman atau tidak berdasarkan batas yang disepakati (aturan logika), menyalakan lampu tanda bahaya (aktuator), mencatat setiap pemeriksaan di buku jaga (log serial), lalu mengirim laporan ke pengawas di ruang lain (komunikasi data). Program Anda mengerjakan kelima hal itu berulang tanpa berhenti.</div>
+  </section>
+  <section class="card">
+    <h2>3. Empat Kasus yang Dapat Anda Pilih</h2>
+    <p>Pilih satu dari empat kasus berikut. Semuanya memakai komponen yang sudah tersedia di simulator dan sudah pernah Anda pakai, sehingga waktu Anda habis untuk merakit alur, bukan mengenali komponen baru.</p>
+
+    <h3>3.1 Alarm suhu</h3>
+    <p>Sumber nilai adalah potensiometer yang Anda perlakukan sebagai pembacaan suhu, lalu diubah ke derajat lewat perhitungan sederhana. Aktuatornya LED merah ditambah buzzer. Aturannya: bila suhu melewati ambang bahaya, nyalakan keduanya dan kirim status <code>BAHAYA</code>; bila turun cukup jauh di bawah ambang, matikan dan kirim <code>AMAN</code>. Data yang dikirim adalah nilai suhu dan statusnya.</p>
+
+    <h3>3.2 Lampu pintar</h3>
+    <p>Sumber nilainya sensor cahaya, aktuatornya LED yang mewakili lampu ruangan. Aturannya berlawanan arah dengan kasus alarm: makin gelap ruangan, lampu justru menyala. Data yang dikirim adalah tingkat cahaya dan status lampu, sehingga penerima tahu lampu hidup atau mati tanpa melihat perangkatnya.</p>
+
+    <h3>3.3 Notifikasi kelembapan</h3>
+    <p>Sumber nilainya potensiometer yang Anda perlakukan sebagai kelembapan tanah dalam persen. Aktuatornya LED kuning sebagai tanda tanah mulai kering. Aturannya: bila kelembapan turun di bawah batas, kirim status <code>KERING</code> agar penerima tahu tanaman perlu disiram. Data yang dikirim adalah persentase kelembapan dan statusnya.</p>
+
+    <h3>3.4 Penghitung kendaraan parkir</h3>
+    <p>Sumber nilainya tombol yang setiap penekanannya dihitung sebagai satu kendaraan masuk. Aktuatornya LED yang menyala ketika hitungan mencapai kapasitas. Aturannya: tambah hitungan pada setiap penekanan, dan bila hitungan sama dengan kapasitas, kirim status <code>PENUH</code>. Data yang dikirim adalah jumlah kendaraan dan status ketersediaan tempat.</p>
+
+    <div class="tip">Keempat kasus berkerangka sama dan hanya berbeda pada tiga hal: pin masukan, rumus pengubah angka, dan arah perbandingan pada aturan logika. Karena itu contoh program pada Bab 8 dapat dipakai untuk kasus mana pun dengan penyesuaian kecil.</div>
+    <div class="warn">Jangan memaksakan komponen yang belum pernah Anda pakai supaya kasus Anda terlihat lebih canggih. Waktu akan habis untuk membaca dokumentasi komponen, sementara yang dinilai adalah keutuhan alur data.</div>
+  </section>
+
+  <section class="card">
+    <h2>4. Merancang Lebih Dulu: Diagram, Ambang, dan Bentuk Data</h2>
+    <p>Rancangan ditulis sebelum program disentuh. Tiga hal berikut sudah cukup, dan ketiganya nanti masuk ke laporan Anda.</p>
+
+    <h3>4.1 Diagram sistem</h3>
+    <p>Diagram cukup berupa kotak dan tanda panah: kotak sensor, kotak papan mikrokontroler, kotak aktuator, dan kotak penerima data, dengan panah yang menunjukkan arah perpindahan informasi. Diagram semacam ini boleh digambar dengan tangan lalu difoto. Gunanya bukan keindahan, melainkan memaksa Anda menyebut setiap perpindahan data sebelum menuliskannya sebagai kode.</p>
+
+    <h3>4.2 Ambang keputusan dan jarak pengaman</h3>
+    <p>Ambang adalah angka batas yang memisahkan dua status. Bila hanya ada satu angka batas, nilai sensor yang bergerak-gerak tepat di sekitarnya akan membuat status berpindah bolak-balik dengan cepat, sehingga LED berkedip tidak wajar dan data terkirim jauh lebih sering daripada yang diperlukan.</p>
+    <p>Karena itu pakai dua batas: satu untuk naik ke status bahaya, satu lagi sedikit lebih rendah untuk kembali aman. Selisih di antaranya disebut jarak pengaman atau histeresis. Misalnya status menjadi bahaya pada 35 derajat tetapi baru kembali aman pada 34 derajat, sehingga nilai antara 34 dan 35 tidak mengubah apa pun.</p>
+    <div class="analogy">Seperti pendingin ruangan yang disetel 24 derajat. Kompresornya tidak menyala dan mati setiap kali suhu bergeser sepersepuluh derajat, melainkan menyala pada 25 dan berhenti pada 23. Jeda itulah yang membuat mesinnya awet.</div>
+
+    <h3>4.3 Bentuk data yang dikirim</h3>
+    <p>Tentukan sejak awal apa yang dikirim, ke mana, dan seberapa sering. Untuk sistem sekecil ini, dua nilai sudah memadai: satu angka hasil pengukuran dan satu status hasil keputusan.</p>
+    <ul>
+      <li><strong>Nilai terukur</strong>, misalnya <code>36.02</code>, agar penerima dapat menilai seberapa jauh keadaan melewati batas, bukan hanya tahu batas terlewati.</li>
+      <li><strong>Status hasil keputusan</strong>, misalnya <code>BAHAYA</code>, agar penerima dapat bereaksi tanpa perlu mengetahui ambang di dalam program Anda.</li>
+      <li><strong>Penanda pengirim</strong> sebagai bagian nama topik, misalnya <code>nim12345</code>, agar data Anda tidak tertukar dengan data orang lain.</li>
+    </ul>
+    <div class="warn">Pada broker publik, apa pun yang Anda kirim dapat dibaca siapa saja. Jangan mengirim data pribadi, kata sandi, atau nama lengkap. Pakai nomor identitas kuliah atau nama samaran sebagai penanda topik, dan anggap semua kiriman terbuka.</div>
+  </section>
+  <section class="card">
+    <h2>5. Memilih Jalur Komunikasi: MQTT atau HTTP</h2>
+    <p>Kedua jalur ini sudah Anda coba: HTTP pada pertemuan tentang pengiriman data ke layanan web, dan MQTT pada Pertemuan 7 tentang publish dan subscribe. Keduanya boleh dipakai selama data benar-benar sampai ke penerima.</p>
+    <div class="table-scroll" tabindex="0">
+      <table>
+      <tr><th>Aspek</th><th>MQTT</th><th>HTTP</th></tr>
+      <tr><td>Cara kerja</td><td>Perangkat mengirim ke topik pada broker; siapa pun yang berlangganan topik itu langsung menerimanya.</td><td>Perangkat mengirim permintaan ke satu alamat layanan dan menunggu jawaban.</td></tr>
+      <tr><td>Cocok untuk</td><td>Pengiriman berulang dengan jarak waktu pendek dan pesan kecil.</td><td>Pengiriman jarang, atau bila Anda memang membutuhkan jawaban dari layanan tujuan.</td></tr>
+      <tr><td>Cara membuktikan sampai</td><td>Berlangganan topik yang sama dari klien MQTT dan melihat pesan masuk.</td><td>Membuka halaman atau riwayat data pada layanan tujuan.</td></tr>
+      <tr><td>Yang perlu diperhatikan</td><td>Nama topik harus unik agar tidak tertukar dengan data orang lain.</td><td>Setiap pengiriman memerlukan lebih banyak proses, jadi tidak nyaman bila dikirim setiap detik.</td></tr>
+      </table>
+    </div>
+    <p>Untuk kasus pada Bab 3, MQTT biasanya lebih ringan karena datanya kecil dan dikirim berulang. Contoh program pada Bab 8 memakai MQTT; bila Anda memilih HTTP, susunan programnya tetap sama dan yang berubah hanya bagian pengirimannya.</p>
+    <div class="tip">Simpan nama topik atau alamat tujuan sebagai konstanta di bagian atas program. Ketika perlu diubah, Anda hanya mengubah satu baris, dan nilai itulah yang dicantumkan di laporan.</div>
+  </section>
+
+  <section class="card">
+    <h2>6. Menyusun Laporan Singkat dan Menjelaskan Program Sendiri</h2>
+    <p>Laporan disiapkan bersamaan dengan pengerjaan. Karena itu ketahui lebih dulu bukti apa yang harus dikumpulkan, supaya Anda tidak perlu menjalankan ulang sistem hanya untuk mengambil tangkapan layar yang terlewat.</p>
+    <p>Laporan berisi tiga hal: diagram sistem dari bagian 4.1, diperbarui bila rangkaian akhirnya berbeda dari rencana; kutipan log serial sepuluh sampai lima belas baris yang memuat setidaknya satu perpindahan status, karena kutipan dengan satu status saja tidak membuktikan aturan logika bekerja; dan penjelasan alur data mulai dari asal angka, cara angka menjadi status, reaksi aktuator, sampai tujuan pengirimannya.</p>
+    <p>Yang paling menentukan adalah kemampuan menjelaskan program sendiri. Program yang berjalan tetapi tidak dapat dijelaskan tidak menunjukkan pemahaman. Uji diri Anda dengan pertanyaan berikut, dan jawab dengan menunjuk baris programnya:</p>
+    <ul>
+      <li>Baris mana yang mengubah angka mentah menjadi satuan bermakna, dan dari mana angka pengalinya?</li>
+      <li>Apa yang terjadi bila nilai sensor berada tepat di antara kedua ambang, dan mengapa?</li>
+      <li>Bagian mana yang menentukan seberapa sering data dikirim, dan apa akibatnya bila jeda itu diperkecil?</li>
+      <li>Bagaimana Anda tahu data benar-benar keluar dari perangkat, bukan hanya tercetak di log serial?</li>
+    </ul>
+    <div class="tip">Bila mengerjakan berpasangan, saling melontarkan keempat pertanyaan itu adalah latihan paling efektif. Bagian yang tidak dapat dijelaskan salah satu dari Anda perlu dibaca ulang bersama, bukan dihapus.</div>
+  </section>
+  <section class="card">
+    <h2>7. Implementasi Praktis: Merakit Sistem Gabungan</h2>
+    <p>Langkah berikut memakai kasus alarm suhu dari bagian 3.1 karena kasus itu memuat keempat bagian dengan komponen paling sedikit. Untuk kasus lain, ganti komponen masukan dan arah perbandingannya; urutan langkahnya tetap sama.</p>
+    <p>Perhatikan bahwa langkah 3 sampai 6 dikerjakan tanpa jaringan sama sekali, dan itu disengaja. Sensor, aturan logika, dan aktuator adalah bagian yang sepenuhnya berada di tangan Anda; bila ada yang salah di situ, penyebabnya pasti di program atau di rangkaian. Begitu Wi-Fi dan broker ikut masuk, daftar kemungkinan penyebab bertambah panjang: nama jaringan, sambungan internet, alamat broker, nama topik, sampai keadaan broker publik yang tidak Anda kendalikan. Menyelesaikan bagian yang pasti lebih dahulu membuat Anda tahu, ketika masalah muncul pada langkah 7 dan sesudahnya, bahwa yang perlu dicurigai hanyalah bagian jaringan.</p>
+    <p>Simpan proyek Anda setiap kali satu langkah berhasil. Bila sebuah perubahan malah merusak yang sudah jalan, Anda dapat kembali ke keadaan terakhir yang baik tanpa mengulang dari awal.</p>
+
+    <h3>7.1 Komponen dan sambungan</h3>
+    <p><strong>Komponen yang perlu ditambahkan:</strong> satu potensiometer sebagai wakil sensor suhu, satu LED merah beserta satu resistor 220 Ω, dan satu buzzer. Keempatnya diambil dari daftar komponen pada panel rangkaian, dan tidak ada komponen lain yang diperlukan.</p>
+    <div class="table-scroll" tabindex="0">
+      <table>
+      <tr><th>Komponen</th><th>Sambungan</th><th>Perannya</th></tr>
+      <tr><td>Potensiometer</td><td>Kaki tengah ke pin 34, dua kaki sisi ke 3V3 dan GND</td><td>Sumber angka yang diperlakukan sebagai suhu; memutarnya sama dengan mengubah suhu ruangan.</td></tr>
+      <tr><td>LED merah dan resistor 220 ohm</td><td>Kaki panjang ke pin 2 melalui resistor, kaki pendek ke GND</td><td>Penanda visual status bahaya.</td></tr>
+      <tr><td>Buzzer</td><td>Kaki positif ke pin 15, kaki negatif ke GND</td><td>Penanda suara agar status bahaya terasa tanpa melihat layar.</td></tr>
+      </table>
+    </div>
+    <div class="tip">Pin 34 dipilih karena pada ESP32 kelompok pin 32 sampai 39 tetap aman sebagai masukan analog ketika Wi-Fi menyala, dan pin 34 hanya bisa menjadi masukan sehingga tidak mungkin tertukar sebagai keluaran.</div>
+    <p>Dua hal pada tabel di atas layak dipahami, bukan sekadar dituruti. Resistor 220 ohm dipasang seri dengan LED sebagai pembatas arus; tanpa pembatas, LED menerima arus jauh lebih besar daripada yang mampu ditanggungnya dan pada rangkaian sungguhan ia akan cepat rusak. Simulator memang tidak akan meledakkan apa pun, tetapi kebiasaan memasangnya perlu terbentuk sejak sekarang, sebab rangkaian yang sama akan Anda rakit dengan komponen nyata pada pertemuan menjelang akhir semester.</p>
+    <p>LED dan buzzer sengaja dipakai bersama karena keduanya menyampaikan status lewat indra yang berbeda. Penanda visual mudah terlewat bila layar tidak sedang dilihat, sedangkan penanda suara memaksa perhatian tetapi mengganggu bila terlalu sering. Sistem peringatan pada peralatan sungguhan hampir selalu memakai keduanya dengan alasan yang sama, dan pada laporan Anda perbedaan itu layak disebut.</p>
+
+    <div class="svgbox" tabindex="0">
+      <svg viewBox="0 25 700 385" width="100%" role="img" aria-label="Rangkaian UTS alarm suhu: kaki VCC potensiometer ke pin 3V3 ESP32, kaki tengah SIG ke GPIO 34, kaki GND potensiometer ke pin GND, lalu GPIO 2 melalui resistor 220 ohm ke kaki panjang LED merah dengan kaki pendeknya ke GND, dan GPIO 15 ke kaki positif buzzer dengan kaki negatifnya ke GND">
+        <rect x="30" y="40" width="170" height="355" rx="14" fill="#dcfce7" stroke="#15803d" stroke-width="2"/>
+        <text x="115" y="96" text-anchor="middle" font-size="22" font-weight="700">ESP32</text>
+        <text x="194" y="143" text-anchor="end" font-size="14" font-weight="700" fill="#6d28d9">3V3</text>
+        <text x="194" y="183" text-anchor="end" font-size="14" font-weight="700" fill="#15803d">GPIO 34</text>
+        <text x="194" y="223" text-anchor="end" font-size="14" font-weight="700" fill="#111827">GND</text>
+        <text x="194" y="268" text-anchor="end" font-size="14" font-weight="700" fill="#15803d">GPIO 2</text>
+        <text x="194" y="318" text-anchor="end" font-size="14" font-weight="700" fill="#15803d">GPIO 15</text>
+        <text x="194" y="353" text-anchor="end" font-size="14" font-weight="700" fill="#111827">GND</text>
+        <text x="194" y="383" text-anchor="end" font-size="14" font-weight="700" fill="#111827">GND</text>
+        <rect x="360" y="112" width="180" height="130" rx="12" fill="#ede9fe" stroke="#6d28d9" stroke-width="2"/>
+        <text x="450" y="166" text-anchor="middle" font-size="17" font-weight="700">Potensiometer</text>
+        <text x="450" y="190" text-anchor="middle" font-size="13" fill="#374151">wakil sensor suhu</text>
+        <line x1="200" y1="138" x2="360" y2="138" stroke="#6d28d9" stroke-width="4"/>
+        <text x="272" y="131" text-anchor="middle" font-size="13" font-weight="700" fill="#6d28d9">VCC</text>
+        <line x1="200" y1="178" x2="360" y2="178" stroke="#15803d" stroke-width="4"/>
+        <text x="272" y="171" text-anchor="middle" font-size="13" font-weight="700" fill="#15803d">SIG</text>
+        <line x1="200" y1="218" x2="360" y2="218" stroke="#111827" stroke-width="4"/>
+        <text x="272" y="211" text-anchor="middle" font-size="13" font-weight="700" fill="#111827">GND</text>
+        <line x1="200" y1="263" x2="300" y2="263" stroke="#15803d" stroke-width="4"/>
+        <rect x="300" y="243" width="100" height="40" rx="8" fill="#fef3c7" stroke="#b45309" stroke-width="2"/>
+        <text x="350" y="269" text-anchor="middle" font-size="15" font-weight="700">220 Ω</text>
+        <line x1="400" y1="263" x2="546" y2="263" stroke="#15803d" stroke-width="4"/>
+        <circle cx="580" cy="263" r="34" fill="#fee2e2" stroke="#dc2626" stroke-width="2"/>
+        <text x="580" y="269" text-anchor="middle" font-size="16" font-weight="700">LED</text>
+        <line x1="614" y1="263" x2="640" y2="263" stroke="#111827" stroke-width="4"/>
+        <line x1="200" y1="313" x2="330" y2="313" stroke="#15803d" stroke-width="4"/>
+        <line x1="200" y1="348" x2="330" y2="348" stroke="#111827" stroke-width="4"/>
+        <rect x="330" y="292" width="160" height="70" rx="10" fill="#fff7ed" stroke="#ea580c" stroke-width="2"/>
+        <text x="410" y="333" text-anchor="middle" font-size="16" font-weight="700">Buzzer</text>
+        <text x="340" y="318" font-size="13" fill="#374151">kaki +</text>
+        <text x="340" y="353" font-size="13" fill="#374151">kaki -</text>
+        <line x1="640" y1="263" x2="640" y2="378" stroke="#111827" stroke-width="4"/>
+        <line x1="640" y1="378" x2="200" y2="378" stroke="#111827" stroke-width="4"/>
+      </svg>
+    </div>
+    <p>Sambungannya terbagi menjadi tiga kelompok, dan seluruh nomor pin di bawah sama dengan nomor pada contoh program Bab 8. Sisi masukan: <strong>kaki VCC potensiometer ke pin 3V3</strong>, <strong>kaki tengah SIG ke GPIO 34</strong>, dan <strong>kaki GND ke pin GND</strong>. Sisi penanda visual: <strong>GPIO 2 → resistor 220 Ω → kaki panjang LED</strong>, lalu <strong>kaki pendek LED → GND</strong>. Sisi penanda suara: <strong>GPIO 15 → kaki positif buzzer</strong>, lalu <strong>kaki negatif buzzer → GND</strong>. Kaki tengah adalah satu-satunya kaki potensiometer yang membawa nilai berubah; dua kaki di sisinya hanya memberi tegangan acuan. Ketiga sambungan GND boleh memakai pin GND yang berbeda pada papan karena seluruh pin GND sudah terhubung di dalam papan.</p>
+
+    <details>
+      <summary>Rangkaian bagian 7.1 dalam bentuk <code>diagram.json</code></summary>
+      <p>Area rangkaian sebenarnya tersimpan sebagai berkas teks bernama <code>diagram.json</code>. Buka tab tersebut, hapus seluruh isinya lebih dahulu, lalu tempelkan kode di bawah secara utuh. Rangkaian akan langsung terbentuk sesuai gambar di atas, sehingga waktu ujian Anda tidak habis untuk menggeser komponen satu per satu.</p>
+      <div class="code"><pre>{
+  "version": 1,
+  "author": "Materi IoT Pertemuan 8",
+  "editor": "wokwi",
+  "parts": [
+    { "type": "board-esp32-devkit-c-v4", "id": "esp", "top": 0, "left": 0, "attrs": {} },
+    { "type": "wokwi-potentiometer", "id": "pot1", "top": -80, "left": 150, "attrs": {} },
+    { "type": "wokwi-led", "id": "led1", "top": 60, "left": 220, "attrs": { "color": "red" } },
+    { "type": "wokwi-resistor", "id": "r1", "top": 110, "left": 140, "attrs": { "value": "220" } },
+    { "type": "wokwi-buzzer", "id": "bz1", "top": 190, "left": 150, "attrs": {} }
+  ],
+  "connections": [
+    [ "pot1:VCC", "esp:3V3", "violet", [ "v0" ] ],
+    [ "pot1:SIG", "esp:34", "green", [ "v0" ] ],
+    [ "pot1:GND", "esp:GND.1", "black", [ "v0" ] ],
+    [ "esp:2", "r1:1", "green", [ "v0" ] ],
+    [ "r1:2", "led1:A", "green", [ "v0" ] ],
+    [ "led1:C", "esp:GND.2", "black", [ "v0" ] ],
+    [ "esp:15", "bz1:2", "green", [ "v0" ] ],
+    [ "bz1:1", "esp:GND.3", "black", [ "v0" ] ]
+  ]
+}</pre></div>
+      <p>Bila panel rangkaian justru menjadi kosong setelah ditempel, biasanya ada tanda kurung atau koma yang ikut terhapus. Tempelkan ulang seluruh isinya, jangan hanya sebagian.</p>
+    </details>
+    <p>Gambar dan tempelan di atas adalah rangkaian untuk contoh program pada Bab 8, yaitu kasus alarm suhu bagian 3.1. Bila Anda memilih kasus lain, rangkaiannya tidak perlu digambar ulang karena yang berubah hanya satu atau dua komponen. Untuk lampu pintar, potensiometer diganti modul LDR yang kaki keluaran analognya menempati GPIO 34, buzzer boleh dilepas, dan LED tetap pada GPIO 2 sebagai wakil lampu ruangan. Untuk notifikasi kelembapan, seluruh rangkaian ini dipakai apa adanya; hanya warna LED yang diganti menjadi kuning dan buzzer boleh dilepas. Untuk penghitung kendaraan parkir, potensiometer diganti tombol, dan karena tombol memerlukan pin masukan digital dengan resistor penarik, pin masukannya berpindah dari GPIO 34 ke pin lain sesuai keterangan pada bagian 8.3, sedangkan LED pada GPIO 2 menjadi penanda tempat penuh.</p>
+
+    <h3>7.2 Langkah perakitan</h3>
+    <ol class="step">
+      <li>Buat proyek ESP32 baru dan beri nama yang memuat penanda Anda, misalnya <code>UTS-Alarm-Suhu-NIM</code>.</li>
+      <li>Tambahkan potensiometer, LED, resistor, dan buzzer, lalu sambungkan sesuai tabel bagian 7.1 dan periksa sekali lagi setiap kabelnya.</li>
+      <li>Tulis program tahap pertama: hanya <code>Serial.begin(115200)</code> pada <code>setup()</code>, lalu <code>analogRead(34)</code> dan <code>Serial.println()</code> pada <code>loop()</code> dengan jeda dua detik. Pastikan angkanya berubah ketika potensiometer diputar.</li>
+      <li>Tambahkan perhitungan pengubah angka mentah menjadi derajat, lalu cetak keduanya berdampingan untuk memeriksa hasilnya wajar.</li>
+      <li>Tambahkan <code>pinMode()</code> untuk LED dan buzzer pada <code>setup()</code>, lalu aturan logika dengan dua ambang. Pastikan keduanya hidup dan mati pada angka yang Anda harapkan.</li>
+      <li>Uji jarak pengaman dengan memutar potensiometer perlahan sampai nilainya di antara kedua ambang; status tidak boleh berpindah bolak-balik di sana.</li>
+      <li>Tambahkan penyambungan Wi-Fi memakai jaringan terbuka simulator bernama <code>Wokwi-GUEST</code> dengan kata sandi kosong, lalu cetak alamat IP yang diperoleh.</li>
+      <li>Tambahkan penyambungan ke broker MQTT beserta pengirimannya, dan cetak keterangan berhasil atau gagal supaya kegagalan tidak tampak seperti program yang diam.</li>
+      <li>Buka klien MQTT, berlangganan topik yang Anda pakai, lalu jalankan kembali proyeknya. Pesan harus muncul di sisi klien setiap kali log serial menyatakan data terkirim.</li>
+      <li>Putar potensiometer sampai status berpindah, biarkan berjalan sekitar setengah menit, lalu salin log serial dan ambil tangkapan layar pesan di klien sebagai bukti laporan.</li>
+    </ol>
+
+    <h3>7.3 Hasil yang diharapkan</h3>
+    <ul>
+      <li>Log serial mencetak nilai suhu, status, dan keterangan pengiriman setiap dua detik tanpa terputus.</li>
+      <li>LED dan buzzer hidup bersamaan ketika status menjadi bahaya, dan mati bersamaan ketika kembali aman.</li>
+      <li>Status tidak berpindah bolak-balik ketika nilai berada di antara kedua ambang.</li>
+      <li>Klien MQTT menerima pesan pada topik Anda dengan isi yang sama dengan log serial.</li>
+    </ul>
+
+    <h3>7.4 Jika hasilnya tidak seperti itu</h3>
+    <div class="table-scroll" tabindex="0">
+      <table>
+      <tr><th>Gejala</th><th>Kemungkinan penyebab</th><th>Yang perlu diperiksa</th></tr>
+      <tr><td>Log serial kosong</td><td>Kecepatan serial pada program berbeda dengan jendela log.</td><td><code>Serial.begin()</code> dan jendela log harus sama-sama 115200.</td></tr>
+      <tr><td>Nilai sensor selalu 0 atau 4095</td><td>Kaki potensiometer tersambung ke pin yang salah, atau satu kaki sisi belum tersambung.</td><td>Kaki tengah menuju pin 34; kedua kaki sisi menuju 3V3 dan GND.</td></tr>
+      <tr><td>LED tidak menyala meski status bahaya</td><td>Arah pemasangan LED terbalik, atau nomor pin di program berbeda dari rangkaian.</td><td>Kaki panjang LED menuju pin keluaran melalui resistor; bandingkan nomor pin dengan rangkaian.</td></tr>
+      <tr><td>Status berkedip cepat</td><td>Kedua ambang bernilai sama sehingga tidak ada jarak pengaman.</td><td>Lebar histeresis harus lebih besar dari nol dan ambang turun lebih rendah dari ambang naik.</td></tr>
+      <tr><td>Log menyatakan terkirim tetapi klien tidak menerima</td><td>Nama topik atau alamat broker tidak sama persis di kedua sisi.</td><td>Salin nama topik apa adanya; huruf besar kecil dan garis miring berpengaruh.</td></tr>
+      </table>
+    </div>
+    <p>Bila satu langkah tetap macet, kembalikan program ke tahap terakhir yang berhasil lalu tambahkan satu bagian saja. Anda juga boleh meminta bantuan; sebutkan tahap yang sudah berhasil dan baris log terakhir yang Anda lihat, karena keterangan itu mempersingkat pencarian penyebab.</p>
+    <p>Satu keterangan yang sering diabaikan padahal paling menolong adalah kode kesalahan yang dicetak saat penyambungan broker gagal. Angka itu berasal dari pustaka MQTT dan membedakan kegagalan yang sebabnya berbeda-beda: sambungan jaringan tidak sampai ke broker, sambungan terbentuk lalu ditolak, atau nama klien yang Anda pakai bertabrakan dengan nama klien orang lain di broker publik yang sama. Karena itu jangan hanya mencetak kata gagal; cetak kodenya, lalu catat kode itu bila Anda perlu bertanya. Nama klien yang memuat nomor induk Anda, seperti pada contoh Bab 8, sudah cukup untuk menghindari tabrakan nama yang paling umum.</p>
+  </section>
+  <section class="card">
+    <h2>8. Contoh Program Integrasi Lengkap dan Penjelasannya</h2>
+    <p>Program berikut memuat keempat bagian dari Bab 2 dan dapat dijalankan apa adanya pada rangkaian bagian 7.1. Ganti <code>nim12345</code> pada nama topik dengan penanda Anda sendiri.</p>
+    <p>Bacalah program ini dalam tiga lapis, jangan dari atas ke bawah sekali jalan. Lapis pertama adalah blok pengaturan di bagian atas: pustaka, identitas jaringan, nama topik, nomor pin, dan kedua ambang. Semua yang mungkin Anda ubah ada di situ, dan tidak ada satu pun angka penting yang tersembunyi di tengah program. Lapis kedua adalah kumpulan fungsi kecil, masing-masing dengan satu tugas jelas: membaca sensor, memutuskan status, menggerakkan aktuator, menyambung Wi-Fi, menyambung broker. Lapis ketiga adalah <code>setup()</code> dan <code>loop()</code> yang praktis hanya memanggil fungsi-fungsi itu dalam urutan yang benar. Susunan seperti ini membuat <code>loop()</code> dapat dibaca sebagai ringkasan alur sistem Anda, dan itu memudahkan Anda menjelaskan program sendiri ketika ditanya.</p>
+    <div class="code"><pre>#include &lt;WiFi.h&gt;
+#include &lt;PubSubClient.h&gt;
+
+const char* ssid       = "Wokwi-GUEST";
+const char* password   = "";
+const char* mqttServer = "broker.hivemq.com";
+const int   mqttPort   = 1883;
+
+const char* topikSuhu   = "iot/kelasA/nim12345/suhu";
+const char* topikStatus = "iot/kelasA/nim12345/status";
+
+const int sensorPin = 34;   // potensiometer sebagai sumber nilai suhu
+const int ledPin    = 2;    // LED merah, penanda visual
+const int buzzerPin = 15;   // buzzer, penanda suara
+
+const float ambangBahaya    = 35.0;  // batas naik ke status bahaya
+const float lebarHisteresis = 1.0;   // selisih batas turun ke aman
+
+WiFiClient espClient;
+PubSubClient mqtt(espClient);
+
+bool statusBahaya = false;  // status yang diingat antar putaran loop
+
+float bacaSuhu() {
+  int nilaiAdc = analogRead(sensorPin);
+  return 20.0 + (nilaiAdc / 4095.0) * 25.0;   // 0..4095 menjadi 20..45 derajat
+}
+
+bool tentukanStatus(float suhu, bool statusSekarang) {
+  if (!statusSekarang &amp;&amp; suhu &gt;= ambangBahaya) return true;
+  if (statusSekarang &amp;&amp; suhu &lt;= ambangBahaya - lebarHisteresis) return false;
+  return statusSekarang;
+}
+
+void aturAktuator(bool bahaya) {
+  digitalWrite(ledPin, bahaya ? HIGH : LOW);
+  digitalWrite(buzzerPin, bahaya ? HIGH : LOW);
+}
+
+void hubungkanWifi() {
+  WiFi.begin(ssid, password);
+  Serial.print("Menyambung Wi-Fi");
+  while (WiFi.status() != WL_CONNECTED) { delay(500); Serial.print("."); }
+  Serial.print(" tersambung, IP: ");
+  Serial.println(WiFi.localIP());
+}
+
+void hubungkanBroker() {
+  while (!mqtt.connected()) {
+    Serial.print("Menyambung broker MQTT... ");
+    if (mqtt.connect("esp32-uts-nim12345")) {
+      Serial.println("berhasil");
+    } else {
+      Serial.print("gagal, kode ");
+      Serial.println(mqtt.state());
+      delay(2000);
+    }
+  }
+}
+
+void setup() {
+  Serial.begin(115200);
+  pinMode(ledPin, OUTPUT);
+  pinMode(buzzerPin, OUTPUT);
+  aturAktuator(false);
+  hubungkanWifi();
+  mqtt.setServer(mqttServer, mqttPort);
+}
+
+void loop() {
+  if (!mqtt.connected()) hubungkanBroker();
+  mqtt.loop();
+
+  float suhu = bacaSuhu();
+  statusBahaya = tentukanStatus(suhu, statusBahaya);
+  aturAktuator(statusBahaya);
+
+  String teksSuhu = String(suhu, 2);
+  const char* teksStatus = statusBahaya ? "BAHAYA" : "AMAN";
+  mqtt.publish(topikSuhu, teksSuhu.c_str());
+  mqtt.publish(topikStatus, teksStatus);
+
+  Serial.print("suhu=");   Serial.print(teksSuhu);
+  Serial.print(" C | status="); Serial.print(teksStatus);
+  Serial.print(" | terkirim ke "); Serial.println(topikSuhu);
+
+  delay(2000);
+}</pre></div>
+    <h3>8.1 Penjelasan baris per baris</h3>
+    <div class="table-scroll" tabindex="0">
+      <table>
+      <tr><th>Bagian</th><th>Yang dikerjakannya</th></tr>
+      <tr><td><code>#include</code>, blok <code>const</code>, dan variabel global</td><td>Memuat pustaka Wi-Fi dan MQTT, mengumpulkan semua nilai yang mungkin diubah di satu tempat (identitas jaringan, alamat broker, nama topik, nomor pin, kedua ambang), lalu menyiapkan dua objek saluran jaringan dan penanda <code>statusBahaya</code> yang nilainya bertahan antar putaran <code>loop()</code>.</td></tr>
+      <tr><td><code>bacaSuhu()</code></td><td>Membaca pin analog yang menghasilkan angka 0 sampai 4095, lalu memetakannya ke 20 sampai 45 derajat. Pembagi ditulis <code>4095.0</code> agar hasilnya pecahan, bukan bilangan bulat. Bila ditulis <code>4095</code> saja, pembagian antara dua bilangan bulat dibulatkan ke bawah menjadi nol untuk hampir semua nilai, sehingga suhu Anda akan tampak tetap 20 derajat betapa pun potensiometer diputar. Kesalahan ini sangat sering terjadi dan gejalanya menyesatkan karena programnya tetap berjalan tanpa keluhan apa pun.</td></tr>
+      <tr><td><code>tentukanStatus()</code></td><td>Menerapkan jarak pengaman dari bagian 4.2: status naik ke bahaya hanya bila sekarang aman dan suhu mencapai ambang; turun ke aman hanya bila sekarang bahaya dan suhu sudah di bawah ambang dikurangi lebar histeresis. Selain itu status dibiarkan. Perhatikan bahwa fungsi ini menerima status sekarang sebagai masukan dan mengembalikan status berikutnya, jadi keputusannya bergantung pada keadaan sebelumnya, bukan pada suhu saja. Justru sifat itulah yang mencegah status berkedip ketika nilai bergoyang di sekitar satu batas.</td></tr>
+      <tr><td><code>aturAktuator()</code></td><td>Menyalakan atau mematikan LED dan buzzer sekaligus dari satu nilai status, sehingga keduanya tidak mungkin berbeda keadaan. Mengumpulkannya dalam satu fungsi juga berarti hanya ada satu tempat yang perlu diubah bila nanti Anda menambah penanda ketiga, dan tidak ada cabang program yang lupa dimutakhirkan.</td></tr>
+      <tr><td><code>hubungkanWifi()</code> dan <code>hubungkanBroker()</code></td><td>Menyambung ke jaringan terbuka simulator lalu ke broker, keduanya menunggu sampai berhasil. Titik, alamat IP, dan kode kesalahan yang dicetak membuat proses menunggu maupun kegagalan dapat dibedakan dari program yang berhenti. Penyambungan broker dibuat sebagai fungsi tersendiri karena ia perlu dipanggil ulang kapan saja dari <code>loop()</code>: sambungan MQTT dapat terputus di tengah jalan, dan tanpa pemanggilan ulang program akan tampak berjalan normal padahal tidak ada lagi data yang benar-benar terkirim.</td></tr>
+      <tr><td><code>setup()</code></td><td>Dijalankan sekali: menyiapkan log serial, menetapkan kedua pin sebagai keluaran, memastikan aktuator mati di awal, menyambung Wi-Fi, lalu mendaftarkan alamat broker. Pemanggilan <code>aturAktuator(false)</code> di sini penting agar keadaan awal perangkat pasti, sebab pin yang baru dinyalakan tidak dijamin bernilai rendah dan buzzer yang berbunyi sejak papan menyala akan menyesatkan.</td></tr>
+      <tr><td><code>loop()</code></td><td>Berulang: memastikan sambungan broker masih ada, membaca suhu, memperbarui status, menggerakkan aktuator, mengirim nilai dan status ke dua topik, mencetak satu baris log, lalu menunggu dua detik. <code>mqtt.loop()</code> wajib dipanggil setiap putaran karena di dalamnya pustaka mengurus lalu lintas yang tidak terlihat, termasuk denyut penanda hidup ke broker; tanpa itu broker dapat memutus perangkat Anda meski program tampak baik-baik saja.</td></tr>
+      <tr><td>Pengiriman dan pencetakan</td><td>Nilai suhu diubah menjadi teks dengan dua angka desimal lalu dikirim sebagai teks, karena MQTT hanya mengangkut deretan karakter dan tidak mengenal tipe bilangan. Pemanggilan <code>c_str()</code> menyerahkan teks itu dalam bentuk yang diminta pustaka. Nilai dan status dikirim ke dua topik terpisah agar penerima dapat berlangganan salah satunya saja; nanti pada Pertemuan 9 keduanya digabung menjadi satu payload JSON, dan alasan penggabungan itu akan dibahas di sana.</td></tr>
+      <tr><td><code>delay(2000)</code> di baris terakhir</td><td>Menahan program dua detik sebelum putaran berikutnya. Untuk ujian ini bentuk itu masih diterima karena program hanya punya satu irama kerja. Ketahuilah bahwa ia membekukan segalanya, termasuk penerimaan pesan dan pembacaan tombol, dan itulah masalah pertama yang diperbaiki pada Pertemuan 9 dengan <code>millis()</code>.</td></tr>
+      </table>
+    </div>
+
+    <h3>8.2 Contoh log serial yang wajar</h3>
+    <p>Perhatikan baris keempat: suhu 35,40 derajat tetap berstatus bahaya karena batas untuk kembali aman adalah 34,00 derajat. Itulah jarak pengaman yang bekerja.</p>
+    <div class="code"><pre>Menyambung Wi-Fi.... tersambung, IP: 10.13.37.2
+Menyambung broker MQTT... berhasil
+suhu=27.14 C | status=AMAN | terkirim ke iot/kelasA/nim12345/suhu
+suhu=34.88 C | status=AMAN | terkirim ke iot/kelasA/nim12345/suhu
+suhu=36.02 C | status=BAHAYA | terkirim ke iot/kelasA/nim12345/suhu
+suhu=35.40 C | status=BAHAYA | terkirim ke iot/kelasA/nim12345/suhu
+suhu=33.71 C | status=AMAN | terkirim ke iot/kelasA/nim12345/suhu</pre></div>
+    <p>Kutipan seperti ini yang diminta pada laporan karena memuat dua perpindahan status.</p>
+    <p>Bacalah log itu sebagai bukti, bukan sebagai hiasan. Dua baris pertama membuktikan bagian jaringan bekerja: papan mendapat alamat IP, lalu broker menerima sambungannya. Baris ketiga dan keempat membuktikan sensor terbaca dan aturan logika belum memutuskan bahaya, meski 34,88 sudah dekat ke ambang. Baris kelima membuktikan ambang naik bekerja. Baris keenam membuktikan jarak pengaman bekerja, karena suhu sudah turun tetapi status sengaja dipertahankan. Baris terakhir membuktikan ambang turun bekerja pada 33,71 yang sudah di bawah 34,00. Keterangan "terkirim ke" di ujung setiap baris membuktikan bagian keempat, yaitu komunikasi data, ikut berjalan pada setiap putaran.</p>
+    <p>Karena satu kutipan log dapat membuktikan semua itu sekaligus, ambil log Anda pada saat status berpindah, bukan pada saat nilainya diam. Log sepanjang tiga puluh baris yang seluruhnya berstatus aman hampir tidak membuktikan apa pun selain program berjalan.</p>
+
+    <h3>8.3 Menyesuaikan program untuk kasus lain</h3>
+    <p>Untuk lampu pintar, ganti isi <code>bacaSuhu()</code> menjadi pembacaan sensor cahaya dan balik arah perbandingan pada <code>tentukanStatus()</code>. Untuk notifikasi kelembapan, ubah pemetaan menjadi 0 sampai 100 persen dan ganti nama status. Untuk penghitung kendaraan, ganti pembacaan analog dengan pembacaan tombol dan penambahan hitungan, lalu bandingkan hitungan dengan kapasitas. Kerangka <code>setup()</code>, <code>loop()</code>, dan bagian pengirimannya tidak berubah.</p>
+    <p>Kenyataan bahwa hanya dua fungsi yang perlu diganti bukan kebetulan, melainkan akibat dari pemisahan tugas pada lapis kedua. Pembacaan sensor dikurung di dalam satu fungsi, keputusan dikurung di dalam fungsi lain, dan keduanya tidak saling tahu cara kerja pihak lain. Selama fungsi pembaca tetap mengembalikan satu angka dan fungsi pemutus tetap mengembalikan satu status, seluruh bagian program lain dapat dibiarkan apa adanya. Kebiasaan memecah program seperti ini akan sangat menolong pada mini project nanti, ketika sistem Anda punya lebih dari satu sensor.</p>
+    <p>Dua hal perlu diperhatikan saat berpindah kasus. Pertama, kasus penghitung kendaraan bersifat peristiwa, bukan nilai berkelanjutan, sehingga yang dijaga bukan jarak pengaman melainkan pantulan tombol: satu tekanan dapat terbaca berkali-kali bila program tidak menahan pembacaan berikutnya sesaat. Kedua, tombol memerlukan pin yang dapat menjadi masukan digital dengan resistor penarik, sedangkan pin 34 tidak menyediakannya; pilih pin lain dan sebutkan pilihan itu di laporan Anda.</p>
+  </section>
+  <section class="card">
+    <h2>9. Ringkasan Materi</h2>
+    <ul>
+      <li>Yang dinilai adalah keutuhan alur, bukan kerumitan rangkaian.</li>
+      <li>Sistem Anda harus memuat empat bagian sekaligus: sensor, aktuator, log serial, dan pengiriman data ke luar perangkat.</li>
+      <li>Keempat kasus pada Bab 3 berkerangka sama dan hanya berbeda pada pin masukan, rumus pengubah angka, serta arah perbandingan.</li>
+      <li>Ambang tunggal membuat status berkedip; dua ambang dengan jarak pengaman membuat keputusan tenang dan pengiriman tidak berlebihan.</li>
+      <li>MQTT dan HTTP sama-sama boleh. Yang menentukan adalah bukti data diterima di sisi penerima, bukan sekadar tercetak di log serial.</li>
+      <li>Bukti laporan dikumpulkan sambil mengerjakan, dan kemampuan menjelaskan program sendiri termasuk yang dinilai.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2>10. Latihan Pemahaman</h2>
+    <h3>10.1 Cek cepat</h3>
+    <p>Jawab dahulu tanpa membuka bab sebelumnya, baru bandingkan dengan kuncinya.</p>
+    <p><strong>1.</strong> Sebuah program menyalakan LED pada 30 derajat dan mematikannya juga pada 30 derajat. Apa yang paling mungkin terjadi ketika suhu bertahan di sekitar 30 derajat?</p>
+    <details>
+      <summary>Lihat kunci jawaban</summary>
+      <p>Status berpindah bolak-balik cepat sehingga LED berkedip dan data terkirim jauh lebih sering daripada perlu. Penyebabnya tidak ada jarak pengaman; perbaikannya menurunkan ambang untuk kembali mati, misalnya menjadi 29 derajat.</p>
+    </details>
+    <p><strong>2.</strong> Log serial mencetak keterangan bahwa data terkirim, tetapi klien MQTT tidak menerima apa pun. Apa dua hal pertama yang Anda periksa?</p>
+    <details>
+      <summary>Lihat kunci jawaban</summary>
+      <p>Kesamaan nama topik di kedua sisi, termasuk huruf besar kecil dan garis miring, lalu kesamaan alamat broker. Baris log hanya membuktikan perintah pengiriman dijalankan, bukan pesan diterima.</p>
+    </details>
+    <p><strong>3.</strong> Isilah: pada ESP32, <code>analogRead()</code> menghasilkan angka dari 0 sampai ______, sehingga pemetaan ke satuan terukur perlu dibagi dengan angka tersebut.</p>
+    <details>
+      <summary>Lihat kunci jawaban</summary>
+      <p>4095, karena pembacaan analognya memakai 12 bit. Pembaginya ditulis <code>4095.0</code> agar hasil pembagiannya berupa pecahan.</p>
+    </details>
+
+    <h3>10.2 Pertanyaan reflektif</h3>
+    <ol>
+      <li>Bila kasus Anda dipakai sungguhan, seberapa sering data perlu dikirim, dan apa pertimbangannya?</li>
+      <li>Bagian mana dari sistem Anda yang paling mungkin gagal lebih dulu di luar simulator, dan mengapa?</li>
+      <li>Apa yang berubah pada program bila status hanya dikirim ketika berpindah, bukan setiap putaran?</li>
+      <li>Siapa yang seharusnya menerima data Anda pada penerapan nyata, dan bentuk data seperti apa yang paling berguna baginya?</li>
+      <li>Mana yang lebih Anda percayai ketika keduanya bertentangan, log serial atau pesan yang diterima klien, dan mengapa?</li>
+    </ol>
+  </section>
+  <section class="card">
+    <h2>11. Tugas Latihan Pertemuan 8</h2>
+    <p>Bangun satu sistem IoT sederhana di simulator yang memuat sensor, aktuator, log serial, dan pengiriman data melalui MQTT atau HTTP, memakai salah satu kasus pada Bab 3 atau kasus lain yang setara. Kerjakan sendiri atau berpasangan; bila berpasangan, cantumkan pembagian pekerjaan.</p>
+    <p>Yang dikumpulkan:</p>
+    <ul>
+      <li>Tautan atau berkas proyek simulator yang dapat dijalankan, dengan nama proyek yang memuat penanda Anda.</li>
+      <li>Laporan singkat dua sampai tiga halaman berisi diagram sistem, kutipan log serial, dan penjelasan alur data sesuai Bab 6.</li>
+      <li>Tangkapan layar sisi penerima data: klien MQTT yang berlangganan topik Anda, atau halaman layanan tujuan bila memakai HTTP.</li>
+      <li>Keterangan ambang yang dipakai beserta alasannya, termasuk lebar jarak pengamannya.</li>
+    </ul>
+    <div class="table-scroll" tabindex="0">
+      <table>
+      <tr><th>Aspek</th><th>Bobot</th><th>Kriteria nilai penuh</th></tr>
+      <tr><td>Sensor virtual terbaca</td><td>20%</td><td>Nilai berubah wajar mengikuti perubahan di simulator dan sudah diubah ke satuan bermakna, bukan angka mentah.</td></tr>
+      <tr><td>Aktuator bereaksi terhadap aturan logika</td><td>20%</td><td>Aktuator berubah tepat pada ambang yang ditetapkan dan tidak berkedip di daerah jarak pengaman.</td></tr>
+      <tr><td>Komunikasi data keluar dari perangkat</td><td>20%</td><td>Data diterima di sisi penerima dengan isi yang sesuai log serial, dibuktikan lewat tangkapan layar.</td></tr>
+      <tr><td>Laporan singkat</td><td>25%</td><td>Diagram, kutipan log yang memuat perpindahan status, dan penjelasan alur data lengkap serta saling bersesuaian.</td></tr>
+      <tr><td>Kemampuan menjelaskan program sendiri</td><td>15%</td><td>Keempat pertanyaan pada Bab 6 dijawab dengan menunjuk baris program yang bersangkutan.</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>12. Checkpoint Evaluasi Pertemuan 8</h2>
+    <p>Pertemuan ini dianggap tuntas bila butir berikut dapat Anda lakukan sendiri. Daftar ini sekaligus dipakai sebagai pemeriksaan diri sebelum mengumpulkan, sehingga kekurangan masih dapat diperbaiki.</p>
+    <div class="mini">
+      <div class="label">Target minimal pertemuan ini</div>
+      <p>Anda mampu membangun satu sistem kecil secara utuh, dari pembacaan sensor sampai data terkirim ke luar perangkat, dan menjelaskan setiap tahapnya.</p>
+    </div>
+    <div class="table-scroll" tabindex="0">
+      <table>
+      <tr><th>Yang diperiksa</th><th>Cara memastikan sendiri</th><th>Bila belum tercapai</th></tr>
+      <tr><td>Sensor virtual terbaca</td><td>Jalankan proyek, ubah keadaan sensor, dan lihat angkanya berubah pada log serial seperti langkah 3 dan 4 bagian 7.2.</td><td>Baca ulang bagian 7.1 dan tabel gejala pada bagian 7.4.</td></tr>
+      <tr><td>Output aktuator bereaksi</td><td>Putar nilai melewati ambang, pastikan LED dan buzzer berubah bersamaan, lalu uji daerah jarak pengaman seperti langkah 6 bagian 7.2.</td><td>Baca ulang bagian 4.2 dan penjelasan <code>tentukanStatus()</code> pada bagian 8.1.</td></tr>
+      <tr><td>Komunikasi data keluar dari perangkat</td><td>Berlangganan topik Anda dari klien MQTT, lalu cocokkan pesan yang masuk dengan baris log serial seperti langkah 9 bagian 7.2.</td><td>Baca ulang Bab 5 dan baris terakhir tabel bagian 7.4.</td></tr>
+      <tr><td>Program dapat dijelaskan sendiri, bukan hanya berjalan</td><td>Jawab keempat pertanyaan pada Bab 6 dengan menunjuk baris programnya, lalu bandingkan dengan tabel bagian 8.1.</td><td>Baca ulang Bab 2 dan seluruh penjelasan bagian 8.1.</td></tr>
+      </table>
+    </div>
+    <p class="footer-note">Mata kuliah ini memiliki empat checkpoint besar: CP-1 pada Pertemuan 4, CP-2 pada Pertemuan 8 yaitu pertemuan ini, CP-3 pada Pertemuan 12, dan CP-4 pada Pertemuan 16. Hasil pertemuan ini dinilai sebagai UTS praktik berbobot 20 persen dari nilai akhir, sedangkan tugas latihan mingguan secara keseluruhan berbobot 20 persen dari nilai akhir.</p>
+  </section>
+
+  <section class="card">
+    <h2>13. Referensi Praktis</h2>
+    <dl class="gloss">
+      <dt>Arsip proyek latihan Anda sendiri, Pertemuan 1 sampai 7 — <code>wokwi.com</code></dt>
+      <dd>Sumber paling berguna pada pertemuan ini. Rangkaian sensor dan aktuator serta program pengiriman data yang pernah berjalan dapat digabungkan mengikuti langkah bagian 7.2, sehingga Anda tidak menulis dari nol.</dd>
+      <dt>Wokwi Docs — <code>docs.wokwi.com</code></dt>
+      <dd>Rujukan untuk nama komponen, penomoran pin, dan keterbatasan jaringan di simulator. Berguna ketika sambungan bagian 7.1 atau penyambungan Wi-Fi pada langkah 7 tidak berjalan seperti yang diharapkan.</dd>
+      <dt>Template laporan praktikum — topik, cari dengan kata kunci <code>format laporan praktikum</code> dan <code>struktur laporan teknis singkat</code></dt>
+      <dd>Membantu menyusun laporan Bab 6 agar rapi dan berurutan. Ambil kerangkanya saja, lalu isi dengan diagram, kutipan log, dan penjelasan alur data Anda sendiri.</dd>
+    </dl>
+    <p class="footer-note">Alamat di atas ditulis sebagai nama domain, bukan tautan langsung ke halaman tertentu, karena struktur halaman situs semacam ini berubah dari waktu ke waktu.</p>
+  </section>
+
+  <footer class="pagenum">
+    <span class="pagenum-seri">Materi Pertemuan 8</span>
+    <span class="pagenum-no">Halaman 8 dari 16</span>
+  </footer>
+</div>
+</body>
+</html>

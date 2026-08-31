@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Materi Pertemuan 1 - Orientasi IoT</title>
+  <link rel="stylesheet" href="assets/materi.css" />
+</head>
+<body>
+  <div class="wrap">
+    <section class="hero">
+      <span class="badge">Pertemuan 1</span>
+      <h1>Orientasi Internet of Things dan Lingkungan Kerja Simulator</h1>
+      <p class="lead">Materi ini membahas pengertian IoT, alur kerja sistem, komponen utama, arsitektur dasar, pengenalan Wokwi, MQTTX, dan Node-RED, serta praktik menjalankan simulasi ESP32 pertama.</p>
+      <div>
+        <span class="pill">Definisi IoT</span>
+        <span class="pill">Arsitektur Dasar</span>
+        <span class="pill">Komponen Sistem</span>
+        <span class="pill">Wokwi</span>
+        <span class="pill">MQTTX</span>
+        <span class="pill">Node-RED</span>
+      </div>
+      <p class="notice">Pertemuan ini hanya membutuhkan browser dan koneksi internet. Tidak ada perangkat keras yang perlu dibeli dan tidak ada perangkat lunak yang perlu diinstal.</p>
+    </section>
+
+    <section class="card">
+      <h2>0. Gambaran Hasil Akhir: Seperti Apa Sistem IoT yang Sudah Jadi</h2>
+      <p>Sebelum masuk ke definisi dan istilah, ada gunanya melihat lebih dulu wujud akhir dari yang akan dipelajari. Bayangkan sebuah sistem yang sudah berjalan: sebuah ESP32 membaca suhu ruangan, mengirimkan angkanya keluar, dan angka itu terlihat bergerak pada sebuah halaman dashboard. Ketika suhunya melewati batas tertentu, kipas menyala dengan sendirinya tanpa disentuh siapa pun.</p>
+      <p>Sistem seperti itu sebenarnya hanya terdiri dari empat titik, dan keempatnya akan dikenali satu per satu pada pertemuan ini:</p>
+      <div class="grid two">
+        <div class="mini"><strong>Apa yang mengamati?</strong><br/>Sensor suhu, yang membaca keadaan ruangan.</div>
+        <div class="mini"><strong>Apa yang memproses?</strong><br/>ESP32, yang menjalankan program dan mengambil keputusan.</div>
+        <div class="mini"><strong>Lewat mana datanya?</strong><br/>Jaringan, yang membawa angka suhu keluar dari device.</div>
+        <div class="mini"><strong>Siapa yang menerima hasilnya?</strong><br/>Manusia melalui dashboard, atau kipas yang langsung bertindak.</div>
+      </div>
+      <p>Sistem seutuhnya belum akan dibangun hari ini. Hari ini bagian-bagiannya dikenali lebih dulu, lalu ditutup dengan praktik menyalakan satu lampu. Empat pertanyaan di atas layak dipegang selama membaca materi ini, sebab setiap bagian berikutnya sesungguhnya sedang menjawab salah satu di antaranya.</p>
+    </section>
+
+    <section class="card">
+      <h2>Capaian Pembelajaran Pertemuan 1</h2>
+      <div class="grid two">
+        <div class="mini">
+          <div class="label">Yang dipahami</div>
+          <ul>
+            <li>Makna Internet of Things sebagai sistem yang menghubungkan benda fisik dengan data dan layanan digital.</li>
+            <li>Alur dasar IoT: sensor → device → network → platform → user.</li>
+            <li>Peran komponen inti seperti sensor, aktuator, mikrokontroler, jaringan, dan dashboard.</li>
+            <li>Fungsi simulator sebagai ruang latihan sebelum memakai perangkat nyata.</li>
+          </ul>
+        </div>
+        <div class="mini">
+          <div class="label">Yang dapat dilakukan</div>
+          <ul>
+            <li>Mengidentifikasi minimal lima komponen dalam sistem IoT.</li>
+            <li>Menjelaskan hubungan antara data sensor, proses pada device, dan tampilan informasi kepada pengguna.</li>
+            <li>Membuka dan menjalankan proyek ESP32 pertama di simulator.</li>
+            <li>Membaca kode dasar Arduino/ESP32 beserta fungsinya.</li>
+          </ul>
+        </div>
+      </div>
+      <p>Fokus Pertemuan 1 ada pada empat hal: definisi IoT beserta contoh penggunaannya, komponen sistem, arsitektur dasar, dan pengenalan tiga alat kerja yang akan dipakai sepanjang mata kuliah ini. Aktivitas praktiknya satu saja, yaitu menjalankan simulasi ESP32 pertama dengan contoh paling sederhana.</p>
+    </section>
+
+    <section class="card">
+      <h2>Peta Perjalanan Mata Kuliah</h2>
+      <p>Mata kuliah ini berjalan 16 pertemuan. Materi hari ini adalah pemberhentian pertama. Peta di bawah memperlihatkan seluruh urutannya, agar setiap istilah yang muncul hari ini punya tempat yang jelas di kemudian hari.</p>
+      <div class="road">
+        <div class="stop here"><b>Pertemuan 1</b>Orientasi IoT dan lingkungan kerja simulator <em>(Anda di sini)</em></div>
+        <div class="stop"><b>Pertemuan 2</b>Dasar ESP32, GPIO, input-output digital</div>
+        <div class="stop"><b>Pertemuan 3</b>Input analog dan pembacaan sensor virtual</div>
+        <div class="stop"><b>Pertemuan 4</b>Aktuator dasar: buzzer, servo, relay virtual <em>— checkpoint CP-1</em></div>
+        <div class="stop"><b>Pertemuan 5</b>Struktur program yang rapi dan debugging dasar</div>
+        <div class="stop"><b>Pertemuan 6</b>Dasar komunikasi data IoT: HTTP</div>
+        <div class="stop"><b>Pertemuan 7</b>Dasar komunikasi data IoT: MQTT</div>
+        <div class="stop"><b>Pertemuan 8</b>UTS, checkpoint integrasi dasar berbasis simulator <em>— checkpoint CP-2</em></div>
+        <div class="stop"><b>Pertemuan 9</b>Data formatting, timing, dan event-driven logic</div>
+        <div class="stop"><b>Pertemuan 10</b>Dashboard dasar dengan Node-RED</div>
+        <div class="stop"><b>Pertemuan 11</b>Penyimpanan data dan visualisasi tren</div>
+        <div class="stop"><b>Pertemuan 12</b>Keamanan dan keandalan dasar sistem IoT <em>— checkpoint CP-3</em></div>
+        <div class="stop"><b>Pertemuan 13</b>Perancangan sistem IoT end-to-end</div>
+        <div class="stop"><b>Pertemuan 14</b>Mini project simulator</div>
+        <div class="stop"><b>Pertemuan 15</b>Transisi awal dari simulator ke hardware nyata</div>
+        <div class="stop"><b>Pertemuan 16</b>UAS, evaluasi akhir mata kuliah <em>— checkpoint CP-4</em></div>
+      </div>
+      <p>Perhatikan bahwa lima pertemuan pertama masih berkutat pada satu device: membaca input, menggerakkan output, dan menulis program yang rapi. Kata “internet” pada IoT baru benar-benar masuk di Pertemuan 6. Urutan ini disengaja, karena device yang belum mampu mengendalikan input-outputnya sendiri akan jauh lebih sulit ditelusuri kesalahannya begitu jaringan ikut terlibat.</p>
+      <p>Empat pertemuan bertanda checkpoint adalah titik penilaian besar: CP-1 menguji GPIO, sensor-aktuator, dan logika dasar; CP-2 menguji integrasi simulator dasar; CP-3 menguji komunikasi data, dashboard, dan keandalan; CP-4 menguji sistem IoT mini yang utuh dari ujung ke ujung.</p>
+
+      <h3>Yang Dituju di Akhir Semester</h3>
+      <p>Enam kemampuan berikut adalah capaian akhir mata kuliah ini. Semuanya dibangun bertahap mulai dari pertemuan pertama, sehingga tidak ada satu pun yang dituntut sudah dikuasai hari ini.</p>
+      <ol>
+        <li>Menjelaskan arsitektur dan komponen IoT.</li>
+        <li>Membuat simulasi dasar sensor dan aktuator di simulator.</li>
+        <li>Menghubungkan device virtual ke MQTT atau HTTP.</li>
+        <li>Membuat dashboard sederhana.</li>
+        <li>Melakukan debugging dan pengujian dasar.</li>
+        <li>Membangun mini system IoT end-to-end berbasis simulator, lalu mulai mengenal transisi ke perangkat nyata.</li>
+      </ol>
+      <p>Bandingkan daftar ini dengan <em>Capaian Pembelajaran Pertemuan 1</em> di bagian sebelumnya: hari ini menyentuh nomor satu secara utuh dan menyiapkan pijakan untuk nomor dua. Empat sisanya menyusul pada pertemuan-pertemuan berikutnya.</p>
+
+      <h3>Susunan Setiap Pertemuan</h3>
+      <p>Setiap pertemuan berlangsung sekitar 2,5 jam dengan pembagian waktu yang relatif tetap:</p>
+      <ul>
+        <li><strong>25 menit</strong> pengantar konsep.</li>
+        <li><strong>35 menit</strong> demo dan pembahasan contoh.</li>
+        <li><strong>60 menit</strong> praktik terpandu, dikerjakan bersama langkah demi langkah.</li>
+        <li><strong>20 menit</strong> latihan mandiri atau kelompok kecil.</li>
+        <li><strong>10 menit</strong> review hasil.</li>
+        <li><strong>10 menit</strong> checkpoint evaluasi dan penjelasan tugas.</li>
+      </ul>
+      <p>Porsi terbesar ada pada praktik, bukan pada penjelasan. Karena itu materi ini sebaiknya dibaca lebih dulu sebelum pertemuan berlangsung, agar 60 menit praktik terpandu benar-benar terpakai untuk mengetik dan menguji, bukan untuk mengejar konsep dasar.</p>
+
+      <h3>Bagaimana Penilaian Dihitung</h3>
+      <p>Nilai akhir mata kuliah ini tersebar merata di lima komponen, masing-masing 20 persen:</p>
+      <ul>
+        <li>Tugas latihan mingguan.</li>
+        <li>Praktikum dan keaktifan.</li>
+        <li>UTS praktik pada Pertemuan 8.</li>
+        <li>Mini project simulator pada Pertemuan 14.</li>
+        <li>UAS berupa demo akhir beserta laporan pada Pertemuan 16.</li>
+      </ul>
+      <p>Tidak ada satu komponen pun yang bisa menyelamatkan sisanya. Tugas latihan mingguan yang tampak kecil punya bobot yang sama besar dengan UAS, dan sebagian besar tugas itu hanya bisa dikerjakan bila praktik di pertemuannya benar-benar dijalankan sendiri.</p>
+
+      <h3>Prasyarat</h3>
+      <p>Pertemuan ini dirancang untuk Anda yang belum pernah menyentuh IoT sama sekali. Tidak ada prasyarat perangkat keras, dan tidak ada perangkat lunak yang perlu diinstal hari ini.</p>
+      <div class="tip">
+        <strong>Belum pernah menulis program?</strong> Tidak menjadi masalah hari ini. Empat hal berikut cukup Anda terima dulu sebagai bentuk baku tanpa perlu memahami alasannya: kata <code>void</code>, tanda titik koma <code>;</code> di akhir perintah, kurung kurawal <code>{ }</code> sebagai pembungkus, dan istilah “fungsi” untuk sekumpulan perintah yang punya nama. Semuanya dibahas tuntas pada Pertemuan 2. Sasaran hari ini adalah mengenali <em>alur</em> sistem, bukan menguasai sintaks.
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>1. Pengantar: Apa Itu Internet of Things?</h2>
+      <p>Internet of Things, atau IoT, adalah konsep ketika benda fisik diberi kemampuan untuk <strong>mengamati kondisi</strong>, <strong>mengirim data</strong>, <strong>menerima perintah</strong>, atau <strong>melakukan aksi otomatis</strong> melalui sistem komputasi dan jaringan. Inti dari IoT bukan hanya “alat yang terhubung ke internet”, tetapi bagaimana alat tersebut menjadi bagian dari alur data yang menghasilkan keputusan atau tindakan.</p>
+      <p>Contoh sederhana: termometer ruangan digital biasa hanya menampilkan suhu di layar lokal. Ketika termometer itu menjadi bagian dari sistem IoT, data suhu dapat dikirim ke platform, disimpan, divisualisasikan, dianalisis, lalu dipakai untuk menyalakan kipas atau mengirim notifikasi.</p>
+      <div class="analogy">
+        <strong>Analogi dunia nyata:</strong> bayangkan sebuah gedung kampus dengan petugas yang rutin memeriksa setiap ruangan. Dalam sistem manual, petugas harus datang satu per satu untuk melihat suhu, lampu, atau pintu. Dalam IoT, “petugas” itu digantikan oleh sensor dan sistem digital yang terus memantau, melaporkan, lalu merespons tanpa harus selalu didatangi manusia.
+      </div>
+
+      <h3>1.1 Mengapa IoT penting?</h3>
+      <div class="grid three">
+        <div class="mini"><strong>Monitoring</strong><br/>IoT memudahkan pengamatan kondisi secara terus-menerus, misalnya suhu, cahaya, kelembapan, atau keberadaan objek.</div>
+        <div class="mini"><strong>Otomasi</strong><br/>IoT memungkinkan sistem mengambil tindakan otomatis berdasarkan aturan tertentu, misalnya lampu menyala saat ruangan gelap.</div>
+        <div class="mini"><strong>Efisiensi</strong><br/>IoT membantu mengurangi pekerjaan manual, mempercepat respons, dan membuat penggunaan energi atau sumber daya lebih terukur.</div>
+      </div>
+
+      <h3>1.2 Contoh penerapan IoT</h3>
+      <div class="table-scroll" tabindex="0">
+        <table>
+        <thead>
+          <tr><th>Bidang</th><th>Contoh</th><th>Manfaat</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Kampus</td><td>Monitoring suhu ruangan laboratorium</td><td>Menjaga kenyamanan dan keselamatan perangkat</td></tr>
+          <tr><td>Rumah</td><td>Lampu otomatis berbasis sensor cahaya atau gerak</td><td>Hemat energi dan praktis</td></tr>
+          <tr><td>Pertanian</td><td>Pemantauan kelembapan tanah</td><td>Membantu keputusan penyiraman</td></tr>
+          <tr><td>Transportasi</td><td>Sistem parkir cerdas</td><td>Mempermudah deteksi slot kosong</td></tr>
+        </tbody>
+        </table>
+      </div>
+
+      <h3>1.3 Karakteristik utama sistem IoT</h3>
+      <p>Sebuah sistem IoT umumnya memiliki empat karakteristik utama. Pertama, sistem mampu menangkap data dari lingkungan. Kedua, sistem dapat memproses atau mengirim data tersebut. Ketiga, data dapat ditampilkan atau disimpan pada platform tertentu. Keempat, sistem dapat menghasilkan aksi, baik otomatis maupun berdasarkan perintah pengguna.</p>
+      <div class="svgbox" tabindex="0">
+        <svg viewBox="0 0 980 240" width="100%" role="img" aria-label="Diagram karakteristik utama IoT">
+          <rect x="20" y="60" width="180" height="100" rx="18" fill="#dbeafe" stroke="#2563eb"/>
+          <rect x="250" y="60" width="180" height="100" rx="18" fill="#dcfce7" stroke="#15803d"/>
+          <rect x="480" y="60" width="180" height="100" rx="18" fill="#ede9fe" stroke="#6d28d9"/>
+          <rect x="710" y="60" width="250" height="100" rx="18" fill="#fef3c7" stroke="#b45309"/>
+          <text x="110" y="102" text-anchor="middle" font-size="24" font-weight="700" fill="#1f2937">Mengamati</text>
+          <text x="110" y="130" text-anchor="middle" font-size="16" fill="#374151">sensor membaca kondisi</text>
+          <text x="340" y="102" text-anchor="middle" font-size="24" font-weight="700" fill="#1f2937">Memproses</text>
+          <text x="340" y="130" text-anchor="middle" font-size="16" fill="#374151">device mengolah data</text>
+          <text x="570" y="102" text-anchor="middle" font-size="24" font-weight="700" fill="#1f2937">Mengirim</text>
+          <text x="570" y="130" text-anchor="middle" font-size="16" fill="#374151">network membawa data</text>
+          <text x="835" y="96" text-anchor="middle" font-size="24" font-weight="700" fill="#1f2937">Menampilkan</text>
+          <text x="835" y="123" text-anchor="middle" font-size="24" font-weight="700" fill="#1f2937">&amp; Merespons</text>
+          <text x="835" y="147" text-anchor="middle" font-size="15" fill="#374151">platform, dashboard, aktuator</text>
+          <line x1="200" y1="110" x2="250" y2="110" stroke="#2563eb" stroke-width="4"/>
+          <polygon points="250,110 236,102 236,118" fill="#2563eb"/>
+          <line x1="430" y1="110" x2="480" y2="110" stroke="#2563eb" stroke-width="4"/>
+          <polygon points="480,110 466,102 466,118" fill="#2563eb"/>
+          <line x1="660" y1="110" x2="710" y2="110" stroke="#2563eb" stroke-width="4"/>
+          <polygon points="710,110 696,102 696,118" fill="#2563eb"/>
+        </svg>
+      </div>
+
+      <h3>1.4 IoT bukan hanya internet</h3>
+      <p>Istilah “internet” pada IoT sering membuat orang mengira bahwa inti pembelajarannya hanya soal koneksi. Padahal, koneksi hanyalah salah satu bagian. Sistem IoT baru bernilai jika ada <strong>objek fisik</strong>, <strong>data yang relevan</strong>, <strong>proses yang benar</strong>, dan <strong>tindak lanjut yang berguna</strong>. Oleh sebab itu, pada pertemuan awal ini Anda perlu memahami gambar besar sistem, bukan sekadar menghafal istilah.</p>
+    </section>
+
+    <section class="card">
+      <h2>2. Komponen Utama Sistem IoT</h2>
+      <p>Salah satu sasaran Pertemuan 1 adalah mampu menyebutkan minimal lima komponen IoT beserta perannya. Pada praktik nyata, komponen sistem IoT dapat dipecah menjadi beberapa bagian yang saling bergantung.</p>
+      <div class="grid two">
+        <div class="mini"><strong>Sensor</strong><br/>Bagian yang membaca kondisi lingkungan, misalnya suhu, cahaya, gerakan, atau kelembapan.</div>
+        <div class="mini"><strong>Device/Mikrokontroler</strong><br/>Otak kecil yang membaca sensor, menjalankan program, lalu menentukan apa yang harus dilakukan.</div>
+        <div class="mini"><strong>Network</strong><br/>Jalur pengiriman data, misalnya Wi-Fi atau protokol komunikasi tertentu.</div>
+        <div class="mini"><strong>Platform</strong><br/>Tempat data diterima, diolah, disimpan, atau diteruskan ke layanan lain.</div>
+        <div class="mini"><strong>Dashboard/User Interface</strong><br/>Tampilan agar manusia dapat melihat informasi dan memberi perintah.</div>
+        <div class="mini"><strong>Aktuator</strong><br/>Bagian yang melakukan aksi fisik, misalnya menyalakan LED, motor, buzzer, atau relay.</div>
+      </div>
+      <div class="analogy">
+        <strong>Analogi dunia nyata:</strong> anggap sistem IoT seperti layanan pengiriman makanan. Sensor adalah orang yang mencatat pesanan, mikrokontroler adalah kasir yang memproses, jaringan adalah jalan pengiriman, platform adalah dapur dan sistem pemesanan, dashboard adalah aplikasi pelanggan, dan aktuator adalah kurir yang benar-benar mengantarkan pesanan.
+      </div>
+
+      <h3>2.1 Penjelasan hubungan antar komponen</h3>
+      <p>Sensor menghasilkan data mentah. Data ini belum otomatis berguna jika tidak dibaca oleh device. Mikrokontroler seperti ESP32 akan menjalankan program yang menentukan bagaimana data diperlakukan. Jika sistem hanya memantau lokal, data bisa cukup ditampilkan di serial monitor. Jika sistem perlu akses jarak jauh, data dikirim melalui jaringan ke platform. Dari platform, data dapat ditampilkan pada dashboard atau dipakai untuk memicu aksi lebih lanjut.</p>
+      <p>Ketika ada aktuator, sistem tidak lagi hanya “melihat” kondisi, tetapi juga dapat “bertindak”. Di sinilah IoT berkembang dari monitoring menjadi otomasi.</p>
+
+      <h3>2.2 Diagram blok dasar sistem IoT</h3>
+      <div class="svgbox" tabindex="0">
+        <svg viewBox="0 0 1040 300" width="100%" role="img" aria-label="Diagram blok dasar sistem IoT">
+          <rect x="30" y="95" width="150" height="90" rx="16" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+          <rect x="230" y="95" width="170" height="90" rx="16" fill="#dcfce7" stroke="#15803d" stroke-width="2"/>
+          <rect x="450" y="95" width="150" height="90" rx="16" fill="#f3e8ff" stroke="#7c3aed" stroke-width="2"/>
+          <rect x="650" y="95" width="170" height="90" rx="16" fill="#fef3c7" stroke="#b45309" stroke-width="2"/>
+          <rect x="870" y="40" width="140" height="70" rx="16" fill="#e0f2fe" stroke="#0284c7" stroke-width="2"/>
+          <rect x="870" y="150" width="140" height="70" rx="16" fill="#fee2e2" stroke="#dc2626" stroke-width="2"/>
+          <text x="105" y="130" text-anchor="middle" font-size="24" font-weight="700">Sensor</text>
+          <text x="105" y="155" text-anchor="middle" font-size="16">data lingkungan</text>
+          <text x="315" y="130" text-anchor="middle" font-size="24" font-weight="700">ESP32</text>
+          <text x="315" y="155" text-anchor="middle" font-size="16">membaca &amp; memproses</text>
+          <text x="525" y="130" text-anchor="middle" font-size="24" font-weight="700">Network</text>
+          <text x="525" y="155" text-anchor="middle" font-size="16">Wi-Fi / internet</text>
+          <text x="735" y="130" text-anchor="middle" font-size="24" font-weight="700">Platform</text>
+          <text x="735" y="155" text-anchor="middle" font-size="16">MQTT / Node-RED</text>
+          <text x="940" y="77" text-anchor="middle" font-size="22" font-weight="700">Dashboard</text>
+          <text x="940" y="186" text-anchor="middle" font-size="22" font-weight="700">Aktuator</text>
+          <line x1="180" y1="140" x2="230" y2="140" stroke="#2563eb" stroke-width="4"/>
+          <polygon points="230,140 216,132 216,148" fill="#2563eb"/>
+          <line x1="400" y1="140" x2="450" y2="140" stroke="#2563eb" stroke-width="4"/>
+          <polygon points="450,140 436,132 436,148" fill="#2563eb"/>
+          <line x1="600" y1="140" x2="650" y2="140" stroke="#2563eb" stroke-width="4"/>
+          <polygon points="650,140 636,132 636,148" fill="#2563eb"/>
+          <line x1="820" y1="110" x2="870" y2="75" stroke="#2563eb" stroke-width="4"/>
+          <polygon points="870,75 856,76 861,88" fill="#2563eb"/>
+          <line x1="820" y1="170" x2="870" y2="185" stroke="#2563eb" stroke-width="4"/>
+          <polygon points="870,185 857,176 853,189" fill="#2563eb"/>
+        </svg>
+      </div>
+
+      <h3>2.3 Monitoring vs kontrol</h3>
+      <p>Tidak semua sistem IoT harus langsung mengontrol sesuatu. Beberapa sistem hanya fokus pada monitoring, misalnya membaca suhu dan menampilkannya. Sistem lain melangkah lebih jauh menjadi sistem kontrol, misalnya menyalakan kipas saat suhu melewati batas. Memahami perbedaan ini penting karena memengaruhi desain perangkat keras, program, dan kebutuhan komunikasi.</p>
+    </section>
+
+    <section class="card">
+      <h2>3. Arsitektur Dasar IoT: Dari Sensor Sampai Pengguna</h2>
+      <p>Alur <strong>sensor → device → network → platform → user</strong> adalah inti Pertemuan 1. Alur ini penting karena menjadi peta besar untuk semua materi lanjutan. Jika alur ini sudah dipahami sejak awal, Anda akan lebih mudah memahami mengapa nanti ada topik sensor, aktuator, HTTP, MQTT, dashboard, dan keamanan — masing-masing sebenarnya sedang memperdalam satu kotak pada alur yang sama.</p>
+      <ol class="step">
+        <li><strong>Sensor</strong> membaca kondisi fisik, misalnya suhu, cahaya, atau gerakan.</li>
+        <li><strong>Device</strong> seperti ESP32 mengambil data sensor dan menjalankan logika program.</li>
+        <li><strong>Network</strong> membawa data ke layanan lain melalui koneksi tertentu.</li>
+        <li><strong>Platform</strong> menerima dan mengolah data, misalnya broker MQTT atau flow pada Node-RED.</li>
+        <li><strong>User</strong> melihat hasil melalui dashboard, notifikasi, atau aksi yang terjadi pada sistem.</li>
+      </ol>
+      <div class="analogy">
+        <strong>Analogi dunia nyata:</strong> bayangkan sistem pengiriman paket. Sensor adalah petugas loket yang menerima barang, device adalah petugas administrasi yang mencatat dan memberi label, network adalah jalur distribusi, platform adalah pusat sortir, dan user adalah penerima yang akhirnya mendapatkan informasi atau paketnya.
+      </div>
+      <div class="svgbox" tabindex="0">
+        <svg viewBox="0 0 1060 260" width="100%" role="img" aria-label="Alur sensor ke pengguna pada IoT">
+          <defs>
+            <linearGradient id="g1" x1="0" x2="1">
+              <stop offset="0%" stop-color="#dbeafe"/>
+              <stop offset="100%" stop-color="#bfdbfe"/>
+            </linearGradient>
+          </defs>
+          <rect x="20" y="80" width="170" height="90" rx="18" fill="url(#g1)" stroke="#2563eb"/>
+          <rect x="225" y="80" width="170" height="90" rx="18" fill="#dcfce7" stroke="#15803d"/>
+          <rect x="430" y="80" width="170" height="90" rx="18" fill="#e0e7ff" stroke="#4338ca"/>
+          <rect x="635" y="80" width="170" height="90" rx="18" fill="#fef3c7" stroke="#b45309"/>
+          <rect x="840" y="80" width="190" height="90" rx="18" fill="#fee2e2" stroke="#dc2626"/>
+          <text x="105" y="115" text-anchor="middle" font-size="26" font-weight="700">Sensor</text>
+          <text x="105" y="142" text-anchor="middle" font-size="16">membaca kondisi</text>
+          <text x="310" y="115" text-anchor="middle" font-size="26" font-weight="700">Device</text>
+          <text x="310" y="142" text-anchor="middle" font-size="16">ESP32 menjalankan program</text>
+          <text x="515" y="115" text-anchor="middle" font-size="26" font-weight="700">Network</text>
+          <text x="515" y="142" text-anchor="middle" font-size="16">data dikirim</text>
+          <text x="720" y="115" text-anchor="middle" font-size="26" font-weight="700">Platform</text>
+          <text x="720" y="142" text-anchor="middle" font-size="16">Node-RED / MQTT</text>
+          <text x="935" y="115" text-anchor="middle" font-size="26" font-weight="700">User</text>
+          <text x="935" y="142" text-anchor="middle" font-size="16">monitoring &amp; kontrol</text>
+          <line x1="190" y1="125" x2="225" y2="125" stroke="#2563eb" stroke-width="4"/>
+          <polygon points="225,125 211,117 211,133" fill="#2563eb"/>
+          <line x1="395" y1="125" x2="430" y2="125" stroke="#2563eb" stroke-width="4"/>
+          <polygon points="430,125 416,117 416,133" fill="#2563eb"/>
+          <line x1="600" y1="125" x2="635" y2="125" stroke="#2563eb" stroke-width="4"/>
+          <polygon points="635,125 621,117 621,133" fill="#2563eb"/>
+          <line x1="805" y1="125" x2="840" y2="125" stroke="#2563eb" stroke-width="4"/>
+          <polygon points="840,125 826,117 826,133" fill="#2563eb"/>
+        </svg>
+      </div>
+
+      <h3>3.1 Peran setiap lapisan</h3>
+      <p>Lapisan sensor berfokus pada akuisisi data. Lapisan device berfokus pada logika, misalnya membaca nilai pin, membandingkan threshold, atau menyiapkan data untuk dikirim. Lapisan network adalah jembatan komunikasi. Lapisan platform mengubah data mentah menjadi informasi yang lebih berguna, misalnya dalam bentuk chart, indikator, atau log. Lapisan user adalah titik di mana manusia melihat, memahami, dan kadang memberi perintah balik kepada sistem.</p>
+      <p>Jika salah satu lapisan hilang, nilai sistem bisa berkurang. Misalnya, sensor tanpa dashboard hanya memberi data lokal yang sulit dipantau dari jauh. Sebaliknya, dashboard tanpa data sensor tidak punya isi yang bermakna.</p>
+    </section>
+
+    <section class="card">
+      <h2>4. Lingkungan Kerja Simulator dan Tool Pendukung</h2>
+      <p>Pertemuan 1 memperkenalkan tiga alat yang akan menemani mata kuliah ini: <strong>Wokwi</strong>, <strong>MQTTX</strong>, dan <strong>Node-RED</strong>. Hanya satu di antaranya yang dipakai hari ini. Dua lainnya diperkenalkan sekarang supaya Anda melihat ekosistemnya secara utuh, tetapi baru benar-benar digunakan beberapa pertemuan lagi. Setiap alat di bawah diberi keterangan kapan ia mulai dipakai.</p>
+      <div class="tip">
+        <strong>Tidak ada yang perlu diinstal hari ini.</strong> Wokwi berjalan langsung di browser, cukup dibuka seperti membuka situs biasa. MQTTX dan Node-RED baru dipasang menjelang pertemuan yang benar-benar membutuhkannya.
+      </div>
+
+      <h3>4.1 Wokwi <span class="tag now">Dipakai hari ini</span></h3>
+      <p>Wokwi adalah simulator yang memungkinkan kita menjalankan proyek mikrokontroler secara virtual di dalam browser. Dalam pembelajaran awal, Wokwi sangat berguna karena Anda dapat mencoba ESP32, LED, sensor, dan rangkaian dasar tanpa harus menyiapkan perangkat fisik. Fokus hari ini adalah membuka simulasi ESP32 pertama dan menjalankan contoh sederhana.</p>
+      <div class="analogy">
+        <strong>Analogi dunia nyata:</strong> Wokwi seperti simulator mengemudi. Sebelum mengendarai mobil sungguhan di jalan raya, seseorang dapat berlatih memahami setir, pedal, dan aturan dasar melalui simulasi. Demikian juga, sebelum memakai ESP32 fisik, Anda berlatih memahami struktur program dan perilaku pin di lingkungan virtual.
+      </div>
+
+      <h3>4.2 MQTTX <span class="tag">Baru dipakai di Pertemuan 7</span></h3>
+      <p>MQTTX adalah klien untuk menguji komunikasi MQTT. Pada Pertemuan 1, MQTTX cukup dikenali sebagai alat bantu untuk melihat bagaimana data IoT nanti dikirim dan diterima melalui topik tertentu. Materi MQTT sendiri diperdalam pada Pertemuan 7; pengenalan awal ini hanya agar Anda tahu bahwa komunikasi IoT dapat diuji dan diamati dengan alat khusus, bukan sesuatu yang berjalan tak terlihat.</p>
+      <div class="analogy">
+        <strong>Analogi dunia nyata:</strong> MQTTX seperti aplikasi pelacak percakapan radio. Ia membantu kita melihat pesan apa yang dikirim, ke mana pesan pergi, dan siapa yang menerima. Jadi, MQTTX membantu memahami arus komunikasi dalam sistem IoT.</div>
+
+      <h3>4.3 Node-RED <span class="tag">Baru dipakai di Pertemuan 10</span></h3>
+      <p>Node-RED adalah platform berbasis flow yang memudahkan integrasi data, logika, dan dashboard. Pada tahap pengenalan ini, cukup dipahami bahwa Node-RED bisa menjadi tempat data masuk, diproses, lalu ditampilkan. Dengan kata lain, Node-RED menjembatani device dengan tampilan yang mudah dipahami manusia. Inilah alat yang membuat dashboard pada gambaran di Bab 0 dapat terwujud, dan pembahasan lengkapnya menunggu sampai Pertemuan 10, setelah MQTT dikuasai lebih dulu di Pertemuan 7.</p>
+      <div class="analogy">
+        <strong>Analogi dunia nyata:</strong> Node-RED seperti papan kontrol di ruang operator. Semua sinyal dari lapangan masuk ke satu tempat, diatur alurnya, lalu ditampilkan agar kondisi sistem mudah dibaca.</div>
+
+      <h3>4.4 Mengapa simulator penting pada tahap awal?</h3>
+      <ul>
+        <li>Mengurangi hambatan awal, karena Anda dapat langsung mencoba tanpa menunggu perangkat fisik.</li>
+        <li>Memudahkan eksperimen berulang, misalnya mengubah kode lalu melihat hasil dengan cepat.</li>
+        <li>Membantu fokus pada logika program dan alur sistem sebelum menghadapi masalah hardware nyata seperti wiring, catu daya, atau noise.</li>
+        <li>Menciptakan lingkungan belajar yang aman untuk eksplorasi dan debugging dasar.</li>
+      </ul>
+    </section>
+
+    <section class="card">
+      <h2>5. Implementasi Praktis: Menjalankan Simulasi ESP32 Pertama</h2>
+      <p>Aktivitas praktik Pertemuan 1 adalah membuka simulasi ESP32 pertama di Wokwi dan menjalankan contoh paling sederhana. Tujuannya bukan menghasilkan sistem IoT yang kompleks, melainkan mengenal alur kerja dasar: membuka project, membaca struktur kode, menjalankan simulasi, dan mengamati perilaku program.</p>
+
+      <h3>5.1 Tujuan praktik</h3>
+      <ul>
+        <li>Mengenal tampilan kerja simulator.</li>
+        <li>Melihat bentuk dasar program ESP32 berbasis Arduino.</li>
+        <li>Memahami bahwa device menjalankan instruksi secara berulang.</li>
+        <li>Menghubungkan teori device dan aktuator ke contoh yang sangat sederhana.</li>
+      </ul>
+
+      <h3>5.2 Skenario praktik yang dipilih</h3>
+      <p>Contoh paling aman untuk perkenalan awal adalah <strong>LED berkedip</strong> atau <em>blink</em>. Walaupun sangat sederhana, contoh ini penting karena menunjukkan beberapa ide inti sekaligus: program memiliki titik awal, program punya bagian inisialisasi, program punya proses berulang, dan output dapat berubah sesuai instruksi.</p>
+      <div class="analogy">
+        <strong>Analogi dunia nyata:</strong> program blink seperti satpam yang bertugas menyalakan dan mematikan lampu lorong secara berkala. Sebelum mulai bertugas, satpam harus tahu saklar mana yang dikendalikan. Setelah itu, ia mengulangi pola: nyalakan, tunggu, matikan, tunggu, lalu ulangi lagi.
+      </div>
+
+      <h3>5.3 Rangkaian yang harus ada lebih dulu</h3>
+      <div class="warn">
+        <strong>Perhatikan sebelum menjalankan kode.</strong> Project ESP32 yang baru dibuat di Wokwi hanya berisi board-nya saja, tanpa LED apa pun di area rangkaian. Kalau kode blink dijalankan pada project yang masih kosong seperti itu, pin GPIO 2 memang berkedip, tetapi tidak ada apa pun yang terlihat di layar sehingga kodenya mudah dikira salah padahal tidak. Jadi LED harus dipasang lebih dulu, atau pakai project yang LED-nya sudah terpasang.
+      </div>
+      <p>Rangkaian yang dibutuhkan hanya tiga sambungan:</p>
+      <div class="svgbox" tabindex="0">
+        <svg viewBox="0 36 700 190" width="100%" role="img" aria-label="Rangkaian LED sederhana: pin GPIO 2 pada ESP32 tersambung ke resistor 220 ohm, lalu ke kaki panjang LED, dan kaki pendek LED kembali ke pin GND">
+          <rect x="30" y="50" width="180" height="130" rx="14" fill="#dcfce7" stroke="#15803d" stroke-width="2"/>
+          <text x="120" y="95" text-anchor="middle" font-size="22" font-weight="700">ESP32</text>
+          <text x="120" y="120" text-anchor="middle" font-size="14" fill="#374151">board virtual</text>
+          <text x="204" y="150" text-anchor="end" font-size="15" font-weight="700" fill="#15803d">GPIO 2</text>
+          <text x="204" y="174" text-anchor="end" font-size="15" font-weight="700" fill="#111827">GND</text>
+          <line x1="210" y1="145" x2="290" y2="145" stroke="#15803d" stroke-width="4"/>
+          <rect x="290" y="125" width="110" height="40" rx="8" fill="#fef3c7" stroke="#b45309" stroke-width="2"/>
+          <text x="345" y="151" text-anchor="middle" font-size="16" font-weight="700">220 Ω</text>
+          <line x1="400" y1="145" x2="490" y2="145" stroke="#15803d" stroke-width="4"/>
+          <circle cx="528" cy="145" r="38" fill="#fee2e2" stroke="#dc2626" stroke-width="2"/>
+          <text x="528" y="151" text-anchor="middle" font-size="17" font-weight="700">LED</text>
+          <line x1="566" y1="145" x2="640" y2="145" stroke="#111827" stroke-width="4"/>
+          <line x1="640" y1="145" x2="640" y2="210" stroke="#111827" stroke-width="4"/>
+          <line x1="640" y1="210" x2="210" y2="210" stroke="#111827" stroke-width="4"/>
+          <line x1="210" y1="210" x2="210" y2="170" stroke="#111827" stroke-width="4"/>
+        </svg>
+      </div>
+      <p>Urutannya: <strong>GPIO 2 → resistor 220 Ω → kaki panjang LED (anoda)</strong>, lalu <strong>kaki pendek LED (katoda) → GND</strong>. Kaki panjang selalu menghadap ke sisi resistor; jika LED dipasang terbalik, ia tidak akan menyala. Resistor berfungsi membatasi arus agar LED tidak rusak — di simulator LED tidak benar-benar terbakar, tetapi kebiasaan memasang resistor perlu dibentuk sejak awal karena pada perangkat fisik hal ini wajib.</p>
+      <details>
+        <summary>Cara cepat memasang rangkaian: salin isi tab <code>diagram.json</code></summary>
+        <p>Di Wokwi, area rangkaian sebenarnya tersimpan sebagai berkas teks bernama <code>diagram.json</code>. Buka tab tersebut, hapus seluruh isinya, tempelkan kode di bawah, lalu simpan. Rangkaian akan langsung terbentuk tanpa perlu menggeser komponen satu per satu, dan bentuknya dijamin sama persis dengan rangkaian yang dimaksud materi ini.</p>
+        <div class="code"><pre>{
+  "version": 1,
+  "author": "Materi IoT Pertemuan 1",
+  "editor": "wokwi",
+  "parts": [
+    { "type": "board-esp32-devkit-c-v4", "id": "esp", "top": 0, "left": 0, "attrs": {} },
+    { "type": "wokwi-led", "id": "led1", "top": -60, "left": 140, "attrs": { "color": "red" } },
+    { "type": "wokwi-resistor", "id": "r1", "top": 40, "left": 130, "attrs": { "value": "220" } }
+  ],
+  "connections": [
+    [ "esp:2", "r1:1", "green", [ "v0" ] ],
+    [ "r1:2", "led1:A", "green", [ "v0" ] ],
+    [ "led1:C", "esp:GND.1", "black", [ "v0" ] ]
+  ]
+}</pre></div>
+        <p><strong>Jika tautan project sudah dibagikan:</strong> tautan itu cukup dibuka, lalu tombol jalankan langsung ditekan. Rangkaiannya sudah terpasang, sehingga tidak ada waktu yang terpakai untuk merakit.</p>
+      </details>
+
+      <h3>5.4 Langkah praktik</h3>
+      <ol class="step">
+        <li>Buka <strong>wokwi.com</strong> di browser. Untuk sekadar menjalankan simulasi, akun belum diperlukan. Akun baru dibutuhkan jika ingin menyimpan pekerjaan.</li>
+        <li>Pilih <strong>New Project</strong>, kemudian pilih board <strong>ESP32</strong>.</li>
+        <li>Kenali tiga area pada layar: <strong>panel kode</strong> di sisi kiri (berkas <code>sketch.ino</code>), <strong>panel rangkaian</strong> di sisi kanan beserta tab <code>diagram.json</code>, dan <strong>tombol jalankan</strong> berbentuk segitiga hijau di atas panel rangkaian.</li>
+        <li>Pasang rangkaian LED seperti pada bagian 5.3, atau tempelkan <code>diagram.json</code> di atas.</li>
+        <li>Hapus seluruh isi panel kode, lalu tempelkan kode dari Bab 6.</li>
+        <li>Tekan tombol jalankan.</li>
+        <li>Amati LED pada panel rangkaian, lalu amati juga tulisan yang muncul pada jendela <strong>Serial Monitor</strong> di bagian bawah layar.</li>
+        <li>Hentikan simulasi, ubah kedua nilai <code>delay(1000)</code> menjadi <code>delay(200)</code>, jalankan kembali, lalu bandingkan hasilnya dengan pengamatan sebelumnya.</li>
+      </ol>
+      <h3>5.5 Hasil yang diharapkan</h3>
+      <p>Praktik ini dinyatakan berhasil jika tiga hal berikut terjadi:</p>
+      <ul>
+        <li>LED pada panel rangkaian menyala selama satu detik, mati selama satu detik, lalu pola itu berulang tanpa berhenti.</li>
+        <li>Serial Monitor menampilkan tulisan <code>LED menyala</code> dan <code>LED mati</code> secara bergantian, satu baris baru setiap detik.</li>
+        <li>Setelah nilai <code>delay</code> diubah menjadi 200, kedipan LED dan kemunculan baris pada Serial Monitor menjadi jauh lebih cepat.</li>
+      </ul>
+      <p>Poin ketiga adalah yang paling penting untuk disadari: satu angka di dalam kode mengubah perilaku sebuah benda. Ini adalah bentuk paling sederhana dari gagasan “program mengendalikan perangkat”, dan gagasan itulah yang nanti dipakai untuk menyalakan kipas, membuka portal, atau mengirim notifikasi.</p>
+
+      <h3>5.6 Jika hasilnya tidak seperti itu</h3>
+      <p>Gagal pada percobaan pertama adalah hal yang normal dan bukan tanda ketidakmampuan. Tabel berikut memuat masalah yang paling sering terjadi pada praktik pertama beserta cara memeriksanya.</p>
+      <div class="table-scroll" tabindex="0">
+        <table>
+        <thead>
+          <tr><th>Gejala</th><th>Kemungkinan penyebab</th><th>Yang perlu diperiksa</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>LED tidak menyala sama sekali, tetapi tidak ada pesan error</td>
+            <td>Belum ada LED di panel rangkaian, LED terpasang terbalik, atau nomor pin pada kode berbeda dengan pin yang tersambung</td>
+            <td>Pastikan LED benar-benar ada di rangkaian, kaki panjangnya menghadap resistor, dan angka pada <code>ledPin</code> sama dengan nomor pin yang dipakai di rangkaian</td>
+          </tr>
+          <tr>
+            <td>Simulasi menolak berjalan dan muncul tulisan merah</td>
+            <td>Kesalahan penulisan kode, umumnya titik koma yang hilang atau kurung kurawal yang tidak berpasangan</td>
+            <td>Baca pesan error di bawah panel kode. Nomor baris yang disebut biasanya baris itu sendiri atau baris tepat di atasnya</td>
+          </tr>
+          <tr>
+            <td>Serial Monitor kosong meskipun LED berkedip</td>
+            <td><code>Serial.begin()</code> belum ditulis di dalam <code>setup()</code></td>
+            <td>Pastikan baris <code>Serial.begin(115200);</code> ada, dan Serial Monitor di bagian bawah layar sedang terbuka</td>
+          </tr>
+          <tr>
+            <td>LED menyala terus tanpa berkedip</td>
+            <td>Hanya ada satu <code>digitalWrite</code>, atau salah satu <code>delay</code> terhapus</td>
+            <td>Pastikan urutan di dalam <code>loop()</code> lengkap: nyala, tunggu, mati, tunggu</td>
+          </tr>
+          <tr>
+            <td>Simulasi berhenti sendiri setelah berjalan beberapa saat</td>
+            <td>Wokwi membatasi durasi satu kali menjalankan simulasi pada penggunaan gratis</td>
+            <td>Cukup jalankan ulang. Untuk praktik ini durasi pendek sudah lebih dari cukup</td>
+          </tr>
+        </tbody>
+        </table>
+      </div>
+      <div class="tip">
+        <strong>Kebiasaan yang perlu dibangun sejak hari ini:</strong> ketika hasil tidak sesuai harapan, jangan langsung mengganti kode secara acak. Periksa satu hal, jalankan lagi, lihat perubahannya. Cara berpikir inilah yang dilatih secara khusus pada Pertemuan 5 tentang debugging.
+      </div>
+
+      <h3>5.7 Keterkaitan dengan teori</h3>
+      <p>Pada contoh blink, LED berperan sebagai aktuator sederhana dan ESP32 berperan sebagai device yang menjalankan logika. Tulisan yang muncul di Serial Monitor adalah bentuk paling awal dari <em>data</em>: device melaporkan apa yang sedang ia lakukan, dan manusia membacanya. Belum ada sensor, belum ada jaringan, dan belum ada dashboard, tetapi dua kotak pada alur di Bab 3 sudah terisi — device dan pengguna. Pada pertemuan berikutnya, laporan yang tadinya hanya berisi “LED menyala” akan diganti dengan angka dari sensor, lalu dikirim keluar melalui jaringan.</p>
+    </section>
+
+    <section class="card">
+      <h2>6. Contoh Kode Dasar ESP32 dan Penjelasan Terperinci</h2>
+      <p>Berikut kode yang dipakai pada praktik di Bab 5. Kode ini menyalakan dan mematikan LED secara berkala, sekaligus melaporkan apa yang sedang dilakukannya ke Serial Monitor. Kode ini cocok sebagai program pertama karena hasilnya mudah diamati dari dua arah sekaligus, yaitu lewat mata (LED) dan lewat tulisan (Serial Monitor).</p>
+      <div class="code"><pre>const int ledPin = 2;
+
+void setup() {
+  Serial.begin(115200);
+  pinMode(ledPin, OUTPUT);
+}
+
+void loop() {
+  digitalWrite(ledPin, HIGH);
+  Serial.println("LED menyala");
+  delay(1000);
+
+  digitalWrite(ledPin, LOW);
+  Serial.println("LED mati");
+  delay(1000);
+}</pre></div>
+
+      <h3>6.1 Penjelasan struktur umum kode</h3>
+      <p>Program di atas terdiri dari tiga bagian utama: deklarasi variabel, fungsi <code>setup()</code>, dan fungsi <code>loop()</code>. Tiga bagian ini sering muncul dalam program berbasis Arduino, sehingga Anda perlu memahaminya sejak awal.</p>
+
+      <h3>6.2 Baris per baris</h3>
+      <div class="table-scroll" tabindex="0">
+        <table>
+        <thead>
+          <tr><th>Potongan kode</th><th>Fungsi</th><th>Kaitan dengan teori</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>const int ledPin = 2;</code></td>
+            <td>Menyimpan nomor pin yang dipakai untuk LED. Kata <code>const</code> berarti nilainya tetap.</td>
+            <td>Menunjukkan bahwa device perlu mengetahui “jalur fisik” mana yang akan dikendalikan.</td>
+          </tr>
+          <tr>
+            <td><code>void setup() { ... }</code></td>
+            <td>Bagian ini dijalankan sekali saat sistem mulai.</td>
+            <td>Mirip tahap persiapan awal sebelum sistem bekerja normal.</td>
+          </tr>
+          <tr>
+            <td><code>Serial.begin(115200);</code></td>
+            <td>Membuka jalur komunikasi teks antara board dan komputer, dengan kecepatan 115200.</td>
+            <td>Inilah jalur pertama tempat device “melaporkan” keadaannya kepada manusia.</td>
+          </tr>
+          <tr>
+            <td><code>pinMode(ledPin, OUTPUT);</code></td>
+            <td>Menetapkan pin LED sebagai keluaran.</td>
+            <td>Menghubungkan teori input-output digital dengan perangkat nyata/virtual.</td>
+          </tr>
+          <tr>
+            <td><code>void loop() { ... }</code></td>
+            <td>Bagian ini berjalan terus-menerus selama board aktif.</td>
+            <td>Menjelaskan bahwa device IoT bekerja secara kontinu, bukan sekali jalan.</td>
+          </tr>
+          <tr>
+            <td><code>digitalWrite(ledPin, HIGH);</code></td>
+            <td>Memberi logika HIGH agar LED menyala.</td>
+            <td>Contoh aksi pada aktuator.</td>
+          </tr>
+          <tr>
+            <td><code>Serial.println("LED menyala");</code></td>
+            <td>Mengirim satu baris tulisan ke Serial Monitor.</td>
+            <td>Contoh data yang mengalir dari device menuju manusia. Nanti isinya diganti angka dari sensor.</td>
+          </tr>
+          <tr>
+            <td><code>delay(1000);</code></td>
+            <td>Menunggu 1000 milidetik atau 1 detik.</td>
+            <td>Menunjukkan konsep waktu dalam sistem tertanam.</td>
+          </tr>
+          <tr>
+            <td><code>digitalWrite(ledPin, LOW);</code></td>
+            <td>Memberi logika LOW agar LED mati.</td>
+            <td>Menunjukkan bahwa output dapat berubah sesuai instruksi program.</td>
+          </tr>
+        </tbody>
+        </table>
+      </div>
+
+      <h3>6.3 Penjelasan konseptual</h3>
+      <p>Ketika simulasi dimulai, ESP32 menjalankan <code>setup()</code> satu kali. Pada tahap ini board melakukan dua persiapan: membuka jalur pelaporan ke Serial Monitor, dan mencatat bahwa pin nomor 2 akan dipakai sebagai output. Setelah itu sistem masuk ke <code>loop()</code>. Di sinilah instruksi dijalankan terus-menerus: LED dinyalakan, keadaannya dilaporkan, sistem menunggu, LED dimatikan, keadaannya dilaporkan, sistem menunggu, lalu siklus diulang dari awal selama board masih aktif.</p>
+      <p>Kode sederhana ini memperlihatkan ide fundamental bahwa <strong>device IoT adalah mesin pengambil keputusan berbasis program</strong>. Pada pertemuan-pertemuan berikutnya, nilai HIGH dan LOW ini dapat dihubungkan dengan kondisi sensor, data jaringan, atau perintah dari dashboard.</p>
+
+      <h3>6.4 Jika waktu tunggu diubah, apa yang terjadi?</h3>
+      <p>Misalnya nilai <code>delay(1000)</code> diubah menjadi <code>delay(200)</code>. Akibatnya, LED berkedip lebih cepat dan baris pada Serial Monitor muncul lebih rapat. Ini mengajarkan bahwa perubahan kecil dalam kode dapat mengubah perilaku sistem secara langsung. Di sinilah pentingnya eksperimen di dalam simulator: Anda dapat mencoba, mengamati, lalu menarik hubungan antara instruksi program dan hasil fisiknya tanpa risiko merusak apa pun.</p>
+
+      <h3>6.5 Mengapa contoh kode ini penting dalam konteks IoT?</h3>
+      <p>Walaupun belum terhubung ke internet, contoh ini tetap relevan untuk IoT karena memperkenalkan fondasi utama, yaitu <strong>interaksi antara program dan perangkat</strong>. Sebelum data dikirim ke jaringan, device harus mampu mengendalikan input-output dasarnya dengan benar. Jika fondasi ini lemah, sistem yang lebih kompleks akan sulit dipahami.</p>
+    </section>
+
+    <section class="card">
+      <h2>7. Menghubungkan Teori dan Praktik</h2>
+      <p>Teori dan praktik sering dianggap sebagai dua hal yang terpisah. Padahal, dalam IoT keduanya sangat dekat. Teori menjelaskan <em>mengapa</em> sistem bekerja, sedangkan praktik menunjukkan <em>bagaimana</em> teori itu diwujudkan.</p>
+      <div class="grid two">
+        <div class="mini">
+          <strong>Teori:</strong> device memproses instruksi.<br/>
+          <strong>Praktik:</strong> ESP32 menjalankan <code>setup()</code> dan <code>loop()</code>.
+        </div>
+        <div class="mini">
+          <strong>Teori:</strong> aktuator melakukan aksi.<br/>
+          <strong>Praktik:</strong> LED menyala dan mati sesuai perintah program.
+        </div>
+        <div class="mini">
+          <strong>Teori:</strong> sistem IoT bekerja berulang dan terus memantau.<br/>
+          <strong>Praktik:</strong> fungsi <code>loop()</code> berjalan terus-menerus.</div>
+        <div class="mini">
+          <strong>Teori:</strong> parameter memengaruhi perilaku sistem.<br/>
+          <strong>Praktik:</strong> perubahan nilai <code>delay()</code> mengubah kecepatan kedip LED.</div>
+      </div>
+      <p>Dari sini dapat dipahami bahwa praktik kecil sekalipun sebenarnya sudah memuat konsep besar. Anda bukan hanya diminta melihat LED berkedip, tetapi memahami bahwa di balik kedipan itu ada konsep output digital, struktur program, dan perilaku sistem tertanam yang kelak menjadi dasar sistem IoT yang lebih lengkap.</p>
+    </section>
+
+    <section class="card">
+      <h2>8. Ringkasan Materi</h2>
+      <ul>
+        <li>IoT adalah sistem yang menghubungkan objek fisik, data, komunikasi, dan layanan digital agar monitoring atau kontrol dapat dilakukan lebih cerdas.</li>
+        <li>Alur dasar IoT adalah sensor → device → network → platform → user.</li>
+        <li>Komponen utama IoT meliputi sensor, mikrokontroler/device, network, platform, dashboard, dan aktuator.</li>
+        <li>Wokwi dipakai hari ini untuk simulasi. MQTTX baru dipakai pada Pertemuan 7 untuk melihat komunikasi MQTT, dan Node-RED dipakai setelahnya untuk integrasi data serta dashboard.</li>
+        <li>Program blink pada ESP32 memperkenalkan struktur program, logika output, perilaku sistem yang berulang, serta laporan device ke Serial Monitor sebagai bentuk data yang paling awal.</li>
+      </ul>
+      <p class="footer-note">Fokus Pertemuan 1: definisi IoT, contoh penerapan, komponen sistem, arsitektur dasar, pengenalan Wokwi, MQTTX, dan Node-RED, serta menjalankan simulasi ESP32 pertama. Pertemuan 2 melanjutkan dengan pembahasan GPIO dan input-output digital secara lebih rinci.</p>
+    </section>
+
+    <section class="card">
+      <h2>9. Latihan Pemahaman</h2>
+      <h3>9.1 Cek cepat</h3>
+      <p>Lima pertanyaan berikut hanya menguji ingatan dan dapat dijawab dalam satu kalimat. Jawab dulu tanpa membuka materi, baru kemudian cocokkan.</p>
+      <ol class="step">
+        <li>Sebutkan urutan lima lapisan pada alur dasar IoT.</li>
+        <li>Antara sensor dan aktuator, mana yang membaca keadaan dan mana yang melakukan aksi?</li>
+        <li>Bagian program mana yang dijalankan hanya sekali, dan bagian mana yang dijalankan berulang?</li>
+        <li>Perintah apa yang dipakai untuk menetapkan sebuah pin sebagai keluaran?</li>
+        <li>Angka 1000 pada <code>delay(1000)</code> memiliki satuan apa?</li>
+      </ol>
+      <details>
+        <summary>Buka kunci jawaban cek cepat</summary>
+        <ol>
+          <li>Sensor → device → network → platform → user.</li>
+          <li>Sensor membaca keadaan lingkungan, aktuator melakukan aksi fisik.</li>
+          <li><code>setup()</code> dijalankan sekali saat board mulai bekerja, <code>loop()</code> dijalankan berulang tanpa berhenti.</li>
+          <li><code>pinMode(nomorPin, OUTPUT);</code></li>
+          <li>Milidetik, sehingga 1000 milidetik sama dengan 1 detik.</li>
+        </ol>
+      </details>
+
+      <h3>9.2 Pertanyaan reflektif</h3>
+      <ol class="step">
+        <li>Jelaskan dengan kata-kata sendiri apa yang dimaksud dengan Internet of Things.</li>
+        <li>Sebutkan minimal lima komponen utama dalam sistem IoT dan jelaskan perannya.</li>
+        <li>Apa perbedaan sistem monitoring dan sistem kontrol dalam konteks IoT?</li>
+        <li>Mengapa simulator penting pada tahap awal pembelajaran?</li>
+        <li>Bagaimana hubungan antara fungsi <code>setup()</code> dan <code>loop()</code> dengan perilaku device IoT?</li>
+      </ol>
+
+      <h3>9.3 Tugas latihan 1: ringkasan satu halaman tentang tiga sistem IoT</h3>
+      <p>Amati lingkungan di sekitar kampus, lalu pilih tiga contoh sistem yang sudah menjadi IoT atau berpotensi dijadikan IoT. Tuliskan hasilnya sebagai <strong>ringkasan satu halaman</strong>. Untuk masing-masing contoh, jelaskan:</p>
+      <ul>
+        <li>Masalah atau kebutuhan yang ingin diselesaikan</li>
+        <li>Sensor yang mungkin digunakan</li>
+        <li>Device yang akan memproses data</li>
+        <li>Data apa yang perlu ditampilkan kepada pengguna</li>
+        <li>Aksi apa yang mungkin dilakukan oleh aktuator</li>
+      </ul>
+      <details>
+        <summary>Contoh satu jawaban yang sudah terisi, sebagai acuan bentuk</summary>
+        <p><strong>Sistem:</strong> lampu koridor gedung kuliah yang sering menyala sepanjang malam meski tidak ada orang.</p>
+        <ul>
+          <li><strong>Masalah:</strong> pemborosan listrik karena lampu menyala saat koridor kosong.</li>
+          <li><strong>Sensor:</strong> sensor gerak untuk mendeteksi keberadaan orang, dan sensor cahaya untuk mengetahui apakah koridor sudah gelap.</li>
+          <li><strong>Device:</strong> ESP32 yang membaca kedua sensor dan memutuskan lampu perlu menyala atau tidak.</li>
+          <li><strong>Data untuk pengguna:</strong> status lampu saat ini, dan berapa lama lampu menyala dalam sehari.</li>
+          <li><strong>Aksi aktuator:</strong> relay menyalakan lampu selama beberapa menit setelah gerakan terdeteksi, lalu mematikannya kembali.</li>
+        </ul>
+        <p>Perhatikan bahwa jawaban ini tidak memuat satu baris kode pun. Yang dinilai adalah kejelasan alurnya, bukan kemampuan teknis yang belum diajarkan.</p>
+      </details>
+      <div class="analogy">
+        <strong>Analogi dunia nyata:</strong> tugas ini seperti memetakan alur kerja sebuah organisasi. Anda diminta bukan hanya melihat alatnya, tetapi memahami siapa yang mengamati, siapa yang memproses, bagaimana informasi bergerak, dan siapa yang mengambil tindakan.
+      </div>
+      <h3>9.4 Tugas latihan 2: gambar diagram blok untuk satu kasus pilihan</h3>
+      <p>Pilih <strong>satu</strong> dari tiga kasus pada tugas sebelumnya, lalu gambar diagram bloknya. Diagram blok adalah cara paling sederhana untuk menjelaskan sebuah sistem: hanya kotak dan panah, tanpa kode dan tanpa detail rangkaian. Aturannya dua saja:</p>
+      <ul>
+        <li><strong>Kotak</strong> mewakili satu komponen atau satu tempat pemrosesan, misalnya sensor, ESP32, jaringan, platform, dashboard, atau aktuator. Beri nama yang spesifik: bukan “sensor” saja, tetapi “sensor gerak PIR”.</li>
+        <li><strong>Panah</strong> mewakili arah data atau perintah bergerak. Tuliskan di atas panah data apa yang dibawa, misalnya “nilai suhu” atau “perintah nyalakan”.</li>
+      </ul>
+      <p>Diagram blok pada Bab 2.2 dapat dipakai sebagai contoh bentuk. Diagram Anda tidak harus serapi itu. Digambar dengan tangan di kertas lalu difoto pun diterima, selama nama kotak dan arah panahnya terbaca.</p>
+      <details>
+        <summary>Contoh diagram blok untuk kasus lampu koridor</summary>
+        <p>Alur utama, dari kiri ke kanan:</p>
+        <p><code>[Sensor gerak PIR]</code> → <em>ada atau tidak ada gerakan</em> → <code>[ESP32]</code> → <em>status lampu</em> → <code>[Wi-Fi]</code> → <code>[Platform]</code> → <code>[Dashboard]</code></p>
+        <p>Cabang aksi, keluar dari kotak ESP32:</p>
+        <p><code>[ESP32]</code> → <em>perintah nyalakan atau matikan</em> → <code>[Relay]</code> → <code>[Lampu koridor]</code></p>
+        <p>Dua hal yang membuat diagram ini benar: setiap panah punya keterangan isi datanya, dan aksi ke aktuator digambar sebagai cabang tersendiri, bukan diselipkan pada jalur menuju dashboard. Perhatikan juga bahwa keputusan “nyalakan atau tidak” terjadi di kotak ESP32, bukan di dashboard, persis seperti pembahasan monitoring dan kontrol pada Bab 2.3.</p>
+      </details>
+      <div class="warn">
+        <strong>Kesalahan yang paling sering muncul:</strong> menggambar panah dari sensor langsung ke dashboard. Data sensor tidak pernah melompat ke tampilan tanpa melewati device yang membacanya dan jalur yang membawanya. Bila sebuah panah pada diagram Anda melewati satu lapisan, hampir pasti ada kotak yang terlewat.
+      </div>
+
+      <h3>9.5 Rubrik penilaian kedua tugas</h3>
+      <p><strong>Tugas latihan 1 — ringkasan tiga sistem IoT:</strong></p>
+      <div class="table-scroll" tabindex="0">
+        <table>
+        <thead>
+          <tr><th>Aspek</th><th>Bobot</th><th>Kriteria nilai penuh</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Kelengkapan</td><td>30%</td><td>Ada tiga contoh sistem, dan kelima poin terisi pada setiap contoh</td></tr>
+          <tr><td>Ketepatan komponen</td><td>30%</td><td>Sensor yang dipilih memang mampu mengukur hal yang dimaksud, dan aktuator yang dipilih memang mampu melakukan aksi yang dimaksud</td></tr>
+          <tr><td>Kejelasan alur</td><td>25%</td><td>Terlihat jelas perjalanan data dari sensor sampai ke pengguna, tanpa lompatan yang tidak dijelaskan</td></tr>
+          <tr><td>Cara penyampaian</td><td>15%</td><td>Ditulis dengan kalimat sendiri, ringkas, dan mudah diikuti</td></tr>
+        </tbody>
+        </table>
+      </div>
+      <p><strong>Tugas latihan 2 — diagram blok satu kasus:</strong></p>
+      <div class="table-scroll" tabindex="0">
+        <table>
+        <thead>
+          <tr><th>Aspek</th><th>Bobot</th><th>Kriteria nilai penuh</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Kelengkapan kotak</td><td>35%</td><td>Semua lapisan yang dilewati data muncul sebagai kotak tersendiri, dari sensor sampai pengguna, termasuk aktuator bila kasusnya melakukan aksi</td></tr>
+          <tr><td>Arah dan keterangan panah</td><td>35%</td><td>Setiap panah menunjuk arah yang benar dan diberi keterangan data atau perintah apa yang dibawanya</td></tr>
+          <tr><td>Kesesuaian dengan kasus</td><td>20%</td><td>Diagram benar-benar menggambarkan kasus yang dipilih pada tugas 1, bukan sistem lain</td></tr>
+          <tr><td>Keterbacaan</td><td>10%</td><td>Nama kotak terbaca dan alurnya dapat diikuti tanpa penjelasan tambahan</td></tr>
+        </tbody>
+        </table>
+      </div>
+      <p class="footer-note">Kedua tugas ini tidak menuntut kode dan tidak menuntut perangkat. Yang dinilai adalah cara berpikir tentang alur sistem, karena kemampuan itulah yang akan dipakai berulang kali sepanjang mata kuliah ini. Ingat bahwa tugas latihan mingguan menyumbang 20 persen nilai akhir, jadi tugas sekecil ini pun tetap terhitung.</p>
+    </section>
+    <section class="card">
+      <h2>10. Checkpoint Evaluasi Pertemuan 1</h2>
+      <p>Pertemuan 1 dianggap tuntas bila tiga hal berikut sudah dapat Anda lakukan. Ketiganya diperiksa di akhir pertemuan dan semuanya sudah dibahas di materi ini, jadi daftar ini sekaligus berfungsi sebagai pemeriksaan diri sebelum pertemuan ditutup.</p>
+      <div class="grid two">
+        <div class="mini">
+          <div class="label">Target minimal pertemuan ini</div>
+          <ul>
+            <li>Memahami alur kerja sistem IoT dari sensor sampai pengguna.</li>
+            <li>Berhasil membuka dan menjalankan proyek simulator pertama.</li>
+          </ul>
+        </div>
+        <div class="mini">
+          <div class="label">Bobot penilaian yang terkait</div>
+          <ul>
+            <li>Praktikum dan keaktifan, 20 persen dari nilai akhir.</li>
+            <li>Tugas latihan mingguan pada Bab 9, 20 persen dari nilai akhir.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="table-scroll" tabindex="0">
+        <table>
+        <thead><tr><th>Yang diperiksa</th><th>Cara memastikan sendiri</th><th>Bila belum tercapai</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>Dapat menyebutkan minimal lima komponen IoT</td>
+            <td>Tutup materi ini, tulis lima komponen dari ingatan, lalu bandingkan dengan Bab 2.</td>
+            <td>Baca ulang Bab 2 dan daftar istilah di Bab 11, kemudian ulangi tanpa melihat.</td>
+          </tr>
+          <tr>
+            <td>Dapat menjelaskan peran sensor, aktuator, konektivitas, dan dashboard</td>
+            <td>Jelaskan keempatnya masing-masing dalam satu kalimat, memakai satu kasus nyata sebagai contoh.</td>
+            <td>Kembali ke Bab 2 dan Bab 3.1, terutama bagian peran setiap lapisan.</td>
+          </tr>
+          <tr>
+            <td>Simulator berhasil dijalankan</td>
+            <td>LED di Wokwi berkedip satu detik menyala dan satu detik mati, sementara Serial Monitor menampilkan tulisan yang bergantian.</td>
+            <td>Ikuti Bab 5.6 tentang penyebab hasil yang tidak sesuai, terutama soal polaritas LED dan resistor.</td>
+          </tr>
+        </tbody>
+        </table>
+      </div>
+      <p class="footer-note">Ketiga butir ini adalah dasar untuk checkpoint besar pertama, CP-1, pada Pertemuan 4. Materi Pertemuan 2 sampai 4 dibangun dengan asumsi ketiganya sudah terlewati, sehingga lebih baik menuntaskan bagian yang belum tercapai sekarang daripada menundanya.</p>
+    </section>
+
+    <section class="card">
+      <h2>11. Istilah Kunci Pertemuan 1</h2>
+      <p>Pertemuan ini memperkenalkan cukup banyak istilah baru sekaligus. Daftar berikut disusun sebagai tempat mengingat kembali, bukan untuk dihafalkan dalam satu malam. Istilah yang belum terasa jelas hari ini akan menjadi jauh lebih masuk akal setelah dipakai pada praktik pertemuan berikutnya.</p>
+      <dl class="gloss">
+        <dt>Internet of Things (IoT)</dt>
+        <dd>Sistem yang membuat benda fisik mampu mengamati keadaan, mengirim data, menerima perintah, atau melakukan aksi melalui jaringan dan program.</dd>
+        <dt>Sensor</dt>
+        <dd>Komponen yang membaca keadaan lingkungan, misalnya suhu, cahaya, kelembapan, atau gerakan, lalu mengubahnya menjadi data.</dd>
+        <dt>Aktuator</dt>
+        <dd>Komponen yang melakukan aksi fisik, misalnya LED, buzzer, motor, atau relay.</dd>
+        <dt>Mikrokontroler</dt>
+        <dd>Komputer berukuran sangat kecil di dalam satu chip, yang menjalankan program untuk membaca sensor dan menggerakkan aktuator.</dd>
+        <dt>ESP32</dt>
+        <dd>Mikrokontroler yang dipakai sepanjang mata kuliah ini, sudah dilengkapi kemampuan Wi-Fi sehingga cocok untuk IoT.</dd>
+        <dt>Pin</dt>
+        <dd>Titik sambungan pada board tempat komponen luar dihubungkan. Setiap pin punya nomor, misalnya pin 2 pada praktik hari ini.</dd>
+        <dt>Network</dt>
+        <dd>Jalur yang membawa data keluar dari device menuju layanan lain, misalnya melalui Wi-Fi.</dd>
+        <dt>Platform</dt>
+        <dd>Tempat data diterima, diolah, disimpan, atau diteruskan setelah keluar dari device.</dd>
+        <dt>Dashboard</dt>
+        <dd>Tampilan yang membuat data bisa dibaca manusia, dan kadang menjadi tempat manusia memberi perintah balik.</dd>
+        <dt>Monitoring</dt>
+        <dd>Sistem yang hanya mengamati dan melaporkan keadaan, tanpa mengubah apa pun.</dd>
+        <dt>Kontrol / otomasi</dt>
+        <dd>Sistem yang melangkah lebih jauh dari monitoring, yaitu mengambil tindakan berdasarkan keadaan yang terbaca.</dd>
+        <dt>Simulator</dt>
+        <dd>Perangkat lunak yang menirukan perilaku board dan komponen, sehingga program dapat diuji tanpa perangkat fisik. Seluruh materi mata kuliah ini memakai istilah <strong>simulator</strong>. Bila pada tutorial di internet Anda menemukan kata lain untuk hal yang sama, yang dimaksud tetap alat yang sama, yaitu Wokwi.</dd>
+        <dt>Wokwi</dt>
+        <dd>Simulator berbasis browser yang dipakai untuk praktik hari ini.</dd>
+        <dt>Serial Monitor</dt>
+        <dd>Jendela tempat tulisan yang dikirim device muncul. Inilah cara paling dasar untuk mengetahui apa yang sedang dikerjakan sebuah device.</dd>
+        <dt><code>setup()</code></dt>
+        <dd>Bagian program yang dijalankan satu kali di awal, dipakai untuk persiapan.</dd>
+        <dt><code>loop()</code></dt>
+        <dd>Bagian program yang dijalankan berulang tanpa berhenti selama board aktif.</dd>
+        <dt>HIGH dan LOW</dt>
+        <dd>Dua keadaan sebuah pin digital. HIGH membuat pin aktif sehingga LED menyala, LOW membuatnya tidak aktif sehingga LED mati.</dd>
+        <dt><code>delay()</code></dt>
+        <dd>Perintah untuk menunggu selama sejumlah milidetik. Nilai 1000 berarti menunggu satu detik.</dd>
+        <dt>MQTT dan MQTTX</dt>
+        <dd>MQTT adalah cara pengiriman data yang banyak dipakai pada IoT; MQTTX adalah alat untuk mengamati pengiriman tersebut. Keduanya dibahas pada Pertemuan 7.</dd>
+        <dt>Node-RED</dt>
+        <dd>Alat berbasis alur untuk menyambungkan data, logika, dan dashboard. Dipakai pada Pertemuan 10.</dd>
+      </dl>
+    </section>
+
+    <section class="card">
+      <h2>12. Referensi Praktis</h2>
+      <p>Tiga sumber berikut adalah rujukan resmi untuk materi Pertemuan 1. Semuanya berbahasa Inggris, tetapi bagian yang perlu dibaca hari ini pendek dan banyak memakai gambar. Bacalah setelah praktik selesai, bukan sebelum, agar istilah di dalamnya sudah punya bentuk nyata di kepala Anda.</p>
+      <dl class="gloss">
+        <dt>Wokwi Docs — <code>docs.wokwi.com</code></dt>
+        <dd>Dokumentasi resmi simulator yang dipakai hari ini. Bagian yang relevan sekarang adalah pengenalan ESP32 dan penjelasan berkas <code>diagram.json</code>, yaitu berkas yang menentukan komponen dan sambungan pada rangkaian di Bab 5.3.</dd>
+        <dt>Arduino Getting Started — <code>arduino.cc</code></dt>
+        <dd>Pengantar resmi kerangka pemrograman Arduino, termasuk penjelasan <code>setup()</code> dan <code>loop()</code> yang dibahas pada Bab 6. Abaikan dulu bagian pemasangan Arduino IDE, karena praktik mata kuliah ini masih berjalan di browser.</dd>
+        <dt>Random Nerd Tutorials: ESP32 overview — <code>randomnerdtutorials.com</code></dt>
+        <dd>Tutorial populer dengan gambar peta pin ESP32 yang jelas. Berguna untuk melihat bahwa pin 2 pada praktik hari ini hanyalah satu dari banyak pin yang tersedia, dan bahwa tiap pin punya kemampuan berbeda.</dd>
+      </dl>
+      <div class="tip">
+        <strong>Cara membaca dokumentasi teknis tanpa kewalahan.</strong> Jangan dibaca dari awal sampai akhir. Bawa satu pertanyaan spesifik, misalnya “pin mana saja yang bisa dipakai untuk LED”, lalu cari jawaban itu saja. Dokumentasi dirancang sebagai tempat mencari, bukan sebagai buku bacaan.
+      </div>
+      <p class="footer-note">Alamat di atas ditulis sebagai nama domain, bukan tautan langsung ke halaman tertentu, karena struktur halaman situs semacam ini berubah dari waktu ke waktu. Cari judul yang disebutkan di atas dari halaman utama masing-masing situs.</p>
+    </section>
+    <footer class="pagenum">
+      <span class="pagenum-seri">Materi Pertemuan 1</span>
+      <span class="pagenum-no">Halaman 1 dari 16</span>
+    </footer>
+  </div>
+</body>
+</html>

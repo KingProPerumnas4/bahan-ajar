@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Materi Pertemuan 12 - Keamanan dan Keandalan Dasar Sistem IoT</title>
+  <link rel="stylesheet" href="assets/materi.css" />
+</head>
+<body>
+  <div class="wrap">
+    <section class="hero">
+      <span class="badge">Pertemuan 12</span>
+      <h1>Keamanan dan Keandalan Dasar Sistem IoT</h1>
+      <p class="lead">Materi ini membahas dua sifat yang membuat sistem IoT layak dipercaya: keamanan, yaitu hanya pihak berhak yang boleh mengirim dan membaca data, dan keandalan, yaitu sistem tetap masuk akal ketika jaringan terputus, broker tidak menjawab, atau sensor mengirim angka yang tidak mungkin benar.</p>
+      <div>
+        <span class="pill">Autentikasi</span>
+        <span class="pill">Kerahasiaan Data</span>
+        <span class="pill">Sambungan Ulang</span>
+        <span class="pill">Backoff</span>
+        <span class="pill">Validasi Masukan</span>
+      </div>
+      <p class="notice">Yang perlu siap: program pengiriman MQTT yang sudah berjalan dari Pertemuan 7 tentang MQTT, simulator Wokwi atau board ESP32 Anda, dan Serial Monitor. Tidak ada pustaka baru di luar <code>WiFi</code> dan <code>PubSubClient</code>.</p>
+    </section>
+
+    <section class="card">
+      <h2>Capaian Pembelajaran Pertemuan 12</h2>
+      <div class="grid two">
+        <div class="mini">
+          <div class="label">Yang dipahami</div>
+          <ul>
+            <li>Alasan device IoT menjadi sasaran meski datanya tampak sederhana.</li>
+            <li>Perbedaan autentikasi sebagai pemeriksaan identitas dan enkripsi sebagai penyembunyian isi.</li>
+            <li>Jenis kegagalan yang benar-benar terjadi pada sistem IoT dan akibatnya bagi data.</li>
+            <li>Alasan mencoba ulang tanpa jeda justru memperburuk keadaan.</li>
+          </ul>
+        </div>
+        <div class="mini">
+          <div class="label">Yang dapat dilakukan</div>
+          <ul>
+            <li>Menyalakan autentikasi username dan password pada sambungan MQTT.</li>
+            <li>Menulis fungsi validasi yang menolak nilai sensor di luar rentang wajar.</li>
+            <li>Membuat logika sambungan ulang memakai <code>millis()</code> dengan jeda bertambah.</li>
+            <li>Menguji sistem dengan kegagalan yang dibuat sengaja dan membaca buktinya pada log.</li>
+          </ul>
+        </div>
+      </div>
+      <p>Fokus Pertemuan 12 ada pada lima hal: autentikasi sederhana, kerahasiaan data pada tingkat konsep, penanganan koneksi yang gagal, mekanisme mencoba ulang, dan validasi masukan. Jalur pengirimannya berasal dari Pertemuan 7 tentang MQTT, sedangkan cara menghitung waktu tanpa <code>delay()</code> dari Pertemuan 9 dipakai agar sambungan ulang tidak membekukan program. Pertemuan ini sekaligus menjadi checkpoint besar CP-3.</p>
+    </section>
+    <section class="card">
+      <h2>1. Mengapa Sistem IoT Menjadi Sasaran</h2>
+      <p>Device pengukur suhu ruangan tampak terlalu remeh untuk diserang, padahal yang dicari penyerang bukan angka suhunya, melainkan tiga hal lain: daya komputasi dan sambungan jaringannya, yang bila dikuasai secara massal dapat dipakai membanjiri sasaran lain tanpa pemiliknya merasakan apa pun; pintu masuk ke jaringan tempat device berada, karena device yang lemah sering satu jaringan dengan komputer dan berkas penting; serta datanya sendiri bila data itu menceritakan kebiasaan manusia, sebab pola pemakaian listrik satu rumah cukup untuk menyimpulkan kapan rumah itu kosong.</p>
+      <div class="analogy">
+        <strong>Analogi:</strong> jendela kamar mandi di lantai dua dibiarkan tidak terkunci karena tidak ada barang berharga di sana. Namun bukan kamar mandi yang diincar, melainkan jalan masuk ke seluruh rumah lewat titik yang paling tidak diawasi.
+      </div>
+      <p>Kesalahan keamanan juga tidak menimbulkan pesan kesalahan. Sistem yang topiknya dapat ditulisi siapa saja tetap berjalan dan tetap menampilkan angka; yang berubah hanya asal angkanya. Karena itu keamanan dipikirkan sejak perancangan, bukan ketika ada gejala.</p>
+    </section>
+
+    <section class="card">
+      <h2>2. Autentikasi dan Kerahasiaan Data</h2>
+      <p>Dua istilah ini sering dipakai bergantian, padahal keduanya menjawab pertanyaan berbeda. <strong>Autentikasi</strong> menjawab siapa yang sedang berbicara: broker memeriksa apakah pengirim berhak sebelum menerima pesannya. <strong>Enkripsi</strong> menjawab apakah isi pembicaraan dapat dibaca pihak lain di tengah jalan, dengan mengubah pesan menjadi bentuk yang tidak bermakna kecuali bagi pemegang kuncinya.</p>
+      <p>Keduanya berdiri sendiri: sambungan boleh terenkripsi tanpa autentikasi, sehingga isinya rahasia namun siapa pun boleh ikut mengirim, dan boleh berautentikasi tanpa enkripsi, sehingga username dan sandinya berjalan sebagai teks biasa yang dapat dibaca penyadap jaringan. Sistem yang serius memakai keduanya sekaligus. Istilah ketiga, <em>otorisasi</em>, menentukan apa yang boleh Anda lakukan setelah dikenali, misalnya hanya boleh menulis ke <code>kelas/iot/lab01/</code> dan tidak boleh membaca topic kelompok lain.</p>
+      <div class="table-scroll" tabindex="0">
+        <table>
+        <thead>
+          <tr><th>Aspek</th><th>Autentikasi</th><th>Enkripsi</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Pertanyaan yang dijawab</td><td>Siapa pengirimnya, dan apakah ia berhak</td><td>Dapatkah isi pesan dibaca pihak lain</td></tr>
+          <tr><td>Bentuk paling sederhana</td><td>Username dan password pada broker</td><td>Sambungan TLS pada port terpisah</td></tr>
+          <tr><td>Bila tidak ada</td><td>Siapa pun dapat menulis ke topic Anda</td><td>Isi pesan dan sandi terbaca di jaringan</td></tr>
+        </tbody>
+        </table>
+      </div>
+    </section>
+    <section class="card">
+      <h2>3. Autentikasi MQTT, Broker Publik, dan Sambungan Terenkripsi</h2>
+      <h3>3.1 Username dan password pada sambungan MQTT</h3>
+      <p>Pada Pertemuan 7 tentang MQTT, sambungan dibuka tanpa identitas apa pun: cukup alamat broker, nomor port, dan sebuah nama klien. Protokol MQTT menyediakan tempat untuk username dan password di dalam paket pembuka sambungan, dan <code>PubSubClient</code> menyediakannya sebagai dua argumen tambahan, sehingga perubahannya hanya sebaris: <code>mqtt.connect(CLIENT_ID, MQTT_USER, MQTT_PASS)</code>.</p>
+      <p>Yang menentukan bukan program pengirim, melainkan broker. Bila broker tidak diatur memeriksa identitas, username dan password diterima apa adanya dan sambungan tetap berhasil meski sandinya salah; bila broker memeriksa, identitas salah ditolak dan penolakannya terbaca sebagai kode kegagalan lewat <code>mqtt.state()</code>. Nilai kodenya berbeda antarversi pustaka, jadi yang perlu dikenali adalah polanya: sambungan gagal berulang sementara Wi-Fi jelas sudah tersambung.</p>
+      <div class="warn">
+        <strong>Nama klien harus unik pada satu broker.</strong> Bila dua device memakai <code>CLIENT_ID</code> yang sama, broker memutus yang lebih dahulu setiap kali yang lain menyambung, sehingga keduanya bergantian terputus. Gejalanya mudah dikira gangguan jaringan.
+      </div>
+      <h3>3.2 Mengapa broker publik tidak layak untuk data sungguhan</h3>
+      <p>Broker publik untuk belajar sengaja dibuat terbuka: siapa pun boleh menyambung, menulis, dan berlangganan ke topic apa pun. Artinya topic Anda dapat dibaca orang yang menebak namanya dan, yang lebih berbahaya, dapat ditulisi sehingga dashboard Anda menampilkan angka yang bukan berasal dari sensor Anda. Nama topic yang panjang dan aneh hanya menyulitkan penebakan; keamanan yang bersandar pada kerahasiaan nama disebut keamanan lewat ketersamaran, dan itu bukan keamanan.</p>
+      <p>Broker publik juga dapat dimatikan tanpa pemberitahuan. Untuk latihan hal itu tidak masalah; begitu data yang lewat mulai berarti, pindahkan ke broker berautentikasi milik sendiri, misalnya Mosquitto di komputer Anda atau layanan broker berakun.</p>
+      <h3>3.3 Sambungan terenkripsi dan sertifikat dalam tingkat konsep</h3>
+      <p>Sambungan MQTT biasa berjalan pada port 1883 dan isinya lewat sebagai teks biasa, sehingga siapa pun yang mengamati lalu lintas jaringan itu, misalnya pemilik Wi-Fi umum di kafe, dapat membaca nama topic, isi pesan, serta username dan password Anda. Versi terenkripsinya berjalan pada port terpisah, lazimnya 8883, dan memakai TLS, mekanisme yang sama yang mengamankan halaman web.</p>
+      <p>TLS mengerjakan dua hal: menyembunyikan isi sehingga penyadap hanya melihat data tanpa makna, dan membuktikan bahwa broker yang dihubungi memang broker yang dimaksud. Pembuktian itu tugas <strong>sertifikat</strong>, dokumen digital yang menyatakan suatu alamat dimiliki pihak tertentu dan ditandatangani pihak ketiga yang dipercaya; tanpa pemeriksaan itu penyerang dapat menyisipkan diri di tengah jalan dan berpura-pura menjadi broker. Bila diibaratkan pengiriman surat, autentikasi adalah tanda tangan pada suratnya, enkripsi adalah amplop tertutup, dan sertifikat adalah kartu identitas kurir.</p>
+      <p>Anda belum perlu memasang TLS sendiri pada tahap ini. Yang perlu diketahui adalah tuntutannya: port berbeda, sertifikat pihak terpercaya di dalam device, jam device yang kira-kira benar karena sertifikat punya masa berlaku, serta memori dan waktu pemrosesan lebih banyak. Karena itu TLS pada device kecil direncanakan sejak awal, bukan ditambahkan di akhir.</p>
+    </section>
+    <section class="card">
+      <h2>4. Kredensial, Risiko Dasar, dan Pencegahan</h2>
+      <p>Nama jaringan Wi-Fi, sandinya, username dan sandi broker, serta kunci layanan cloud dari Pertemuan 11 tentang penyimpanan data semuanya termasuk <strong>kredensial</strong>. Bahayanya bukan karena orang lain dapat membaca kode di dalam device, melainkan karena kode berpindah tangan: diunggah ke penyimpanan bersama, dilampirkan pada laporan, disalin ke berkas contoh. Setiap perpindahan menyalin sandi Anda, dan sandi yang sudah tersebar tidak dapat ditarik kembali.</p>
+      <p>Langkah terpenting untuk tahap ini adalah <strong>memisahkan kredensial dari logika</strong>: kumpulkan semuanya sebagai tetapan bernama di bagian paling atas program seperti pada contoh Bab 9, lalu ganti isinya dengan penanda seperti <code>"GANTI_DENGAN_SANDI_ANDA"</code> sebelum tugas dikumpulkan. Pada proyek yang lebih besar kredensial dipindahkan ke berkas terpisah yang tidak pernah ikut diunggah.</p>
+      <div class="warn">
+        <strong>Dua kebiasaan yang wajib ditinggalkan.</strong> Jangan menampilkan sandi pada tangkapan layar maupun pada log, karena keduanya dibaca dan dibagikan. Jangan memakai sandi akun pribadi pada device latihan, sebab device latihan adalah bagian paling lemah dari sistem apa pun.
+      </div>
+      <p>Kredensial yang tersebar hanyalah satu dari sekian risiko. Daftar berikut memuat risiko yang paling sering benar-benar terjadi pada sistem IoT tingkat awal, bukan serangan rumit, disandingkan dengan pencegahan yang sudah dapat Anda kerjakan hari ini.</p>
+      <div class="table-scroll" tabindex="0">
+        <table>
+        <thead>
+          <tr><th>Risiko</th><th>Contoh akibat</th><th>Pencegahan sederhana</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Topic dapat ditulisi siapa saja</td><td>Dashboard menampilkan suhu 90 derajat yang tidak pernah diukur</td><td>Broker berautentikasi, ditambah validasi rentang pada penerima</td></tr>
+          <tr><td>Data terbaca di jaringan</td><td>Nama topic, isi pesan, dan sandi broker terekam pihak lain</td><td>Sambungan terenkripsi pada port TLS, hindari jaringan umum</td></tr>
+          <tr><td>Kredensial tersebar bersama kode</td><td>Sandi Wi-Fi rumah ikut terunggah di dalam berkas program</td><td>Kredensial dikumpulkan sebagai tetapan dan diganti penanda</td></tr>
+          <tr><td>Sandi bawaan tidak pernah diganti</td><td>Broker dapat dimasuki dengan sandi yang tertulis di manualnya</td><td>Ganti setiap sandi bawaan pada pemasangan pertama</td></tr>
+          <tr><td>Nilai sensor mustahil ikut tersimpan</td><td>Grafik tren rusak karena satu nilai minus 127 derajat</td><td>Validasi yang menolak nilai di luar rentang sebelum data dikirim</td></tr>
+        </tbody>
+        </table>
+      </div>
+      <p>Perhatikan baris terakhir: penolakan nilai yang tidak masuk akal muncul sebagai urusan keamanan sekaligus keandalan. Itu bukan kebetulan, sebab data palsu dari penyerang dan data rusak dari sensor yang lepas sama-sama berbentuk angka mustahil, sehingga satu pemeriksaan rentang menangkap keduanya.</p>
+    </section>
+    <section class="card">
+      <h2>5. Kegagalan yang Nyata dan Cara Mencoba Ulang</h2>
+      <p>Program pada pertemuan sebelumnya diam-diam berdiri di atas satu anggapan besar: Wi-Fi selalu tersambung dan broker selalu menjawab. Selama sepuluh menit pengujian di ruangan yang sama dengan titik akses, anggapan itu tampak benar; dijalankan dua hari, ia hampir pasti runtuh.</p>
+      <ul>
+        <li><strong>Wi-Fi terputus.</strong> Titik akses dinyalakan ulang, sinyal melemah, atau sandinya diganti; device tetap membaca sensor tanpa tujuan pengiriman.</li>
+        <li><strong>Broker tidak dapat dihubungi.</strong> Broker dimatikan, alamatnya salah tulis, atau identitasnya ditolak. Gejalanya khas: <code>WiFi.status()</code> menunjukkan tersambung sementara <code>mqtt.connected()</code> tetap bernilai salah.</li>
+        <li><strong>Sambungan hidup tetapi pesan tidak sampai.</strong> Pemanggilan <code>publish()</code> mengembalikan nilai salah, atau pesan hilang tanpa kabar pada tingkat mutu layanan paling sederhana.</li>
+        <li><strong>Sensor mengirim angka yang tidak mungkin.</strong> Kabel data lepas sedikit atau sensor belum siap saat dibaca, sehingga keluar nilai ekstrem seperti minus 127, nol yang mencurigakan, atau <code>nan</code>.</li>
+      </ul>
+      <p>Yang membedakan program latihan dari program yang layak dipercaya bukan ada atau tidaknya kegagalan itu, melainkan tanggapannya: mencoba lagi, melewati satu putaran, atau mengabarkan keadaan. Yang tidak boleh dipilih adalah berhenti tanpa jejak, sebab device tidak punya layar dan tidak dapat ditanyai. Karena itu tiap kejadian penting perlu meninggalkan jejak pada log.</p>
+      <div class="tip">
+        <strong>Beri awalan seragam pada setiap baris log.</strong> Awalan seperti <code>[WIFI]</code>, <code>[MQTT]</code>, <code>[TOLAK]</code>, dan <code>[KIRIM]</code> mengubah log dari kumpulan kalimat menjadi sesuatu yang dapat disisir: Anda dapat menelusuri satu jenis kejadian saja tanpa membaca seluruh baris, dan ketika log disalin ke laporan, pembaca lain langsung tahu baris mana yang penting. Pakai awalan yang sama sejak awal, sebab log yang awalannya berganti-ganti sama sulitnya dibaca dengan log tanpa awalan. Awalan inilah yang pada Bab 7 dan Bab 8 menjadi bukti bahwa penanganan kegagalan Anda benar-benar bekerja, sebab yang dinilai bukan pernyataan Anda melainkan jejak yang dicetak program.
+      </div>
+      <p>Ketika sambungan gagal, tindakan yang wajar adalah mencoba lagi; persoalannya ada pada seberapa cepat. Program yang mencoba lagi seketika di dalam <code>loop()</code> mencoba ribuan kali per menit. Akibatnya ada tiga: log terisi ribuan baris kegagalan yang sama sehingga pesan penting tidak terlihat, arus listrik terpakai terus-menerus karena modul radio tidak pernah beristirahat, dan bila banyak device melakukannya bersamaan, broker yang baru bangun langsung dibanjiri lalu jatuh lagi. Menelepon nomor sibuk setiap detik memberi gambaran yang sama: tidak mempercepat apa pun.</p>
+      <p>Jalan keluarnya adalah <strong>jeda yang bertambah</strong>, yang lazim disebut <em>backoff</em>. Percobaan pertama dilakukan setelah satu detik; bila gagal, jedanya dikalikan dua menjadi dua detik, lalu empat, delapan, dan seterusnya sampai batas atas yang ditetapkan, misalnya satu menit. Begitu sambungan berhasil, jeda dikembalikan ke nilai awal supaya gangguan berikutnya ditangani cepat lagi. Perhitungannya memakai <code>millis()</code> seperti pada Pertemuan 9 tentang pengaturan waktu tanpa <code>delay()</code>, sebab menunggu dengan <code>delay()</code> membekukan seluruh program termasuk pembacaan sensor.</p>
+      <div class="table-scroll" tabindex="0">
+        <table>
+        <thead>
+          <tr><th>Percobaan</th><th>Jeda sebelum mencoba</th><th>Waktu sejak gangguan mulai</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>ke-1</td><td>1 detik</td><td>1 detik</td></tr>
+          <tr><td>ke-2</td><td>2 detik</td><td>3 detik</td></tr>
+          <tr><td>ke-3</td><td>4 detik</td><td>7 detik</td></tr>
+          <tr><td>ke-4</td><td>8 detik</td><td>15 detik</td></tr>
+          <tr><td>ke-7 dan seterusnya</td><td>60 detik, batas atas</td><td>bertambah 60 detik setiap kali</td></tr>
+        </tbody>
+        </table>
+      </div>
+      <p>Bacalah kolom terakhir: gangguan satu jam hanya menghasilkan sekitar enam puluh baris log, bukan puluhan ribu. Batas atas diperlukan agar jedanya tidak tumbuh tanpa henti, sebab tanpa batas device menunggu berjam-jam meski jaringan sudah pulih.</p>
+    </section>
+    <section class="card">
+      <h2>6. Validasi Masukan dan Rentang yang Wajar</h2>
+      <p>Aturannya satu kalimat: setiap angka yang masuk ke sistem diperiksa sebelum dipakai, dikirim, atau disimpan. Pemeriksaan dilakukan sedekat mungkin dengan sumbernya, yaitu di dalam device, agar nilai buruk tidak pernah membebani jaringan dan tidak pernah masuk ke berkas riwayat. Penerima di Node-RED sebaiknya memeriksa sekali lagi, karena ia tidak dapat memastikan pengirimnya benar device Anda.</p>
+      <p>Ada tiga bentuk pemeriksaan yang menutup hampir semua kasus nyata. <strong>Bentuknya benar:</strong> hasil pembacaan memang angka, bukan <code>nan</code> yang muncul ketika sensor gagal dibaca. <strong>Nilainya dalam rentang wajar:</strong> rentang ditetapkan dari kenyataan fisik tempat sensor dipasang, bukan dari kemampuan maksimal sensornya. <strong>Perubahannya masuk akal:</strong> suhu ruangan tidak dapat melompat lima derajat dalam sepuluh detik, sehingga lompatan sebesar itu lebih mungkin berarti gangguan pembacaan daripada peristiwa nyata.</p>
+      <p>Rentang wajar paling mudah ditetapkan dengan menuliskannya sebagai tabel, satu baris untuk tiap besaran yang Anda ukur. Tabel berikut memuat rentang yang lazim dipakai pada sensor yang dipakai di mata kuliah ini, beserta dasar penetapannya dan nilai khas yang justru muncul ketika sensornya bermasalah.</p>
+      <div class="table-scroll" tabindex="0">
+        <table>
+        <thead>
+          <tr><th>Besaran dan sensor</th><th>Rentang wajar</th><th>Dasar penetapan</th><th>Nilai yang menandakan gangguan</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Suhu ruangan, DHT22</td><td>-10 sampai 60 derajat</td><td>Batas kemungkinan fisik ruangan tertutup, bukan batas kemampuan sensor yang jauh lebih lebar</td><td><code>nan</code> ketika pembacaan gagal, atau satu nilai yang tidak pernah berubah sama sekali</td></tr>
+          <tr><td>Suhu, DS18B20</td><td>-10 sampai 60 derajat</td><td>Sama seperti di atas, dengan tambahan dua nilai bawaan yang perlu dikenali</td><td>-127 ketika kabel data lepas, dan 85 ketika sensor dibaca sebelum selesai bersiap</td></tr>
+          <tr><td>Kelembapan relatif, DHT22</td><td>0 sampai 100 persen</td><td>Batas satuannya sendiri, sebab persen kelembapan relatif tidak mungkin di luar rentang itu</td><td>0 persen terus-menerus, atau 100 persen pada ruangan yang jelas kering</td></tr>
+          <tr><td>Jarak, ultrasonik HC-SR04</td><td>2 sampai 400 sentimeter</td><td>Batas kemampuan modul; di bawah 2 sentimeter gema kembali terlalu cepat untuk diukur</td><td>0 atau nilai maksimum yang berulang ketika tidak ada gema yang kembali</td></tr>
+          <tr><td>Kelembapan tanah, sensor resistif</td><td>0 sampai 100 persen setelah dipetakan</td><td>Nilai mentah 0 sampai 4095 dipetakan lebih dahulu agar rentangnya bermakna</td><td>Nilai mentah tetap 0 atau tetap 4095, tanda sensor lepas atau terhubung singkat</td></tr>
+        </tbody>
+        </table>
+      </div>
+      <p>Kolom terakhir adalah yang paling sering terlewat. Banyak sensor memiliki nilai khas yang muncul justru ketika ia gagal, dan mengenali nilai itu jauh lebih cepat daripada menebak; karena itu rentang wajar sebaiknya ditulis di dalam dokumen rancangan, bukan hanya di dalam kode.</p>
+      <p>Yang dilakukan terhadap nilai yang ditolak sama pentingnya dengan penolakannya. Jangan menggantinya dengan nol, karena nol tampak sah dan ikut dihitung sebagai data, dan jangan pula menghapusnya tanpa jejak. Yang benar adalah melewati satu putaran pengiriman lalu mencetak satu baris log yang menyebut nilai yang ditolak beserta alasannya, sehingga penolakan berulang dapat disadari sebagai gejala sensor yang perlu diperiksa.</p>
+      <div class="warn">
+        <strong>Rentang yang terlalu sempit ikut membuang data benar.</strong> Bila batas atas suhu ditetapkan 35 derajat karena ruangan biasanya sejuk, pada hari yang benar-benar panas sistem Anda berhenti melaporkan tepat ketika laporannya paling dibutuhkan. Tetapkan rentang pada batas kemungkinan fisik, bukan pada kebiasaan.
+      </div>
+    </section>
+    <section class="card">
+      <h2>7. Implementasi Praktis: Menguji dengan Kegagalan yang Dibuat Sengaja</h2>
+      <p>Penanganan kegagalan hanya dapat dipercaya bila pernah diuji. Bagian ini mengubah program pengiriman Anda menjadi program yang tahan gangguan, lalu membuat tiga kegagalan dengan sengaja dan membaca tanggapan sistem pada Serial Monitor; acuannya adalah program lengkap pada Bab 9.</p>
+      <p>Alatnya hanya dua dan keduanya sudah Anda pakai sebelumnya. Yang pertama simulator dengan board ESP32 yang sudah tersedia sendiri pada project baru. Yang kedua <strong>Serial Monitor</strong>, yang di pertemuan ini memikul dua tugas sekaligus: jendela tempat log dibaca, sekaligus jalur masuk perintah uji, sebab <code>bacaPerintahUji()</code> pada Bab 9 membaca apa pun yang Anda ketikkan di sana. Rantai sambungan yang harus benar ada empat titik dan seluruhnya diambil dari kode Bab 9: <strong>ESP32 virtual → jaringan <code>Wokwi-GUEST</code> dengan kata sandi kosong → broker <code>broker.hivemq.com</code> port <code>1883</code> → topic <code>kelas/iot/lab01/suhu</code> dan <code>kelas/iot/lab01/status</code></strong>. Broker itu broker publik yang dipakai untuk latihan saja dan bukan untuk data sungguhan, dengan alasan yang sudah diuraikan pada Bab 3.2.</p>
+      <p><strong>Komponen yang perlu ditambahkan:</strong> tidak ada. Rangkaian potensiometer dari Pertemuan 9 tentang pengaturan waktu pengiriman data dipakai kembali apa adanya, yaitu <strong>kaki tengah potensiometer ke GPIO 34</strong> dan <strong>kedua kaki sisinya ke 3V3 dan GND</strong>, sesuai <code>analogRead(34)</code> pada Bab 9. Tidak ada sensor, kabel, maupun rangkaian baru yang perlu dipasang di pertemuan ini, sebab seluruh pekerjaannya ada di sisi program dan sambungan jaringan. Potensiometernya tetap perlu terpasang karena hanya dengan itu nilai bacaan dapat Anda ubah dengan tangan pada Uji A-2 di bawah.</p>
+      <p>Satu batas yang tidak boleh dilewati: seluruh kegagalan pada bab ini dibuat pada program dan sambungan milik Anda sendiri. Selama latihan, <code>MQTT_USER</code> dan <code>MQTT_PASS</code> dibiarkan sebagai penanda <code>GANTI_USERNAME_ANDA</code> dan <code>GANTI_SANDI_ANDA</code>, atau diisi identitas broker milik Anda sendiri. Jangan sekali pun memakai identitas milik orang lain dan jangan mengarahkan program ke broker orang lain untuk melihat apa yang terjadi, sebab yang seperti itu bukan lagi pengujian.</p>
+      <div class="tip">
+        <strong>Simulator tidak menyediakan tombol untuk mematikan Wi-Fi.</strong> Karena itu gangguan jaringan dibuat dari dalam program: ketika Anda mengetik <code>p</code> pada Serial Monitor, program memanggil <code>WiFi.disconnect()</code>. Dari sudut pandang program hasilnya sama dengan titik akses yang benar-benar mati, sebab <code>WiFi.status()</code> tidak lagi bernilai <code>WL_CONNECTED</code> dan pengiriman gagal. Bila Anda memakai board sungguhan, uji yang sama dapat dijalankan dengan perintah itu atau dengan mematikan titik akses secara langsung.
+      </div>
+      <ol class="step">
+        <li>Simpan salinan program pengiriman MQTT Anda dari Pertemuan 7 dengan nama baru, agar versi yang sudah berjalan tetap utuh.</li>
+        <li>Pindahkan seluruh kredensial ke bagian paling atas sebagai tetapan bernama, lalu ubah pemanggilan sambungan menjadi <code>mqtt.connect(CLIENT_ID, MQTT_USER, MQTT_PASS)</code>.</li>
+        <li>Tambahkan tetapan <code>SUHU_MIN</code>, <code>SUHU_MAX</code>, dan <code>LONJAKAN_MAX</code>, lalu tulis fungsi <code>nilaiWajar()</code> seperti pada Bab 9.</li>
+        <li>Ganti logika sambungan ulang dengan fungsi <code>jagaSambungan()</code> yang memakai <code>millis()</code> dan jeda bertambah; pastikan tidak ada <code>delay()</code> yang tersisa di dalamnya.</li>
+        <li>Tambahkan fungsi <code>bacaPerintahUji()</code> agar nilai uji dan pemutusan Wi-Fi dapat diminta dari Serial Monitor. Jalankan program dan pastikan urutan awalnya wajar: pesan awal, Wi-Fi tersambung, broker tersambung, lalu baris <code>[KIRIM]</code> yang teratur.</li>
+        <li><strong>Uji A, nilai di luar rentang.</strong> Ketik <code>999</code> pada Serial Monitor lalu tekan Enter. Baris <code>[TOLAK]</code> harus muncul tanpa <code>[KIRIM]</code> untuk nilai itu. Ulangi dengan <code>-50</code>.</li>
+        <li><strong>Uji B, Wi-Fi terputus.</strong> Ketik <code>p</code> lalu tekan Enter. Log harus memperlihatkan percobaan penyambungan dengan jeda yang bertambah, lalu kembali normal dengan jeda kembali ke nilai awal ketika sambungan pulih.</li>
+        <li><strong>Uji C, broker tidak dapat dihubungi.</strong> Ubah <code>MQTT_HOST</code> menjadi alamat yang tidak ada lalu jalankan ulang; log harus memperlihatkan Wi-Fi tersambung sementara sambungan broker gagal berulang dengan jeda bertambah. Simpan log ketiga uji secara terpisah, karena itulah bukti yang dikumpulkan pada tugas Bab 12.</li>
+      </ol>
+      <p>Delapan langkah di atas menyiapkan programnya. Rincian berikut menjalankan kegagalannya satu per satu, dan tiap langkah menyebut nilai mana yang diubah, menjadi apa, apa yang harus terbaca sesudahnya, serta bagaimana nilai itu dikembalikan. Satu hal perlu diingat sejak awal: <code>INTERVAL_KIRIM</code> bernilai 10000, sehingga pembacaan dan pengiriman hanya diperiksa setiap sepuluh detik dan tanggapan atas apa pun yang Anda lakukan baru terlihat pada putaran berikutnya.</p>
+      <ol class="step">
+        <li><strong>Rekam keadaan normal lebih dahulu.</strong> Jalankan simulasi tanpa mengubah apa pun sampai muncul tiga baris <code>[KIRIM]</code>. Jarak antar baris itu sekitar sepuluh detik, dan angkanya berubah mengikuti posisi tuas potensiometer. Log inilah pembanding untuk ketiga uji berikutnya.</li>
+        <li><strong>Uji A-1, nilai di luar rentang lewat Serial Monitor.</strong> Klik jendela Serial Monitor, ketik <code>999</code>, lalu tekan Enter. Baris <code>[UJI] nilai titipan: 999.0</code> muncul seketika, dan pada pengiriman berikutnya menyusul <code>[TOLAK] di luar rentang wajar: 999.0</code> tanpa satu pun baris <code>[KIRIM]</code> untuk nilai itu. Ulangi dengan <code>-50</code>. Tidak ada yang perlu dikembalikan: <code>adaNilaiUji</code> kembali bernilai salah begitu nilainya terbaca, sehingga putaran berikutnya kembali memakai potensiometer.</li>
+        <li><strong>Uji A-2, lonjakan lewat potensiometer.</strong> Setel tuas di posisi tengah dan tunggu satu baris <code>[KIRIM]</code> agar <code>suhuSebelumnya</code> terisi. Sesudah itu putar tuasnya sampai ujung dalam satu selang sepuluh detik. Nilai <code>analogRead(34)</code> naik mendekati 4095 sehingga hasil pemetaannya mendekati 60.0, yaitu batas <code>SUHU_MAX</code> itu sendiri; karena itu yang menangkapnya bukan pemeriksaan rentang melainkan pemeriksaan lonjakan, dan yang tercetak adalah <code>[TOLAK] lonjakan tidak masuk akal</code> beserta angkanya, sebab bedanya terhadap nilai sebelumnya melampaui <code>LONJAKAN_MAX</code> yang bernilai 10.0. Kembalikan tuas ke posisi tengah, tunggu satu putaran, dan <code>[KIRIM]</code> muncul lagi.</li>
+        <li><strong>Uji A-3, mempersempit rentang di dalam program.</strong> Hentikan simulasi, lalu pada baris <code>const float SUHU_MAX = 60.0;</code> ganti angkanya menjadi <code>5.0</code>. Jalankan ulang dengan tuas di posisi tengah: setiap pembacaan sekarang berada di atas batas, sehingga tiap sepuluh detik muncul <code>[TOLAK] di luar rentang wajar</code> dan tidak ada satu pun <code>[KIRIM]</code>. Inilah bentuk nyata dari peringatan pada Bab 6 tentang rentang yang terlalu sempit. Kembalikan angkanya menjadi <code>60.0</code>, jalankan ulang, lalu pastikan <code>[KIRIM]</code> kembali muncul sebelum melanjutkan.</li>
+        <li><strong>Uji B, Wi-Fi terputus.</strong> Jalankan sampai <code>[MQTT] tersambung</code> muncul, klik Serial Monitor, ketik <code>p</code>, lalu tekan Enter. Yang berubah di sini bukan nilai di program melainkan pemanggilan <code>WiFi.disconnect()</code> di dalam <code>bacaPerintahUji()</code>, jadi tidak ada baris yang perlu ditulis ulang sesudahnya. Urutan yang harus terbaca: <code>[UJI] Wi-Fi diputus atas permintaan</code>, lalu <code>[JEDA] jarak percobaan sekarang 1 detik</code> diikuti <code>[WIFI] mencoba menyambung</code>. Bila percobaan pertama belum berhasil, percobaan berikutnya baru dilakukan dua detik kemudian dan barisnya menyebut <code>2 detik</code>. Di sela-selanya, tiap sepuluh detik tetap muncul <code>[TUNDA] belum tersambung, nilai tidak dikirim</code>, dan baris itulah bukti program tetap berjalan selama gangguan. Jaringan <code>Wokwi-GUEST</code> biasanya kembali pada percobaan pertama atau kedua, sehingga log berlanjut ke <code>[MQTT] mencoba menyambung</code> lalu <code>[MQTT] tersambung</code>.</li>
+        <li><strong>Membuktikan jeda benar-benar kembali ke nilai awal.</strong> Pengembalian <code>jedaCoba</code> ke <code>JEDA_AWAL</code> tidak dicetak, jadi jangan mencarinya sebagai baris tersendiri. Buktinya diambil dengan mengulang Uji B sekali lagi setelah sambungan pulih: baris <code>[JEDA]</code> pertama pada gangguan kedua harus menyebut <code>1 detik</code>, bukan melanjutkan angka terakhir sebelum pulih.</li>
+        <li><strong>Uji C, broker tidak dapat dihubungi.</strong> Hentikan simulasi, lalu pada baris <code>const char* MQTT_HOST = "broker.hivemq.com";</code> hapus satu huruf di tengah nama itu sehingga isinya tidak lagi menunjuk broker mana pun. Cara ini dipilih karena kegagalannya tetap terjadi di dalam program Anda sendiri. Jalankan ulang: Wi-Fi tetap tersambung, tetapi setiap percobaan broker berakhir dengan <code>[MQTT] gagal, kode</code> diikuti angka negatif. Angka itu boleh berbeda antarversi pustaka seperti disebut pada Bab 3, jadi yang dibaca polanya, bukan nilainya.</li>
+        <li><strong>Baca tangga jedanya sampai batas atas.</strong> Pada Uji C kegagalannya tidak pulih sendiri, sehingga seluruh tangga jeda terlihat utuh: baris <code>[JEDA]</code> berturut-turut menyebut 1, 2, 4, 8, 16, 32, lalu 60 detik dan berhenti di sana, karena <code>jedaCoba</code> dikalikan dua setiap kegagalan lalu ditahan oleh <code>JEDA_MAKS</code>. Percobaan ketujuh itu cocok dengan baris terakhir tabel pada Bab 5. Jarak sebenarnya antar baris dapat sedikit lebih panjang daripada angka yang tercetak, sebab percobaan yang gagal sendiri memakan waktu. Biarkan dua putaran lagi setelah 60 detik tercapai untuk memastikan angkanya tidak tumbuh lebih jauh.</li>
+        <li><strong>Kembalikan seluruh nilai ke keadaan semula.</strong> Hentikan simulasi, tulis kembali <code>MQTT_HOST</code> menjadi <code>"broker.hivemq.com"</code>, pastikan <code>MQTT_PORT</code> tetap <code>1883</code> dan <code>SUHU_MAX</code> tetap <code>60.0</code>, lalu jalankan ulang sampai <code>[MQTT] tersambung</code> dan <code>[KIRIM]</code> kembali muncul teratur. Beri keterangan pada setiap log yang Anda simpan tentang nilai apa yang diubah menjadi apa, sebab keterangan itulah yang membedakan bukti dari sekadar tempelan log.</li>
+      </ol>
+      <p><strong>Hasil yang harus terlihat:</strong> pada keadaan normal Serial Monitor memuat <code>[BOOT] esp32-lab-01 siap</code>, lalu <code>[MQTT] tersambung</code>, lalu baris <code>[KIRIM]</code> yang muncul sekitar setiap sepuluh detik dengan angka yang ikut berubah ketika tuas potensiometer digeser. Pada Uji A, <code>999</code> dan <code>-50</code> keduanya muncul sebagai <code>[TOLAK] di luar rentang wajar</code> dan tidak satu pun ikut terkirim, sedangkan putaran tuas sampai ujung muncul sebagai <code>[TOLAK] lonjakan tidak masuk akal</code>. Pada Uji B, sesudah <code>[UJI] Wi-Fi diputus atas permintaan</code> tampak baris <code>[JEDA]</code> yang menyebut 1 detik lalu 2 detik, diselingi <code>[TUNDA] belum tersambung, nilai tidak dikirim</code> setiap sepuluh detik, dan berakhir pada <code>[MQTT] tersambung</code>. Pada Uji C, <code>[MQTT] gagal, kode</code> berulang dengan tangga jeda 1, 2, 4, 8, 16, 32, lalu berhenti bertambah di 60 detik, dan sesudah <code>MQTT_HOST</code> ditulis benar kembali, <code>[KIRIM]</code> muncul lagi pada jarak sepuluh detik. Yang membuktikan program tidak membeku adalah lognya tetap bertambah sepanjang gangguan, bukan Serial Monitor yang diam menunggu.</p>
+      <div class="warn">
+        <strong>Perintah uji yang tampak tidak berpengaruh.</strong> Dua sebab hampir selalu menjelaskannya. Pertama, jendela Serial Monitor belum diklik sebelum Anda mengetik, atau Enter belum ditekan, sehingga <code>Serial.readStringUntil('\n')</code> belum menerima satu baris utuh dan baris <code>[UJI]</code> tidak pernah muncul. Kedua, baris <code>[UJI]</code> sudah muncul tetapi kesimpulan diambil terlalu cepat: pembacaan dan pengiriman hanya diperiksa setiap <code>INTERVAL_KIRIM</code>, sehingga <code>[TOLAK]</code> atau <code>[KIRIM]</code> baru menyusul pada putaran berikutnya. Tunggu satu putaran penuh sebelum mengubah apa pun di dalam program.
+      </div>
+      <p>Bila Anda macet dan penyebabnya tidak terlihat pada log, mintalah bantuan teman atau ajukan pertanyaan di kelas dengan menyertakan potongan log beserta bagian program yang Anda ubah.</p>
+    </section>
+
+    <section class="card">
+      <h2>8. Hasil yang Diharapkan</h2>
+      <p>Setelah ketiga uji dijalankan, empat hal berikut harus dapat Anda tunjukkan: log keadaan normal dengan baris tersambung dan baris <code>[KIRIM]</code> pada jarak waktu teratur; baris <code>[TOLAK]</code> yang menyebut nilai serta alasannya tanpa diikuti pengiriman; log sambungan ulang yang jedanya bertambah, misalnya 1, 2, 4, lalu 8 detik, dan kembali ke 1 detik setelah pulih; serta program yang tetap membaca sensor selama gangguan, terbukti dari log yang tidak membeku.</p>
+      <h3>8.1 Jika hasilnya tidak seperti itu</h3>
+      <div class="table-scroll" tabindex="0">
+        <table>
+        <thead>
+          <tr><th>Gejala</th><th>Kemungkinan penyebab</th><th>Yang perlu diperiksa</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Log membanjir dengan pesan gagal yang sama tiap detik</td><td>Jeda tidak pernah dikalikan, atau penanda waktu percobaan tidak diperbarui</td><td>Baris pengali jeda dan baris <code>cobaTerakhir = millis();</code> pada Bab 9</td></tr>
+          <tr><td>Program berhenti menanggapi selama gangguan</td><td>Masih ada <code>delay()</code> di jalur sambungan ulang</td><td>Seluruh isi fungsi sambungan ulang, bandingkan dengan Bab 5</td></tr>
+          <tr><td>Nilai 999 tetap terkirim</td><td>Hasil validasi tidak dipakai, atau pemeriksaan dilakukan setelah pengiriman</td><td>Urutan di dalam <code>loop()</code>: validasi harus mendahului <code>publish()</code></td></tr>
+          <tr><td>Sambungan broker gagal terus meski alamat benar</td><td>Identitas ditolak, atau nama klien dipakai device lain</td><td>Nilai <code>mqtt.state()</code> pada log dan keunikan <code>CLIENT_ID</code>, lihat Bab 3</td></tr>
+          <tr><td>Setelah gangguan pulih, data tidak terkirim lagi</td><td>Jeda sudah membesar dan tidak pernah dikembalikan ke nilai awal</td><td>Baris yang mengembalikan jeda ketika sambungan sehat pada Bab 9</td></tr>
+        </tbody>
+        </table>
+      </div>
+    </section>
+    <section class="card">
+      <h2>9. Contoh Program Lengkap dengan Validasi dan Sambungan Ulang</h2>
+      <p>Program berikut utuh dan dapat dijalankan setelah kredensialnya diisi. Sensor diwakili potensiometer pada pin 34 yang nilainya dipetakan ke rentang suhu; bila Anda memakai sensor sungguhan, yang berubah hanya isi fungsi <code>bacaSensor()</code>.</p>
+      <div class="code"><pre>#include &lt;WiFi.h&gt;
+#include &lt;PubSubClient.h&gt;
+
+// --- 1. Kredensial dan tetapan ---
+const char* WIFI_SSID    = "Wokwi-GUEST";
+const char* WIFI_PASS    = "";
+const char* MQTT_HOST    = "broker.hivemq.com";
+const int   MQTT_PORT    = 1883;
+const char* MQTT_USER    = "GANTI_USERNAME_ANDA";
+const char* MQTT_PASS    = "GANTI_SANDI_ANDA";
+const char* CLIENT_ID    = "esp32-lab-01";
+const char* TOPIC_DATA   = "kelas/iot/lab01/suhu";
+const char* TOPIC_STATUS = "kelas/iot/lab01/status";
+// --- 2. Batas nilai yang dianggap wajar ---
+const float SUHU_MIN     = -10.0;
+const float SUHU_MAX     = 60.0;
+const float LONJAKAN_MAX = 10.0;
+
+// --- 3. Pengaturan waktu, tanpa delay() ---
+const unsigned long INTERVAL_KIRIM = 10000;
+const unsigned long JEDA_AWAL      = 1000;
+const unsigned long JEDA_MAKS      = 60000;
+
+WiFiClient jaringan;
+PubSubClient mqtt(jaringan);
+
+unsigned long kirimTerakhir = 0;
+unsigned long cobaTerakhir  = 0;
+unsigned long jedaCoba      = JEDA_AWAL;
+float suhuSebelumnya = NAN;
+float nilaiUji       = 0;
+bool  adaNilaiUji    = false;
+
+// --- 4. Perintah uji dari Serial Monitor ---
+void bacaPerintahUji() {
+  if (Serial.available() == 0) return;
+  String masukan = Serial.readStringUntil('\n');
+  masukan.trim();
+  if (masukan == "p") {
+    Serial.println("[UJI] Wi-Fi diputus atas permintaan");
+    WiFi.disconnect();
+  } else if (masukan.length() &gt; 0) {
+    nilaiUji = masukan.toFloat();
+    adaNilaiUji = true;
+    Serial.print("[UJI] nilai titipan: "); Serial.println(nilaiUji, 1);
+  }
+}
+// --- 5. Pembacaan sensor dan nilai uji ---
+float bacaSensor() {
+  if (adaNilaiUji) {
+    adaNilaiUji = false;
+    return nilaiUji;
+  }
+  return analogRead(34) * 60.0 / 4095.0;
+}
+// --- 6. Validasi: tiga pemeriksaan ---
+bool nilaiWajar(float nilai) {
+  if (isnan(nilai)) {
+    Serial.println("[TOLAK] pembacaan gagal, bukan angka");
+    return false;
+  }
+  if (nilai &lt; SUHU_MIN || nilai &gt; SUHU_MAX) {
+    Serial.print("[TOLAK] di luar rentang wajar: "); Serial.println(nilai, 1);
+    return false;
+  }
+  if (!isnan(suhuSebelumnya) &amp;&amp; fabs(nilai - suhuSebelumnya) &gt; LONJAKAN_MAX) {
+    Serial.print("[TOLAK] lonjakan tidak masuk akal: "); Serial.println(nilai, 1);
+    return false;
+  }
+  return true;
+}
+// --- 7. Sambungan ulang dengan jeda yang bertambah ---
+void jagaSambungan() {
+  if (WiFi.status() == WL_CONNECTED &amp;&amp; mqtt.connected()) {
+    jedaCoba = JEDA_AWAL;
+    return;
+  }
+  if (millis() - cobaTerakhir &lt; jedaCoba) return;
+  cobaTerakhir = millis();
+  Serial.print("[JEDA] jarak percobaan sekarang ");
+  Serial.print(jedaCoba / 1000); Serial.println(" detik");
+  if (WiFi.status() != WL_CONNECTED) {
+    Serial.println("[WIFI] mencoba menyambung");
+    WiFi.begin(WIFI_SSID, WIFI_PASS);
+  } else {
+    Serial.println("[MQTT] mencoba menyambung");
+    if (mqtt.connect(CLIENT_ID, MQTT_USER, MQTT_PASS)) {
+      Serial.println("[MQTT] tersambung");
+      mqtt.publish(TOPIC_STATUS, "online", true);
+      jedaCoba = JEDA_AWAL;
+      return;
+    }
+    Serial.print("[MQTT] gagal, kode "); Serial.println(mqtt.state());
+  }
+  jedaCoba = jedaCoba * 2;
+  if (jedaCoba &gt; JEDA_MAKS) jedaCoba = JEDA_MAKS;
+}
+void setup() {
+  Serial.begin(115200);
+  WiFi.mode(WIFI_STA);
+  mqtt.setServer(MQTT_HOST, MQTT_PORT);
+  Serial.println("[BOOT] esp32-lab-01 siap");
+}
+
+// --- 8. Putaran utama ---
+void loop() {
+  bacaPerintahUji();
+  jagaSambungan();
+  mqtt.loop();
+
+  if (millis() - kirimTerakhir &lt; INTERVAL_KIRIM) return;
+  kirimTerakhir = millis();
+
+  float suhu = bacaSensor();
+  if (!nilaiWajar(suhu)) return;
+  suhuSebelumnya = suhu;
+
+  if (!mqtt.connected()) {
+    Serial.println("[TUNDA] belum tersambung, nilai tidak dikirim");
+    return;
+  }
+  char pesan[16];
+  snprintf(pesan, sizeof(pesan), "%.1f", suhu);
+  if (mqtt.publish(TOPIC_DATA, pesan)) {
+    Serial.print("[KIRIM] "); Serial.println(pesan);
+  } else {
+    Serial.println("[GAGAL] publish tidak diterima broker");
+  }
+}</pre></div>
+      <ul>
+        <li><strong>Bagian 1 sampai 3.</strong> Kredensial, batas nilai, dan pengaturan waktu dikumpulkan sebagai tetapan bernama di bagian atas, sehingga jelas apa yang harus diganti sebelum kode dibagikan. <code>JEDA_AWAL</code> adalah jarak percobaan pertama, <code>JEDA_MAKS</code> batas atasnya.</li>
+        <li><strong>Bagian 4 sampai 6.</strong> Mengetik <code>p</code> memutus Wi-Fi dan mengetik angka menitipkan satu nilai uji, sehingga pengujian tidak menuntut kode diubah. Ketiga pemeriksaan pada <code>nilaiWajar()</code> berbeda tugas: <code>isnan()</code> menangkap pembacaan gagal, <code>SUHU_MIN</code> dan <code>SUHU_MAX</code> menangkap nilai mustahil, dan <code>fabs()</code> terhadap <code>suhuSebelumnya</code> menangkap lompatan tidak masuk akal. Setiap penolakan dicetak.</li>
+        <li><strong>Bagian 7 dan 8.</strong> Baris <code>if (millis() - cobaTerakhir &lt; jedaCoba) return;</code> adalah inti backoff: program pulang lebih awal selama waktunya belum tiba, sehingga tidak ada yang membeku dan tidak ada banjir percobaan. Wi-Fi diurus lebih dahulu karena MQTT tidak mungkin tersambung tanpa jaringan, dan jeda kembali ke nilai awal begitu sambungan sehat. Di dalam <code>loop()</code> validasi mendahului pengiriman, dan <code>suhuSebelumnya</code> hanya diperbarui oleh nilai yang lolos; nilai yang gagal dikirim tidak disimpan untuk dikirim ulang, sehingga data selama gangguan memang hilang.</li>
+        <li><strong>Pesan status yang tersimpan di broker.</strong> Tepat setelah sambungan berhasil, program mengirim <code>"online"</code> ke <code>TOPIC_STATUS</code> dengan argumen ketiga <code>true</code>. Argumen itu adalah penanda <em>retained</em>, yang meminta broker menyimpan pesan tersebut sebagai pesan terakhir pada topic itu, sehingga dashboard yang baru dibuka langsung menerima status terakhir tanpa menunggu pengiriman berikutnya; tanpa penanda itu, pelanggan yang datang belakangan tidak melihat apa pun sampai ada pesan baru. Batasnya perlu Anda ketahui: pesan retained bertahan sampai diganti, jadi tulisan <code>"online"</code> tetap tersimpan meski device sudah lama mati, sehingga ia menunjukkan keadaan terakhir yang dilaporkan, bukan bukti bahwa device sedang hidup.</li>
+      </ul>
+    </section>
+    <section class="card">
+      <h2>10. Ringkasan Materi</h2>
+      <ul>
+        <li>Device IoT diincar bukan karena datanya berharga, melainkan karena ia banyak, selalu menyala, dan hampir tidak diawasi.</li>
+        <li>Autentikasi memeriksa siapa yang berbicara, enkripsi menyembunyikan isinya, dan sertifikat membuktikan bahwa broker yang dihubungi memang broker yang dimaksud.</li>
+        <li>MQTT menyediakan username dan password pada pembukaan sambungan, tetapi yang memeriksanya adalah broker, sehingga broker publik tidak layak untuk data sungguhan.</li>
+        <li>Kredensial dikumpulkan sebagai tetapan di satu tempat, karena kode selalu berpindah tangan sementara sandi yang tersebar tidak dapat ditarik kembali.</li>
+        <li>Kegagalan yang nyata adalah Wi-Fi terputus, broker tidak terhubung, pesan tidak sampai, dan nilai sensor mustahil; mencoba ulang memakai jeda bertambah sampai batas atas, lalu kembali ke nilai awal begitu pulih.</li>
+        <li>Validasi memeriksa bentuk, rentang, dan kewajaran perubahan; nilai yang ditolak dilewati dan dicatat, tidak diganti nol.</li>
+      </ul>
+    </section>
+
+    <section class="card">
+      <h2>11. Latihan Pemahaman</h2>
+      <p>Jawab lebih dahulu tanpa membuka kunci, lalu bandingkan.</p>
+      <details>
+        <summary>1. Sambungan MQTT Anda terenkripsi tetapi brokernya tidak memeriksa identitas. Apa yang masih dapat dilakukan orang lain?</summary>
+        <p>Ia tetap dapat menyambung dan menulis ke topic Anda, sehingga dashboard menampilkan data palsu. Enkripsi hanya menyembunyikan isi dari penyadap; yang menyaring pengirim adalah autentikasi.</p>
+      </details>
+      <details>
+        <summary>2. Wi-Fi tersambung, tetapi <code>mqtt.connected()</code> selalu bernilai salah. Sebutkan tiga kemungkinan penyebab.</summary>
+        <p>Alamat atau port broker salah, identitas ditolak broker, atau nama klien dipakai device lain sehingga keduanya saling memutus. Nilai <code>mqtt.state()</code> pada log mempersempit dugaan.</p>
+      </details>
+      <details>
+        <summary>3. Mengapa nilai sensor yang ditolak tidak boleh diganti angka nol?</summary>
+        <p>Karena nol tampak sah, sehingga ia ikut disimpan, ikut digambar, dan ikut menarik rata-rata. Yang benar adalah melewati pengiriman untuk putaran itu dan mencatat penolakannya pada log.</p>
+      </details>
+      <p>Lima pertanyaan reflektif berikut dijawab dengan kalimat sendiri: (1) risiko mana pada tabel Bab 4 yang paling mungkin terjadi pada sistem Anda; (2) rentang wajar apa yang Anda tetapkan beserta dasarnya; (3) apa yang sebaiknya dilakukan terhadap data yang gagal dikirim selama gangguan; (4) berapa batas atas jeda yang pantas untuk kasus Anda dan mengapa; (5) kredensial apa saja yang kini ada di dalam kode Anda dan mana yang harus diganti penanda sebelum dikumpulkan.</p>
+    </section>
+    <section class="card">
+      <h2>12. Tugas Latihan Pertemuan 12</h2>
+      <p>Buat skenario kegagalan pada sistem Anda dan tunjukkan bagaimana sistem menanggapinya. Ketiga uji pada Bab 7 dijalankan seluruhnya, dan buktinya berupa log, bukan pernyataan bahwa sistem sudah tahan gangguan.</p>
+      <ul>
+        <li>Berkas program dengan kredensial sudah diganti penanda, memuat fungsi validasi dan sambungan ulang berjeda bertambah.</li>
+        <li>Tiga potongan log yang diberi keterangan: nilai di luar rentang ditolak, Wi-Fi terputus lalu pulih, dan broker tidak dapat dihubungi.</li>
+        <li>Satu halaman penjelasan: rentang wajar yang Anda pakai beserta dasarnya, nilai jeda awal dan batas atasnya beserta alasannya, serta dua risiko dari tabel Bab 4 yang paling mengancam sistem Anda beserta pencegahan yang Anda pilih.</li>
+      </ul>
+      <div class="table-scroll" tabindex="0">
+        <table>
+        <thead>
+          <tr><th>Aspek</th><th>Bobot</th><th>Kriteria nilai penuh</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Validasi masukan bekerja</td><td>30%</td><td>Nilai di luar rentang dan nilai bukan angka ditolak, dicatat pada log, dan tidak pernah terkirim</td></tr>
+          <tr><td>Logika penanganan kegagalan</td><td>30%</td><td>Sambungan ulang memakai <code>millis()</code> dengan jeda bertambah dan batas atas, tanpa <code>delay()</code>, dan jeda kembali ke awal setelah pulih</td></tr>
+          <tr><td>Bukti pengujian</td><td>25%</td><td>Ketiga skenario dijalankan dan lognya jelas menunjukkan tanggapan sistem</td></tr>
+          <tr><td>Kredensial dan penjelasan risiko</td><td>15%</td><td>Kredensial terkumpul sebagai tetapan tanpa sandi asli, dan dua risiko disebut beserta akibatnya pada sistem sendiri</td></tr>
+        </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>13. Checkpoint Evaluasi Pertemuan 12</h2>
+      <p>Pertemuan ini dianggap tuntas bila butir berikut dapat Anda lakukan sendiri. Daftar ini sekaligus dipakai sebagai pemeriksaan diri sebelum tugas dikumpulkan.</p>
+      <div class="mini">
+        <div class="label">Target minimal pertemuan ini</div>
+        <p>Ada validasi masukan yang benar-benar menolak nilai tidak wajar, ada penanganan kegagalan yang bekerja ketika sambungan terputus, dan Anda dapat menyebutkan risiko dasar sistem IoT beserta pencegahannya.</p>
+      </div>
+      <div class="table-scroll" tabindex="0">
+        <table>
+        <thead>
+          <tr><th>Yang diperiksa</th><th>Cara memastikan sendiri</th><th>Bila belum tercapai</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Validasi masukan sudah ada</td><td>Titipkan nilai <code>999</code> dan <code>-50</code> lewat Serial Monitor seperti pada Bab 7; keduanya harus muncul sebagai <code>[TOLAK]</code> tanpa pengiriman</td><td>Baca ulang Bab 6, lalu bandingkan fungsi Anda dengan bagian 6 pada Bab 9</td></tr>
+          <tr><td>Penanganan kegagalan bekerja</td><td>Putuskan Wi-Fi dengan perintah uji, lalu periksa apakah jeda pada log bertambah dan kembali ke nilai awal setelah pulih</td><td>Baca ulang Bab 5, lalu periksa bagian 7 pada Bab 9 dan tabel gejala pada Bab 8</td></tr>
+          <tr><td>Risiko dasar dapat disebutkan</td><td>Tanpa membuka catatan, sebutkan tiga risiko beserta pencegahannya, lalu cocokkan dengan tabel Bab 4</td><td>Baca ulang Bab 1 sampai Bab 4, terutama tabel risiko</td></tr>
+        </tbody>
+        </table>
+      </div>
+      <p class="footer-note">Pertemuan ini adalah checkpoint besar CP-3, setelah CP-1 pada Pertemuan 4 dan CP-2 pada Pertemuan 8, dan sebelum CP-4 pada Pertemuan 16. Tugas latihan mingguan berbobot 20 persen dari nilai akhir.</p>
+    </section>
+
+    <section class="card">
+      <h2>14. Referensi Praktis</h2>
+      <dl class="gloss">
+        <dt>OWASP — <code>owasp.org</code></dt>
+        <dd>Pengantar keamanan IoT beserta daftar kelemahan yang paling sering ditemukan pada perangkat terhubung. Dipakai untuk memperluas tabel risiko pada Bab 4.</dd>
+        <dt>HiveMQ — <code>hivemq.com</code></dt>
+        <dd>Penjelasan dasar autentikasi MQTT, arti kode kegagalan sambungan, serta sambungan terenkripsi pada port terpisah. Menjadi pelengkap Bab 3.</dd>
+        <dt>Praktik baik keandalan device — topik pencarian</dt>
+        <dd>Bila belum ada satu sumber tetap, telusuri topik ini dengan kata kunci <code>exponential backoff</code>, <code>reconnect strategy</code>, dan <code>sensor input validation</code>. Hasilnya memperdalam Bab 5 dan Bab 6.</dd>
+      </dl>
+      <p class="footer-note">Alamat sumber ditulis sebagai nama domain karena struktur halaman sebuah situs berubah dari waktu ke waktu, sehingga tautan langsung cepat menjadi tidak berlaku.</p>
+    </section>
+    <footer class="pagenum">
+      <span class="pagenum-seri">Materi Pertemuan 12</span>
+      <span class="pagenum-no">Halaman 12 dari 16</span>
+    </footer>
+  </div>
+</body>
+</html>

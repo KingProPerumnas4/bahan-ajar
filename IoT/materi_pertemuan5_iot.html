@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Materi Pertemuan 5 - Struktur Program dan Debugging Dasar</title>
+  <link rel="stylesheet" href="assets/materi.css" />
+</head>
+<body>
+  <div class="wrap">
+    <section class="hero">
+      <span class="badge">Pertemuan 5</span>
+      <h1>Struktur Program yang Rapi dan Debugging Dasar</h1>
+      <p class="lead">Materi ini membahas penggunaan fungsi, variabel, konstanta, serial monitor, debugging sintaks, dan debugging logika, serta latihan merapikan program agar lebih modular dan mudah dilacak kesalahannya.</p>
+      <div>
+        <span class="pill">Fungsi</span><span class="pill">Variabel</span><span class="pill">Konstanta</span><span class="pill">Serial Monitor</span><span class="pill">Error Sintaks</span><span class="pill">Error Logika</span>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Capaian Pembelajaran Pertemuan 5</h2>
+      <div class="grid two">
+        <div class="mini">
+          <div class="label">Yang dipahami</div>
+          <ul>
+            <li>Peran fungsi, variabel, dan konstanta dalam membuat program lebih rapi dan mudah dipelihara.</li>
+            <li>Perbedaan antara error sintaks dan error logika.</li>
+            <li>Fungsi Serial Monitor sebagai alat bantu membaca proses program.</li>
+            <li>Alasan program modular lebih mudah diuji daripada program yang menumpuk dalam satu blok besar.</li>
+          </ul>
+        </div>
+        <div class="mini">
+          <div class="label">Yang dapat dilakukan</div>
+          <ul>
+            <li>Membaca pesan error kompilasi dasar.</li>
+            <li>Menambahkan <code>Serial.print()</code> untuk melacak nilai dan alur program.</li>
+            <li>Memecah program menjadi fungsi-fungsi kecil dengan tugas yang jelas.</li>
+            <li>Menemukan titik kesalahan sederhana pada program ESP32 di simulator.</li>
+          </ul>
+        </div>
+      </div>
+      <p>Fokus Pertemuan 5 adalah penggunaan fungsi, variabel, konstanta, serial monitor, debugging sintaks, dan debugging logika. Aktivitas utamanya adalah membaca error kompilasi, menambahkan <code>Serial.print()</code> untuk debugging, serta memecah program besar menjadi fungsi-fungsi kecil. Target minimumnya adalah Anda tidak hanya menyalin kode, tetapi mampu melacak kesalahan dan membuat program lebih rapi.</p>
+    </section>
+
+    <section class="card">
+      <h2>1. Mengapa Struktur Program yang Rapi Itu Penting?</h2>
+      <p>Pada tahap awal belajar pemrograman mikrokontroler, banyak program masih ditulis dengan gaya “asal jalan”. Selama lampu menyala atau sensor terbaca, program dianggap selesai. Masalahnya, saat program mulai bertambah panjang, pendekatan seperti ini membuat kode sulit dibaca, sulit diperbaiki, dan sulit dikembangkan. Oleh karena itu, pertemuan ini menekankan bahwa program yang baik bukan hanya program yang berjalan, tetapi juga program yang <strong>terstruktur</strong>, <strong>mudah dipahami</strong>, dan <strong>mudah ditelusuri saat terjadi kesalahan</strong>.</p>
+      <div class="analogy">
+        <strong>Analogi dunia nyata:</strong> bayangkan sebuah gudang tanpa rak dan label. Semua barang memang ada di dalam gudang, tetapi ketika satu barang dicari, prosesnya menjadi lama dan membingungkan. Program yang berantakan mirip seperti itu. Sebaliknya, program yang rapi seperti gudang dengan rak, label, dan jalur kerja yang jelas: siapa pun lebih mudah memahami isinya dan lebih cepat menemukan masalah.</div>
+
+      <h3>1.1 Ciri program yang rapi</h3>
+      <div class="grid three">
+        <div class="mini"><strong>Nama jelas</strong><br/>Variabel dan fungsi diberi nama yang menggambarkan perannya.</div>
+        <div class="mini"><strong>Tugas terpisah</strong><br/>Setiap fungsi mengerjakan satu tugas tertentu, tidak semua dicampur dalam <code>loop()</code>.</div>
+        <div class="mini"><strong>Mudah diuji</strong><br/>Bagian-bagian program bisa dicek satu per satu saat terjadi kesalahan.</div>
+      </div>
+
+      <h3>1.2 Dampak program yang tidak rapi</h3>
+      <p>Program yang terlalu padat dalam satu blok sering menimbulkan tiga masalah. Pertama, pembaca sulit memahami alur. Kedua, kesalahan kecil sulit ditemukan karena semua logika bercampur. Ketiga, perubahan satu bagian bisa merusak bagian lain secara tidak sengaja. Dalam konteks IoT, masalah ini berbahaya karena program sering harus membaca input, mengontrol output, menampilkan log, dan nanti mengirim data ke jaringan secara bersamaan.</p>
+    </section>
+
+    <section class="card">
+      <h2>2. Fungsi, Variabel, dan Konstanta</h2>
+      <p>Pertemuan 5 menempatkan fungsi, variabel, dan konstanta sebagai inti perapian program. Ketiganya terlihat sederhana, tetapi sangat menentukan kualitas kode.</p>
+
+      <h3>2.1 Variabel</h3>
+      <p>Variabel adalah tempat menyimpan data yang nilainya bisa berubah selama program berjalan. Contoh: status LED, nilai sensor, atau mode kerja. Variabel penting karena mikrokontroler perlu menyimpan hasil pembacaan atau kondisi terkini agar dapat mengambil keputusan.</p>
+      <div class="analogy"><strong>Analogi dunia nyata:</strong> variabel seperti papan tulis kecil di meja kerja. Isi tulisannya bisa diubah kapan saja sesuai keadaan terbaru.</div>
+
+      <h3>2.2 Konstanta</h3>
+      <p>Konstanta adalah data yang nilainya tetap dan tidak diubah selama program berjalan, misalnya nomor pin atau ambang batas yang memang sengaja dibuat tetap. Konstanta membuat program lebih aman dan lebih mudah dibaca karena bagian yang bersifat tetap diberi penanda yang jelas.</p>
+      <div class="analogy"><strong>Analogi dunia nyata:</strong> konstanta seperti nomor ruang kelas. Nomor itu dipakai terus sebagai acuan dan tidak berubah-ubah setiap beberapa menit.</div>
+
+      <h3>2.3 Fungsi</h3>
+      <p>Fungsi adalah blok program yang dibuat untuk menjalankan tugas tertentu. Dengan fungsi, program panjang bisa dibagi menjadi bagian-bagian kecil yang masing-masing punya peran jelas, misalnya membaca tombol, mengatur LED, atau menampilkan log ke serial monitor.</p>
+      <div class="analogy"><strong>Analogi dunia nyata:</strong> fungsi seperti pembagian tugas dalam sebuah tim. Ada anggota yang khusus menerima data, ada yang memproses, dan ada yang melaporkan hasil. Pekerjaan menjadi lebih tertata dibanding semua orang mengerjakan semuanya sekaligus.</div>
+
+      <div class="svgbox" tabindex="0">
+        <svg viewBox="0 0 1040 260" width="100%" role="img" aria-label="Diagram hubungan fungsi variabel dan konstanta">
+          <rect x="30" y="70" width="180" height="110" rx="18" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+          <rect x="260" y="70" width="220" height="110" rx="18" fill="#dcfce7" stroke="#15803d" stroke-width="2"/>
+          <rect x="530" y="70" width="220" height="110" rx="18" fill="#fef3c7" stroke="#b45309" stroke-width="2"/>
+          <rect x="800" y="70" width="200" height="110" rx="18" fill="#ede9fe" stroke="#6d28d9" stroke-width="2"/>
+          <text x="120" y="112" text-anchor="middle" font-size="25" font-weight="700">Konstanta</text>
+          <text x="120" y="140" text-anchor="middle" font-size="16">nilai tetap</text>
+          <text x="370" y="112" text-anchor="middle" font-size="25" font-weight="700">Variabel</text>
+          <text x="370" y="140" text-anchor="middle" font-size="16">nilai dapat berubah</text>
+          <text x="640" y="112" text-anchor="middle" font-size="25" font-weight="700">Fungsi</text>
+          <text x="640" y="140" text-anchor="middle" font-size="16">mengolah tugas tertentu</text>
+          <text x="900" y="112" text-anchor="middle" font-size="25" font-weight="700">Program</text>
+          <text x="900" y="140" text-anchor="middle" font-size="16">lebih rapi &amp; teruji</text>
+          <line x1="210" y1="125" x2="260" y2="125" stroke="#2563eb" stroke-width="4"/>
+          <polygon points="260,125 246,117 246,133" fill="#2563eb"/>
+          <line x1="480" y1="125" x2="530" y2="125" stroke="#2563eb" stroke-width="4"/>
+          <polygon points="530,125 516,117 516,133" fill="#2563eb"/>
+          <line x1="750" y1="125" x2="800" y2="125" stroke="#2563eb" stroke-width="4"/>
+          <polygon points="800,125 786,117 786,133" fill="#2563eb"/>
+        </svg>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>3. Serial Monitor sebagai Alat Debugging</h2>
+      <p>Serial Monitor adalah salah satu alat paling dasar namun paling penting dalam pemrograman embedded. Dengan Serial Monitor, program dapat “berbicara” kepada pembuatnya: menampilkan pesan, nilai variabel, status proses, atau titik tertentu yang sedang dilalui program.</p>
+      <p>Pada pertemuan ini Anda diminta menambahkan <code>Serial.print()</code> untuk debugging. Tujuannya bukan sekadar mencetak teks, tetapi membangun kebiasaan melacak apa yang sebenarnya terjadi di dalam program.</p>
+      <div class="analogy"><strong>Analogi dunia nyata:</strong> Serial Monitor seperti CCTV dan buku log di ruang kontrol. Tanpa keduanya, seseorang hanya menebak-nebak apa yang terjadi. Dengan log yang jelas, proses bisa dilihat langkah demi langkah.</div>
+
+      <h3>3.1 Mengapa Serial Monitor berguna?</h3>
+      <ul>
+        <li>Menunjukkan apakah program benar-benar masuk ke bagian tertentu.</li>
+        <li>Menampilkan nilai variabel saat program berjalan.</li>
+        <li>Membantu membedakan apakah masalah terjadi pada pembacaan input, proses logika, atau output.</li>
+        <li>Mengurangi kebiasaan menebak-nebak penyebab error.</li>
+      </ul>
+
+      <h3>3.2 Contoh penggunaan dasar</h3>
+      <div class="code"><pre>Serial.begin(115200);
+Serial.println("Program dimulai");
+Serial.print("Nilai tombol: ");
+Serial.println(buttonState);</pre></div>
+      <p><code>Serial.begin(115200)</code> mengaktifkan komunikasi serial dengan kecepatan tertentu. Setelah itu, <code>Serial.println()</code> dan <code>Serial.print()</code> dapat dipakai untuk menampilkan teks atau nilai variabel. Perbedaan utamanya adalah <code>println</code> menambahkan pindah baris, sedangkan <code>print</code> tidak.</p>
+    </section>
+
+    <section class="card">
+      <h2>4. Debugging: Error Sintaks dan Error Logika</h2>
+      <p>Checkpoint pertemuan ini menekankan bahwa Anda harus dapat membedakan error sintaks dan error logika. Keduanya sering tertukar, padahal sifat dan cara menanganinya berbeda.</p>
+      <div class="table-scroll" tabindex="0">
+        <table>
+        <thead>
+          <tr><th>Jenis Error</th><th>Ciri</th><th>Contoh</th><th>Cara menanganinya</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Error sintaks</td>
+            <td>Program gagal dikompilasi karena aturan penulisan salah.</td>
+            <td>Titik koma hilang, kurung tidak seimbang, nama fungsi salah tulis.</td>
+            <td>Baca pesan kompilasi, temukan baris terkait, lalu perbaiki penulisan.</td>
+          </tr>
+          <tr>
+            <td>Error logika</td>
+            <td>Program berhasil dikompilasi, tetapi hasilnya tidak sesuai harapan.</td>
+            <td>LED seharusnya menyala saat tombol ditekan, tetapi justru mati.</td>
+            <td>Gunakan Serial Monitor, cek nilai variabel, telusuri alur keputusan program.</td>
+          </tr>
+        </tbody>
+        </table>
+      </div>
+
+      <div class="svgbox" tabindex="0">
+        <svg viewBox="0 0 980 250" width="100%" role="img" aria-label="Diagram alur debugging dasar">
+          <rect x="25" y="85" width="150" height="80" rx="16" fill="#dbeafe" stroke="#2563eb"/>
+          <rect x="220" y="85" width="180" height="80" rx="16" fill="#fef3c7" stroke="#b45309"/>
+          <rect x="445" y="55" width="220" height="60" rx="16" fill="#fee2e2" stroke="#dc2626"/>
+          <rect x="445" y="135" width="220" height="60" rx="16" fill="#dcfce7" stroke="#15803d"/>
+          <rect x="710" y="85" width="245" height="80" rx="16" fill="#ede9fe" stroke="#6d28d9"/>
+          <text x="100" y="118" text-anchor="middle" font-size="22" font-weight="700">Jalankan</text>
+          <text x="100" y="144" text-anchor="middle" font-size="16">program</text>
+          <text x="310" y="118" text-anchor="middle" font-size="22" font-weight="700">Apakah</text>
+          <text x="310" y="144" text-anchor="middle" font-size="16">kompilasi gagal?</text>
+          <text x="555" y="90" text-anchor="middle" font-size="22" font-weight="700">Ya → error sintaks</text>
+          <text x="555" y="169" text-anchor="middle" font-size="22" font-weight="700">Tidak → cek logika</text>
+          <text x="832" y="118" text-anchor="middle" font-size="22" font-weight="700">Gunakan pesan error</text>
+          <text x="832" y="144" text-anchor="middle" font-size="16">atau Serial Monitor</text>
+          <line x1="175" y1="125" x2="220" y2="125" stroke="#2563eb" stroke-width="4"/>
+          <polygon points="220,125 206,117 206,133" fill="#2563eb"/>
+          <line x1="400" y1="125" x2="445" y2="85" stroke="#2563eb" stroke-width="4"/>
+          <polygon points="445,85 432,89 441,99" fill="#2563eb"/>
+          <line x1="400" y1="125" x2="445" y2="165" stroke="#2563eb" stroke-width="4"/>
+          <polygon points="445,165 441,151 432,161" fill="#2563eb"/>
+          <line x1="665" y1="85" x2="710" y2="125" stroke="#2563eb" stroke-width="4"/>
+          <polygon points="710,125 697,116 693,129" fill="#2563eb"/>
+          <line x1="665" y1="165" x2="710" y2="125" stroke="#2563eb" stroke-width="4"/>
+          <polygon points="710,125 697,121 706,134" fill="#2563eb"/>
+        </svg>
+      </div>
+
+      <h3>4.1 Contoh error sintaks</h3>
+      <div class="code"><pre>void setup() {
+  Serial.begin(115200)
+}</pre></div>
+      <p>Kode di atas tampak sederhana, tetapi ada titik koma yang hilang setelah <code>Serial.begin(115200)</code>. Akibatnya, program tidak akan dikompilasi. Ini adalah contoh error sintaks: aturan penulisan bahasa tidak dipenuhi.</p>
+
+      <h3>4.2 Contoh error logika</h3>
+      <div class="code"><pre>if (buttonState == HIGH) {
+  digitalWrite(ledPin, LOW);
+}</pre></div>
+      <p>Secara sintaks, kode ini benar. Namun, jika niat program adalah menyalakan LED saat tombol ditekan, maka logikanya salah karena kondisi <code>HIGH</code> justru membuat LED mati. Error seperti ini hanya bisa dikenali dengan memahami tujuan program dan mengamati perilaku hasilnya.</p>
+    </section>
+
+    <section class="card">
+      <h2>5. Contoh Refactoring: Dari Program Berantakan Menjadi Modular</h2>
+      <p>Salah satu aktivitas pertemuan ini adalah memecah program besar menjadi fungsi-fungsi kecil. Di bawah ini ditunjukkan contoh sederhana agar perbedaan antara kode yang menumpuk dan kode modular terlihat jelas.</p>
+
+      <h3>5.1 Versi kurang rapi</h3>
+      <div class="code"><pre>const int ledPin = 2;
+const int buttonPin = 4;
+int buttonState = 0;
+
+void setup() {
+  pinMode(ledPin, OUTPUT);
+  pinMode(buttonPin, INPUT);
+  Serial.begin(115200);
+}
+
+void loop() {
+  buttonState = digitalRead(buttonPin);
+  Serial.print("Button: ");
+  Serial.println(buttonState);
+  if (buttonState == HIGH) {
+    digitalWrite(ledPin, HIGH);
+  } else {
+    digitalWrite(ledPin, LOW);
+  }
+  delay(200);
+}</pre></div>
+      <p>Program ini sebenarnya masih bisa dipahami, tetapi semua tugas masih menumpuk di <code>loop()</code>: membaca tombol, menampilkan log, dan mengatur LED. Ketika program nanti berkembang, <code>loop()</code> akan menjadi terlalu padat.</p>
+
+      <h3>5.2 Versi lebih modular</h3>
+      <div class="code"><pre>const int ledPin = 2;
+const int buttonPin = 4;
+int buttonState = 0;
+
+void setupPins() {
+  pinMode(ledPin, OUTPUT);
+  pinMode(buttonPin, INPUT);
+}
+
+void readButton() {
+  buttonState = digitalRead(buttonPin);
+}
+
+void printDebugInfo() {
+  Serial.print("Button: ");
+  Serial.println(buttonState);
+}
+
+void updateLed() {
+  if (buttonState == HIGH) {
+    digitalWrite(ledPin, HIGH);
+  } else {
+    digitalWrite(ledPin, LOW);
+  }
+}
+
+void setup() {
+  Serial.begin(115200);
+  setupPins();
+}
+
+void loop() {
+  readButton();
+  printDebugInfo();
+  updateLed();
+  delay(200);
+}</pre></div>
+
+      <h3>5.3 Mengapa versi kedua lebih baik?</h3>
+      <ul>
+        <li>Setiap fungsi memiliki tugas yang jelas.</li>
+        <li>Jika terjadi masalah pada pembacaan tombol, perhatian bisa langsung diarahkan ke <code>readButton()</code>.</li>
+        <li>Jika log terlalu banyak atau ingin diubah formatnya, cukup ubah <code>printDebugInfo()</code>.</li>
+        <li>Program lebih mudah dibaca karena alur besar pada <code>loop()</code> sekarang tampak ringkas: baca input, tampilkan log, ubah output.</li>
+      </ul>
+      <div class="analogy"><strong>Analogi dunia nyata:</strong> versi modular seperti dapur restoran dengan stasiun kerja terpisah: ada bagian persiapan, bagian memasak, dan bagian penyajian. Jika ada masalah rasa, koki tidak perlu membongkar seluruh dapur; cukup memeriksa stasiun yang relevan.</div>
+    </section>
+
+    <section class="card">
+      <h2>6. Penjelasan Kode Secara Terperinci</h2>
+      <p>Berikut penjelasan rinci pada versi modular agar hubungan antara teori dan implementasi menjadi jelas.</p>
+      <div class="table-scroll" tabindex="0">
+        <table>
+        <thead>
+          <tr><th>Bagian kode</th><th>Penjelasan fungsi</th><th>Hubungan dengan teori</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>const int ledPin = 2;</code></td>
+            <td>Menyimpan nomor pin LED sebagai konstanta agar tidak berubah selama program berjalan.</td>
+            <td>Menunjukkan konsep konstanta sebagai acuan tetap.</td>
+          </tr>
+          <tr>
+            <td><code>int buttonState = 0;</code></td>
+            <td>Menyimpan status tombol yang nilainya bisa berubah tergantung pembacaan input.</td>
+            <td>Menunjukkan konsep variabel sebagai data dinamis.</td>
+          </tr>
+          <tr>
+            <td><code>setupPins()</code></td>
+            <td>Mengatur mode pin di awal sehingga tugas konfigurasi terpisah dari logika utama.</td>
+            <td>Contoh fungsi kecil dengan satu tanggung jawab.</td>
+          </tr>
+          <tr>
+            <td><code>readButton()</code></td>
+            <td>Membaca kondisi tombol dan menyimpannya ke variabel <code>buttonState</code>.</td>
+            <td>Memisahkan tahap input dari proses lain agar mudah dicek.</td>
+          </tr>
+          <tr>
+            <td><code>printDebugInfo()</code></td>
+            <td>Mencetak status tombol ke Serial Monitor.</td>
+            <td>Mewakili praktik debugging berbasis log.</td>
+          </tr>
+          <tr>
+            <td><code>updateLed()</code></td>
+            <td>Menentukan apakah LED menyala atau mati berdasarkan nilai tombol.</td>
+            <td>Menghubungkan input, logika keputusan, dan output.</td>
+          </tr>
+          <tr>
+            <td><code>loop()</code></td>
+            <td>Menjalankan siklus utama program secara berulang.</td>
+            <td>Menunjukkan pola kerja device embedded yang terus memantau dan merespons.</td>
+          </tr>
+        </tbody>
+        </table>
+      </div>
+      <p>Dengan susunan seperti ini, Anda dapat melihat bahwa “program rapi” bukan sekadar masalah estetika penulisan. Kerapian langsung memengaruhi kemampuan untuk memahami, menguji, dan memperbaiki sistem.</p>
+    </section>
+
+    <section class="card">
+      <h2>7. Praktik Debugging Dasar di Simulator</h2>
+      <p>Pertemuan 5 menuntut dua kemampuan inti: memperbaiki program rusak dan merapikan program lama. Berikut alur praktik yang dapat Anda ikuti.</p>
+      <p>Seluruh praktik pertemuan ini dikerjakan di simulator <strong>Wokwi</strong>, alat yang sama seperti pada pertemuan sebelumnya, sehingga tidak ada perangkat fisik yang perlu disiapkan. Bagian 7.1 memasang rangkaian yang dipakai bersama oleh semua latihan pada materi ini, bagian 7.2 menunjukkan tempat pesan kesalahan dan keluaran Serial Monitor dibaca, lalu bagian 7.3 dan 7.4 memakai keduanya untuk menelusuri kesalahan. Kode yang dijalankan diambil dari Bab 5.2 serta kedua program pada Bab 10.1, jadi bacalah bab ini berdampingan dengan bab-bab tersebut.</p>
+
+      <h3>7.1 Menyiapkan rangkaian dan lingkungan kerja di simulator</h3>
+      <p>Satu rangkaian saja sudah cukup untuk seluruh latihan pada materi ini. Rangkaian itu memuat tiga komponen yang memang muncul di contoh kodenya: LED pada <code>ledPin</code>, tombol pada <code>buttonPin</code> atau <code>tombolPin</code>, dan modul LDR pada <code>ldrPin</code>. Dengan ketiganya terpasang sejak awal, Anda dapat berpindah antara kode Bab 5.2, Program A, dan Program B tanpa merakit ulang apa pun.</p>
+      <p><strong>Komponen yang perlu ditambahkan:</strong> satu LED, satu resistor bernilai 220 Ω, satu tombol atau <em>pushbutton</em>, dan satu modul LDR sebagai sensor cahaya. Semuanya diambil dari daftar komponen yang terbuka ketika tanda tambah (<strong>+</strong>) pada panel rangkaian ditekan.</p>
+      <div class="svgbox" tabindex="0">
+        <svg viewBox="0 30 700 325" width="100%" role="img" aria-label="Rangkaian gabungan Pertemuan 5: pin GPIO 2 tersambung ke resistor 220 ohm lalu ke kaki panjang LED dan kaki pendek LED kembali ke GND, pin GPIO 4 tersambung ke satu kaki tombol dengan kaki di seberangnya ke GND, sedangkan pin AO modul LDR tersambung ke GPIO 34 dengan pin VCC modul ke 3V3 dan pin GND modul ke GND">
+          <rect x="30" y="40" width="170" height="290" rx="14" fill="#dcfce7" stroke="#15803d" stroke-width="2"/>
+          <text x="115" y="88" text-anchor="middle" font-size="22" font-weight="700">ESP32</text>
+          <text x="115" y="110" text-anchor="middle" font-size="14" fill="#374151">board virtual</text>
+          <text x="194" y="145" text-anchor="end" font-size="15" font-weight="700" fill="#15803d">GPIO 2</text>
+          <text x="194" y="183" text-anchor="end" font-size="15" font-weight="700" fill="#111827">GND</text>
+          <text x="194" y="223" text-anchor="end" font-size="15" font-weight="700" fill="#6d28d9">GPIO 4</text>
+          <text x="194" y="269" text-anchor="end" font-size="15" font-weight="700" fill="#15803d">3V3</text>
+          <text x="194" y="309" text-anchor="end" font-size="15" font-weight="700" fill="#6d28d9">GPIO 34</text>
+          <line x1="200" y1="140" x2="285" y2="140" stroke="#15803d" stroke-width="4"/>
+          <rect x="285" y="120" width="100" height="40" rx="8" fill="#fef3c7" stroke="#b45309" stroke-width="2"/>
+          <text x="335" y="146" text-anchor="middle" font-size="15" font-weight="700">220 Ω</text>
+          <line x1="385" y1="140" x2="458" y2="140" stroke="#15803d" stroke-width="4"/>
+          <circle cx="492" cy="140" r="34" fill="#fee2e2" stroke="#dc2626" stroke-width="2"/>
+          <text x="492" y="146" text-anchor="middle" font-size="16" font-weight="700">LED</text>
+          <line x1="526" y1="140" x2="620" y2="140" stroke="#111827" stroke-width="4"/>
+          <line x1="620" y1="140" x2="620" y2="326" stroke="#111827" stroke-width="4"/>
+          <line x1="620" y1="178" x2="200" y2="178" stroke="#111827" stroke-width="4"/>
+          <line x1="200" y1="218" x2="300" y2="218" stroke="#6d28d9" stroke-width="4"/>
+          <rect x="300" y="196" width="112" height="44" rx="10" fill="#ede9fe" stroke="#6d28d9" stroke-width="2"/>
+          <text x="356" y="224" text-anchor="middle" font-size="16" font-weight="700">Tombol</text>
+          <line x1="412" y1="218" x2="620" y2="218" stroke="#111827" stroke-width="4"/>
+          <line x1="200" y1="264" x2="280" y2="264" stroke="#15803d" stroke-width="4"/>
+          <line x1="280" y1="264" x2="280" y2="284" stroke="#15803d" stroke-width="4"/>
+          <line x1="280" y1="284" x2="330" y2="284" stroke="#15803d" stroke-width="4"/>
+          <line x1="200" y1="304" x2="330" y2="304" stroke="#6d28d9" stroke-width="4"/>
+          <rect x="330" y="268" width="210" height="74" rx="10" fill="#ede9fe" stroke="#6d28d9" stroke-width="2"/>
+          <text x="438" y="313" text-anchor="middle" font-size="16" font-weight="700">Modul LDR</text>
+          <text x="338" y="280" font-size="12" font-weight="700" fill="#15803d">VCC</text>
+          <text x="338" y="300" font-size="12" font-weight="700" fill="#6d28d9">AO</text>
+          <text x="534" y="322" text-anchor="end" font-size="12" font-weight="700" fill="#111827">GND</text>
+          <line x1="540" y1="326" x2="620" y2="326" stroke="#111827" stroke-width="4"/>
+        </svg>
+      </div>
+      <p>Urutan sambungannya terbagi menjadi empat kelompok. Pertama, <strong>GPIO 2 → resistor 220 Ω → kaki panjang LED</strong>, lalu <strong>kaki pendek LED → GND</strong>. Kedua, <strong>satu kaki tombol → GPIO 4</strong> dan <strong>kaki di seberangnya → GND</strong>; kaki yang dipakai harus dua kaki yang berseberangan, karena dua kaki pada sisi yang sama sudah tersambung di dalam tombol. Ketiga, <strong>pin AO modul LDR → GPIO 34</strong>. Keempat, <strong>pin VCC modul LDR → 3V3</strong> dan <strong>pin GND modul LDR → GND</strong>. Nomor pin ini bukan pilihan bebas: 2 dan 4 diambil dari <code>ledPin</code> dan <code>buttonPin</code> pada Bab 5.1 serta Bab 5.2, sedangkan 34 diambil dari <code>ldrPin</code> pada Program A di Bab 10.1. GPIO 34 juga tidak dapat ditukar dengan sembarang pin, karena pembacaan analog pada ESP32 hanya tersedia pada GPIO 32 sampai 39 dan pin tersebut hanya dapat menjadi input.</p>
+
+      <details>
+        <summary>Rangkaian gabungan dalam bentuk <code>diagram.json</code></summary>
+        <p>Area rangkaian sebenarnya tersimpan sebagai berkas teks bernama <code>diagram.json</code>. Buka tab tersebut, hapus seluruh isinya lebih dahulu, tempelkan kode di bawah secara utuh, lalu kembali ke panel rangkaian. Rangkaian akan langsung terbentuk dengan bentuk yang sama seperti gambar di atas, tanpa perlu menggeser komponen satu per satu.</p>
+        <div class="code"><pre>{
+  "version": 1,
+  "author": "Materi IoT Pertemuan 5",
+  "editor": "wokwi",
+  "parts": [
+    { "type": "board-esp32-devkit-c-v4", "id": "esp", "top": 0, "left": 0, "attrs": {} },
+    { "type": "wokwi-led", "id": "led1", "top": -60, "left": 140, "attrs": { "color": "red" } },
+    { "type": "wokwi-resistor", "id": "r1", "top": 40, "left": 130, "attrs": { "value": "220" } },
+    { "type": "wokwi-pushbutton", "id": "btn1", "top": 130, "left": 130, "attrs": { "color": "green" } },
+    { "type": "wokwi-photoresistor-sensor", "id": "ldr1", "top": 230, "left": 130, "attrs": {} }
+  ],
+  "connections": [
+    [ "esp:2", "r1:1", "green", [ "v0" ] ],
+    [ "r1:2", "led1:A", "green", [ "v0" ] ],
+    [ "led1:C", "esp:GND.1", "black", [ "v0" ] ],
+    [ "esp:4", "btn1:1.l", "violet", [ "v0" ] ],
+    [ "btn1:2.l", "esp:GND.2", "black", [ "v0" ] ],
+    [ "esp:34", "ldr1:AO", "violet", [ "v0" ] ],
+    [ "ldr1:VCC", "esp:3V3", "red", [ "v0" ] ],
+    [ "ldr1:GND", "esp:GND.3", "black", [ "v0" ] ]
+  ]
+}</pre></div>
+        <p>Bila panel rangkaian menjadi kosong setelah tempelan itu dimasukkan, biasanya ada tanda kurung atau koma yang ikut terhapus. Tempelkan ulang seluruh isinya, jangan hanya sebagian.</p>
+      </details>
+      <ol class="step">
+        <li>Buka <strong>wokwi.com</strong> di browser, pilih <strong>New Project</strong>, lalu pilih board <strong>ESP32</strong>.</li>
+        <li>Kenali empat bagian pada layar: <strong>panel kode</strong> di sisi kiri berisi berkas <code>sketch.ino</code>, <strong>panel rangkaian</strong> di sisi kanan, tab <code>diagram.json</code> di atas panel rangkaian, dan <strong>tombol jalankan</strong> berbentuk segitiga hijau.</li>
+        <li>Pasang keempat komponen seperti gambar di atas, atau tempelkan <code>diagram.json</code> yang tersedia. Untuk menyambung dua kaki komponen, klik kaki pertama lalu klik kaki kedua.</li>
+        <li>Hapus seluruh isi panel kode, lalu tempelkan contoh kode dari Bab 5.2. Kode itu dipakai lebih dahulu justru karena isinya sudah benar, sehingga Anda mengenal tampilan program yang berjalan normal sebelum berhadapan dengan program yang rusak.</li>
+        <li>Periksa bahwa angka pada <code>const int ledPin = 2;</code> dan <code>const int buttonPin = 4;</code> sama dengan nomor pin yang benar-benar tersambung di panel rangkaian.</li>
+        <li>Tekan tombol jalankan, lalu amati dua tempat sekaligus: LED di panel rangkaian dan tulisan yang muncul di jendela Serial Monitor di bagian bawah layar.</li>
+        <li>Sebagai variasi, hentikan simulasi lalu ubah <code>delay(200)</code> pada baris terakhir <code>loop()</code> menjadi <code>delay(1000)</code>, jalankan kembali, dan bandingkan kecepatan munculnya baris baru di Serial Monitor dengan pengamatan sebelumnya.</li>
+      </ol>
+      <p><strong>Hasil yang harus terlihat:</strong> Serial Monitor menampilkan baris <code>Button: 0</code> atau <code>Button: 1</code> yang bertambah kira-kira lima baris setiap detik, dan LED di panel rangkaian mengikuti angka itu: menyala ketika angkanya 1 dan mati ketika angkanya 0. Setelah nilai <code>delay</code> diubah menjadi 1000, baris baru hanya muncul kira-kira satu kali setiap detik sehingga keluarannya jauh lebih mudah dibaca. Perbedaan ini perlu Anda alami sendiri, karena log yang mengalir terlalu cepat adalah salah satu penyebab utama penelusuran kesalahan menjadi sulit.</p>
+      <div class="warn">
+        <strong>Project baru hanya berisi board.</strong> Area rangkaian pada project ESP32 yang baru dibuat masih kosong: belum ada LED, resistor, tombol, maupun modul LDR di sana. Bila kode dijalankan pada project yang masih kosong, pin GPIO 2 tetap berganti keadaan dan Serial Monitor tetap mencetak angka, tetapi tidak ada apa pun yang terlihat menyala, sehingga kode yang sebenarnya sudah benar mudah dikira salah. Karena itu rangkaian selalu dipasang lebih dahulu, sebelum kode dijalankan.
+      </div>
+      <div class="tip">
+        <strong>Bila angka di belakang <code>Button:</code> berubah sendiri tanpa tombol ditekan.</strong> Contoh kode pada Bab 5.1 dan Bab 5.2 memakai <code>pinMode(buttonPin, INPUT)</code> tanpa pull-up, sehingga GPIO 4 tidak memiliki nilai yang pasti selama tombol tidak ditekan dan angkanya dapat berpindah-pindah sendiri. Ini bukan kerusakan rangkaian, melainkan gejala yang khas dan justru berguna sebagai bahan latihan membaca log. Bila Anda ingin pembacaannya stabil, ganti menjadi <code>INPUT_PULLUP</code> seperti pada Program B di Bab 10.1. Ingat bahwa dengan pull-up kondisi tertekan terbaca <code>LOW</code>, sehingga perbandingan di dalam <code>updateLed()</code> perlu dibalik agar LED tetap menyala saat tombol ditekan.
+      </div>
+      <h3>7.2 Membaca pesan kesalahan dan membuka Serial Monitor</h3>
+      <p>Dua hal pada bagian ini adalah bekal yang dipakai di seluruh sisa materi: mengetahui di panel mana pesan kompilasi muncul, dan mengetahui di mana keluaran <code>Serial.print()</code> dibaca. Tanpa keduanya, langkah-langkah pada Bab 7.3 tidak dapat dijalankan karena tidak ada tempat untuk melihat hasilnya. Kerjakan langkah berikut memakai Program A pada Bab 10.1, yang memang sengaja memuat satu kesalahan sintaks, di atas rangkaian yang baru Anda pasang.</p>
+      <ol class="step">
+        <li>Ganti seluruh isi panel kode dengan Program A dari Bab 10.1, lalu tekan tombol jalankan. Kompilasi akan gagal dan simulasi tidak akan dimulai.</li>
+        <li>Cari pesannya pada <strong>panel pesan yang terbuka di bagian bawah panel kode</strong>. Panel itu baru muncul ketika kompilasi gagal, dan isinya adalah keluaran kompiler apa adanya, bukan terjemahannya.</li>
+        <li>Baca satu baris pesan dari kiri ke kanan. Bentuknya <code>sketch.ino:12:3: error: expected ';' before '}' token</code>: bagian pertama adalah nama berkas, <strong>angka pertama sesudah nama berkas adalah nomor baris</strong>, angka kedua adalah nomor kolom pada baris itu, lalu kata <code>error</code> diikuti keterangan masalahnya.</li>
+        <li>Cocokkan nomor baris tersebut dengan nomor yang tercetak di tepi kiri panel kode. Menekan pesannya biasanya langsung memindahkan kursor ke baris yang dimaksud, dan baris itu juga ditandai di panel kode.</li>
+        <li>Periksa juga baris di atas baris yang disebut, jangan hanya baris itu sendiri. Nomor baris pada pesan menunjukkan tempat kompiler menyadari ada masalah, dan tempat itu tidak selalu sama dengan tempat kesalahan ditulis. Pada Program A, pesannya dapat menunjuk baris <code>}</code>, padahal titik koma yang hilang ada di baris di atasnya.</li>
+        <li>Perbaiki kesalahannya, jalankan kembali, lalu pastikan panel pesan tadi tidak muncul lagi. Selama panel itu masih muncul, tidak ada satu baris pun program yang benar-benar dijalankan.</li>
+        <li>Setelah kompilasi berhasil, buka <strong>jendela Serial Monitor di bagian bawah layar</strong> dengan menekan judul panel bernama <strong>Serial Monitor</strong>. Jendela itu dapat diperlebar dengan menarik tepi atasnya ke atas, sehingga lebih banyak baris keluaran terlihat sekaligus.</li>
+        <li>Pastikan baris <code>Program A siap</code> muncul di sana, lalu perhatikan baris <code>Nilai cahaya:</code> yang menyusul. Bila jendela itu tetap kosong padahal kompilasi berhasil, periksa bahwa <code>Serial.begin(115200);</code> benar-benar ada di dalam <code>setup()</code>.</li>
+        <li>Geser penggeser tingkat cahaya pada gambar modul LDR, lalu perhatikan angka pada baris <code>Nilai cahaya:</code> ikut berubah dan LED menyala ketika angka itu turun di bawah nilai <code>ambangGelap</code>, yaitu 1500.</li>
+      </ol>
+      <p><strong>Hasil yang harus terlihat:</strong> sebelum perbaikan, panel pesan di bawah panel kode memuat satu baris <code>error</code> yang menyebut nama berkas beserta nomor baris, sedangkan Serial Monitor sama sekali kosong. Sesudah perbaikan, panel pesan itu hilang, Serial Monitor menampilkan <code>Program A siap</code> disusul angka <code>Nilai cahaya:</code> yang bertambah satu baris setiap setengah detik, dan LED menyala atau mati mengikuti nilai tersebut. Kedua keadaan itu perlu Anda lihat berurutan, karena perbandingan di antara keduanyalah yang membuat perbedaan antara gagal dikompilasi dan berjalan tetapi salah hasilnya menjadi konkret.</p>
+      <div class="warn">
+        <strong>Perubahan kode tidak berlaku pada simulasi yang sedang berjalan.</strong> Setiap kali panel kode disunting, hentikan simulasi lalu jalankan kembali agar kode yang baru ikut dikompilasi. Bila langkah ini terlewat, perbaikan yang sudah benar tampak seperti tidak berpengaruh, dan Anda mudah mencurigai bagian program yang sebenarnya tidak bermasalah.
+      </div>
+
+
+      <h3>7.3 Langkah debugging yang sistematis</h3>
+      <ol>
+        <li><strong>Jalankan kompilasi.</strong> Jika gagal, baca pesan error dan identifikasi jenis kesalahannya.</li>
+        <li><strong>Perbaiki error sintaks terlebih dahulu.</strong> Selama program belum bisa dijalankan, error logika belum bisa diuji.</li>
+        <li><strong>Tambahkan Serial Monitor.</strong> Cetak nilai variabel penting atau pesan di titik tertentu.</li>
+        <li><strong>Uji satu bagian dalam satu waktu.</strong> Misalnya, pastikan pembacaan tombol benar sebelum memeriksa LED.</li>
+        <li><strong>Rapikan setelah program benar.</strong> Gunakan fungsi kecil agar pemeriksaan berikutnya lebih mudah.</li>
+      </ol>
+
+      <h3>7.4 Contoh skenario</h3>
+      <p>Misalnya LED tidak menyala saat tombol ditekan. Jangan langsung mengganti semua baris. Pertama, cek apakah program bisa dikompilasi. Kedua, tampilkan nilai tombol ke Serial Monitor. Jika nilai tombol ternyata selalu <code>0</code>, masalah ada pada pembacaan input atau wiring virtual. Jika nilai berubah dengan benar, baru cek bagian logika LED. Dengan pendekatan ini, debugging menjadi proses terarah, bukan coba-coba acak.</p>
+      <div class="analogy"><strong>Analogi dunia nyata:</strong> debugging seperti mencari penyebab lampu ruangan tidak menyala. Seseorang tidak langsung membongkar seluruh instalasi gedung. Ia mulai dari hal paling dasar: apakah saklar ditekan, apakah bohlam masih baik, apakah listrik tersedia, lalu bergerak ke kemungkinan yang lebih spesifik.</div>
+    </section>
+
+    <section class="card">
+      <h2>8. Ringkasan Materi</h2>
+      <ul>
+        <li>Program yang rapi memudahkan pembacaan, pengembangan, dan perbaikan.</li>
+        <li>Variabel menyimpan data yang berubah, konstanta menyimpan acuan tetap, dan fungsi membagi tugas program menjadi bagian yang jelas.</li>
+        <li>Serial Monitor adalah alat penting untuk memahami apa yang terjadi di dalam program.</li>
+        <li>Error sintaks membuat program gagal dikompilasi, sedangkan error logika membuat hasil program salah meskipun kompilasi berhasil.</li>
+        <li>Program modular lebih mudah diuji dan lebih mudah di-debug dibanding program yang seluruh logikanya bercampur dalam satu blok besar.</li>
+      </ul>
+      <p class="footer-note">Materi Pertemuan 5 ini berfokus pada penggunaan fungsi, variabel, konstanta, serial monitor, debugging sintaks, dan debugging logika; dengan aktivitas membaca error kompilasi, menambahkan <code>Serial.print()</code>, dan memecah program besar menjadi fungsi-fungsi kecil.</p>
+    </section>
+
+    <section class="card">
+      <h2>9. Latihan Pemahaman</h2>
+      <h3>9.1 Soal konsep</h3>
+      <ol>
+        <li>Jelaskan perbedaan variabel dan konstanta dengan contoh sederhana.</li>
+        <li>Mengapa fungsi membuat program lebih mudah dipelihara?</li>
+        <li>Apa perbedaan utama error sintaks dan error logika?</li>
+        <li>Mengapa Serial Monitor sangat membantu saat proses debugging?</li>
+      </ol>
+
+      <h3>9.2 Soal praktik</h3>
+      <ul>
+        <li>Tambahkan <code>Serial.print()</code> pada program tombol-LED untuk menampilkan status tombol setiap 200 ms.</li>
+        <li>Ambil satu program dari pertemuan sebelumnya, lalu pecah menjadi minimal tiga fungsi kecil.</li>
+        <li>Cari satu error sintaks dan satu error logika pada contoh program sederhana, lalu jelaskan cara memperbaikinya.</li>
+      </ul>
+    </section>
+    <section class="card">
+      <h2>10. Tugas Latihan Pertemuan 5</h2>
+      <p>Tugas latihan pertemuan ini terdiri atas dua bagian. Bagian pertama melatih kemampuan menemukan kesalahan pada program yang sudah ada, dan bagian kedua melatih kemampuan merapikan program yang sebenarnya sudah berjalan. Keduanya saling melengkapi: kesalahan lebih mudah ditemukan pada program yang tersusun rapi, dan program hanya dapat dirapikan dengan benar bila Anda memahami cara kerjanya.</p>
+
+      <h3>10.1 Tugas 1: perbaiki dua program rusak</h3>
+      <p>Di bawah ini terdapat dua program, dan masing-masing memuat tepat satu kesalahan. Program A memuat satu kesalahan sintaks, sedangkan Program B memuat satu kesalahan logika. Salin keduanya ke simulator, jalankan, temukan kesalahannya, lalu perbaiki. Kerjakan lebih dahulu tanpa membuka kunci jawaban pada Bab 10.4, karena nilai latihan ini justru ada pada proses pencariannya.</p>
+      <p><strong>Komponen yang perlu ditambahkan:</strong> tidak ada. Kedua program dijalankan di atas rangkaian gabungan yang sudah dipasang pada Bab 7.1, karena rangkaian itu memuat LED pada GPIO 2, tombol pada GPIO 4, dan modul LDR pada GPIO 34, yaitu seluruh pin yang dipakai Program A dan Program B. Tempat pesan kompilasi dibaca dan cara membuka jendela Serial Monitor dijelaskan pada Bab 7.2.</p>
+      <p><strong>Program A.</strong> Program ini dimaksudkan untuk menyalakan LED ketika ruangan gelap. Sensor cahaya dipasang sedemikian sehingga nilai pembacaan yang makin kecil berarti ruangan makin gelap, dan ambang batasnya ditetapkan pada 1500. Selain satu kesalahan yang sengaja ditanam, seluruh bagian lain sudah benar.</p>
+      <div class="code"><pre>// Program A: LED indikator ruangan gelap
+const int ldrPin = 34;
+const int ledPin = 2;
+const int ambangGelap = 1500;
+
+int nilaiCahaya = 0;
+
+void setup() {
+  Serial.begin(115200);
+  pinMode(ledPin, OUTPUT);
+  Serial.println("Program A siap");
+}
+
+void bacaCahaya() {
+  nilaiCahaya = analogRead(ldrPin)
+}
+
+void tampilkanLog() {
+  Serial.print("Nilai cahaya: ");
+  Serial.println(nilaiCahaya);
+}
+
+void aturLed() {
+  if (nilaiCahaya &lt; ambangGelap) {
+    digitalWrite(ledPin, HIGH);
+  } else {
+    digitalWrite(ledPin, LOW);
+  }
+}
+
+void loop() {
+  bacaCahaya();
+  tampilkanLog();
+  aturLed();
+  delay(500);
+}</pre></div>
+
+      <p><strong>Program B.</strong> Program ini dimaksudkan untuk menghitung berapa kali tombol ditekan, lalu menampilkan jumlahnya ke Serial Monitor. Tombol dipasang dengan <code>INPUT_PULLUP</code>, sehingga kondisi tertekan terbaca sebagai <code>LOW</code>. LED menyala selama tombol ditekan, dan bagian itu sudah benar. Program ini berhasil dikompilasi tanpa pesan error, tetapi hasil hitungannya tidak seperti yang diharapkan.</p>
+      <div class="code"><pre>// Program B: penghitung jumlah tekanan tombol
+const int tombolPin = 4;
+const int ledPin = 2;
+
+int kondisiTombol = HIGH;
+int kondisiSebelumnya = HIGH;
+
+void setup() {
+  Serial.begin(115200);
+  pinMode(tombolPin, INPUT_PULLUP);
+  pinMode(ledPin, OUTPUT);
+  Serial.println("Program B siap");
+}
+
+void loop() {
+  int jumlahTekan = 0;
+
+  kondisiTombol = digitalRead(tombolPin);
+
+  if (kondisiSebelumnya == HIGH &amp;&amp; kondisiTombol == LOW) {
+    jumlahTekan = jumlahTekan + 1;
+    Serial.print("Jumlah tekan: ");
+    Serial.println(jumlahTekan);
+  }
+
+  if (kondisiTombol == LOW) {
+    digitalWrite(ledPin, HIGH);
+  } else {
+    digitalWrite(ledPin, LOW);
+  }
+
+  kondisiSebelumnya = kondisiTombol;
+  delay(50);
+}</pre></div>
+      <p>Yang dikumpulkan untuk Tugas 1 adalah kode kedua program yang sudah diperbaiki, disertai catatan singkat untuk masing-masing program: baris mana yang salah, jenis kesalahannya, gejala yang Anda lihat sebelum perbaikan, dan apa yang Anda ubah. Untuk Program B, sertakan juga tangkapan layar Serial Monitor sebelum dan sesudah perbaikan sebagai bukti bahwa perilakunya memang berubah.</p>
+
+      <h3>10.2 Tugas 2: rapikan satu program dari pertemuan sebelumnya</h3>
+      <p>Pilih satu program yang sudah pernah Anda buat pada pertemuan sebelumnya, lalu susun ulang menjadi versi yang lebih modular. Beberapa pilihan yang cocok:</p>
+      <ul>
+        <li>Program tombol dan LED atau pola blinking dari Pertemuan 2.</li>
+        <li>Program smart light berbasis ambang batas dari Pertemuan 3.</li>
+        <li>Program portal otomatis dengan servo dan buzzer dari Pertemuan 4.</li>
+      </ul>
+      <p>Ketentuan pengerjaannya sebagai berikut:</p>
+      <ol>
+        <li>Buat minimal <strong>tiga fungsi</strong> selain <code>setup()</code> dan <code>loop()</code>.</li>
+        <li>Setiap fungsi hanya mengerjakan satu pekerjaan, misalnya menyiapkan pin, membaca input, menampilkan log, atau mengatur keluaran.</li>
+        <li>Nama fungsi harus menjelaskan pekerjaannya sehingga isinya dapat diduga tanpa dibuka, misalnya <code>bacaSensor()</code>, <code>tampilkanLog()</code>, atau <code>aturAktuator()</code>. Nama seperti <code>fungsi1()</code> tidak diterima.</li>
+        <li>Setelah dirapikan, <code>loop()</code> sebaiknya hanya berisi urutan pemanggilan fungsi, sebagaimana bentuk pada Bab 5.2.</li>
+        <li>Perilaku program tidak boleh berubah. Versi rapi harus memberi hasil yang sama dengan versi sebelumnya.</li>
+      </ol>
+      <p>Sertakan penjelasan singkat, tiga sampai lima kalimat, tentang alasan Anda memecah program seperti itu: pekerjaan apa yang dipisahkan, dan bagian mana yang kini lebih mudah diperiksa bila terjadi kesalahan. Bab 5.3 dan tabel pada Bab 6 dapat dipakai sebagai contoh cara menjelaskan hubungan antara nama fungsi dan tugasnya.</p>
+      <p>Yang dikumpulkan untuk Tugas 2 adalah kode versi sebelum dan versi sesudah dirapikan, ditambah penjelasan singkat tersebut.</p>
+
+      <h3>10.3 Rubrik penilaian kedua tugas</h3>
+      <div class="table-scroll" tabindex="0">
+        <table>
+        <thead>
+          <tr><th>Aspek</th><th>Bobot</th><th>Kriteria nilai penuh</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Ketepatan temuan pada Tugas 1</td><td>30%</td><td>Kedua kesalahan ditemukan tepat pada barisnya, dan jenisnya disebut dengan benar: sintaks untuk Program A dan logika untuk Program B</td></tr>
+          <tr><td>Penjelasan gejala pada Tugas 1</td><td>20%</td><td>Untuk Program A disebutkan pesan kompilasi yang muncul; untuk Program B dijelaskan perilaku yang menyimpang beserta bukti dari Serial Monitor</td></tr>
+          <tr><td>Pemecahan fungsi pada Tugas 2</td><td>30%</td><td>Ada minimal tiga fungsi, masing-masing mengerjakan satu tugas, dan namanya menjelaskan pekerjaannya tanpa perlu membaca isinya</td></tr>
+          <tr><td>Alasan perapian pada Tugas 2</td><td>20%</td><td>Alasan pemecahan dijelaskan singkat dan tepat, serta perilaku program terbukti tidak berubah dibanding versi sebelumnya</td></tr>
+        </tbody>
+        </table>
+      </div>
+      <p class="footer-note">Menemukan kesalahan tanpa dapat menjelaskan gejalanya masih dianggap belum tuntas, karena kemampuan yang dilatih di sini adalah menghubungkan gejala dengan penyebab, bukan menghafal letak kesalahan.</p>
+
+      <h3>10.4 Kunci jawaban</h3>
+      <p>Bagian ini dibaca setelah Anda mencoba sendiri. Membaca kunci lebih dahulu memang lebih cepat, tetapi kemampuan yang diuji pada checkpoint adalah menemukan kesalahan tanpa bantuan, bukan mengenali kesalahan yang sudah ditunjukkan.</p>
+      <p><strong>Program A, kesalahan sintaks.</strong> Baris yang salah adalah <code>nilaiCahaya = analogRead(ldrPin)</code> di dalam fungsi <code>bacaCahaya()</code>. Baris itu tidak diakhiri titik koma, padahal setiap pernyataan harus ditutup dengan titik koma. Tanpa tanda itu, kompiler menganggap pernyataan belum selesai dan terus membaca sampai menemukan kurung kurawal penutup.</p>
+      <p>Gejalanya: program gagal dikompilasi, sehingga tidak ada yang berjalan dan Serial Monitor tetap kosong. Pesan kompilasi yang muncul berbunyi seperti <code>expected ';' before '}' token</code>. Kompiler menyebut tanda <code>}</code> sebagai bagian yang ditemuinya, padahal yang sebenarnya kurang adalah titik koma pada baris di atasnya. Penanda posisinya bisa berada di ujung baris <code>nilaiCahaya = analogRead(ldrPin)</code> atau pada baris <code>}</code> sesudahnya, tergantung versi kompiler. Inilah kebiasaan yang perlu dibangun sejak awal: pesan error menunjukkan tempat kompiler menyadari ada masalah, dan tempat itu tidak selalu sama dengan tempat kesalahan ditulis. Perbaikannya cukup menambahkan titik koma.</p>
+      <div class="code"><pre>void bacaCahaya() {
+  nilaiCahaya = analogRead(ldrPin);
+}</pre></div>
+      <p><strong>Program B, kesalahan logika.</strong> Baris yang salah adalah <code>int jumlahTekan = 0;</code> yang ditulis di dalam <code>loop()</code>. Deklarasi di posisi itu membuat variabel dibuat ulang setiap kali <code>loop()</code> dijalankan, sehingga nilainya kembali menjadi 0 pada setiap putaran dan hasil penambahan tidak pernah menumpuk. Secara sintaks penulisannya sah, karena itu kompilasi berhasil dan tidak ada pesan error apa pun.</p>
+      <p>Gejalanya terlihat pada perilaku, bukan pada pesan kompilasi: LED tetap menyala dengan benar saat tombol ditekan, tetapi Serial Monitor selalu menampilkan <code>Jumlah tekan: 1</code> berapa kali pun tombol ditekan. Angkanya tidak pernah menjadi 2 atau 3. Perbaikannya adalah memindahkan deklarasi keluar dari <code>loop()</code> sehingga menjadi variabel global bersama variabel lain di atas <code>setup()</code>, lalu menghapus baris deklarasi yang ada di dalam <code>loop()</code>.</p>
+      <div class="code"><pre>int kondisiTombol = HIGH;
+int kondisiSebelumnya = HIGH;
+int jumlahTekan = 0;
+
+void loop() {
+  kondisiTombol = digitalRead(tombolPin);
+  // sisa isi loop() tetap sama, tanpa baris deklarasi jumlahTekan
+}</pre></div>
+      <p>Setelah diperbaiki, Serial Monitor akan menampilkan angka yang bertambah: 1, lalu 2, lalu 3, dan seterusnya. Cara lain yang juga benar adalah menulis <code>static int jumlahTekan = 0;</code> di dalam <code>loop()</code>, karena kata <code>static</code> membuat nilai variabel bertahan antarpemanggilan. Perhatikan urutan kerja pada kedua program ini: kesalahan Program A harus diperbaiki lebih dahulu agar program dapat berjalan, sedangkan kesalahan Program B hanya dapat ditemukan setelah program berjalan dan perilakunya diamati, persis seperti langkah debugging pada Bab 7.3.</p>
+    </section>
+
+    <section class="card">
+      <h2>11. Checkpoint Evaluasi Pertemuan 5</h2>
+      <p>Pertemuan 5 dianggap tuntas bila tiga hal berikut dapat Anda lakukan. Ketiganya sudah dibahas di materi ini, sehingga daftar di bawah sekaligus dipakai sebagai pemeriksaan diri sebelum Anda melanjutkan ke pertemuan berikutnya.</p>
+      <div class="mini">
+        <div class="label">Target minimal pertemuan ini</div>
+        <ul>
+          <li>Tidak berhenti pada menyalin kode, tetapi mampu melacak sendiri letak kesalahan pada program.</li>
+          <li>Program yang Anda tulis mulai tersusun rapi, sehingga bagian yang bermasalah dapat diperiksa satu per satu.</li>
+        </ul>
+      </div>
+      <div class="table-scroll" tabindex="0">
+        <table>
+        <thead><tr><th>Yang diperiksa</th><th>Cara memastikan sendiri</th><th>Bila belum tercapai</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>Dapat membedakan error sintaks dan error logika</td>
+            <td>Ambil Program A dan Program B pada Bab 10.1, lalu sebutkan jenis kesalahan masing-masing sebelum menjalankannya. Uji jawaban Anda dengan satu pertanyaan: apakah program masih bisa dikompilasi? Bila tidak bisa, kesalahannya sintaks; bila bisa tetapi hasilnya salah, kesalahannya logika.</td>
+            <td>Baca ulang tabel perbandingan pada Bab 4, lalu dua contoh pendek pada Bab 4.1 dan Bab 4.2.</td>
+          </tr>
+          <tr>
+            <td>Dapat menunjukkan titik kesalahan memakai Serial Monitor</td>
+            <td>Sisipkan <code>Serial.print()</code> pada beberapa titik program Anda, jalankan, lalu tunjuk baris keluaran tempat nilai mulai menyimpang dari yang diharapkan. Anda dianggap mampu bila dapat menyebutkan bagian program yang bermasalah berdasarkan keluaran itu, bukan berdasarkan dugaan.</td>
+            <td>Kembali ke Bab 3.1 dan Bab 3.2 tentang kegunaan Serial Monitor, lalu ikuti langkah bertahap pada Bab 7.3 dan contoh penelusuran pada Bab 7.4.</td>
+          </tr>
+          <tr>
+            <td>Program lebih rapi dibanding versi sebelumnya</td>
+            <td>Bandingkan <code>loop()</code> versi lama dan versi baru dari Tugas 2 pada Bab 10.2. Versi baru seharusnya hanya berisi urutan pemanggilan fungsi, dan setiap nama fungsi dapat dijelaskan pekerjaannya dalam satu kalimat.</td>
+            <td>Pelajari kembali perbandingan pada Bab 5.1 dan Bab 5.2, alasan-alasannya pada Bab 5.3, serta tabel nama fungsi dan tugasnya pada Bab 6.</td>
+          </tr>
+        </tbody>
+        </table>
+      </div>
+      <p class="footer-note">Checkpoint besar pertama, CP-1, sudah dilewati pada Pertemuan 4. Berikutnya adalah CP-2 pada Pertemuan 8, lalu CP-3 pada Pertemuan 12, dan CP-4 pada Pertemuan 16. Kemampuan melacak kesalahan yang dilatih di pertemuan ini akan dipakai terus-menerus menjelang CP-2, karena program yang berhubungan dengan jaringan lebih sulit ditebak dan lebih bergantung pada log. Perlu diingat juga bahwa tugas latihan mingguan, termasuk kedua tugas pada Bab 10, berbobot 20 persen dari nilai akhir.</p>
+    </section>
+
+    <section class="card">
+      <h2>12. Referensi Praktis</h2>
+      <p>Tiga rujukan berikut melengkapi materi pertemuan ini. Sebagian besar berbahasa Inggris, dan sebaiknya dibaca setelah praktik selesai agar istilah di dalamnya sudah punya bentuk nyata dari program yang Anda perbaiki sendiri.</p>
+
+      <h3>12.1 Arduino Reference, bagian Serial — <code>docs.arduino.cc</code></h3>
+      <p>Halaman rujukan resmi untuk seluruh perintah komunikasi serial, termasuk <code>Serial.begin()</code>, <code>Serial.print()</code>, dan <code>Serial.println()</code> yang dipakai pada Bab 3.2. Bacaan ini juga menjelaskan arti angka kecepatan seperti 115200, sehingga tampilan Serial Monitor yang berupa karakter acak menjadi lebih mudah dijelaskan penyebabnya.</p>
+
+      <h3>12.2 Wokwi Docs, bagian Serial Monitor — <code>docs.wokwi.com</code></h3>
+      <p>Dokumentasi resmi simulator yang dipakai pada mata kuliah ini, khususnya cara membuka dan membaca jendela Serial Monitor. Berguna langsung saat mengerjakan Tugas 1 pada Bab 10.1, terutama ketika Anda perlu menyimpan tangkapan layar keluaran sebelum dan sesudah perbaikan Program B.</p>
+
+      <h3>12.3 Topik: debugging dasar pada sistem tertanam</h3>
+      <p>Untuk topik ini tidak ada satu sumber baku yang ditunjuk, jadi carilah sendiri dengan kata kunci <code>basic debugging embedded systems</code>, <code>serial print debugging</code>, dan <code>syntax error vs logic error</code>. Pilih bacaan yang membahas cara mempersempit letak kesalahan langkah demi langkah, karena itulah yang melengkapi urutan penelusuran pada Bab 7.3.</p>
+
+      <p class="footer-note">Alamat di atas ditulis sebagai nama domain, bukan tautan langsung ke halaman tertentu, karena struktur halaman situs semacam ini berubah dari waktu ke waktu. Cari judul bagian yang disebutkan di atas dari halaman utama masing-masing situs, dan untuk entri ketiga cari berdasarkan kata kuncinya.</p>
+    </section>
+    <footer class="pagenum">
+      <span class="pagenum-seri">Materi Pertemuan 5</span>
+      <span class="pagenum-no">Halaman 5 dari 16</span>
+    </footer>
+  </div>
+</body>
+</html>

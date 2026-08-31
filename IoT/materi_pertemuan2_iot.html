@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Materi Pertemuan 2 - Dasar ESP32, GPIO, Input-Output Digital</title>
+  <link rel="stylesheet" href="assets/materi.css" />
+</head>
+<body>
+  <div class="wrap">
+    <section class="hero">
+      <span class="badge">Pertemuan 2</span>
+      <h1>Dasar ESP32, GPIO, Input-Output Digital</h1>
+      <p class="lead">Materi ini membahas struktur program Arduino pada ESP32, fungsi setup() dan loop(), konsep GPIO, digital input/output, serta praktik LED blink, tombol, dan pola blinking.</p>
+      <div>
+        <span class="pill">ESP32</span><span class="pill">GPIO</span><span class="pill">setup()</span><span class="pill">loop()</span><span class="pill">Digital Input</span><span class="pill">Digital Output</span>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Capaian Pembelajaran Pertemuan 2</h2>
+      <div class="grid two">
+        <div class="mini">
+          <div class="label">Yang dipahami</div>
+          <ul>
+            <li>Struktur program Arduino pada ESP32, terutama fungsi <code>setup()</code> dan <code>loop()</code>.</li>
+            <li>Konsep GPIO sebagai jalur input dan output digital.</li>
+            <li>Perbedaan digital input dan digital output dalam sistem tertanam.</li>
+            <li>Hubungan antara logika program dan respons perangkat seperti LED dan tombol.</li>
+          </ul>
+        </div>
+        <div class="mini">
+          <div class="label">Yang dapat dilakukan</div>
+          <ul>
+            <li>Membuat simulasi LED blink pada ESP32.</li>
+            <li>Membaca status tombol sebagai input digital.</li>
+            <li>Mengendalikan LED berdasarkan logika input-output digital.</li>
+            <li>Menjelaskan pin yang digunakan dalam rangkaian sederhana.</li>
+          </ul>
+        </div>
+      </div>
+      <p>Fokus Pertemuan 2 adalah struktur program Arduino, <code>setup()</code> dan <code>loop()</code>, GPIO, serta digital input/output. Aktivitas praktik yang ditekankan adalah simulasi LED blink, tombol untuk menyalakan dan mematikan LED, dan variasi pola blinking. Tugas latihannya adalah membuat simulasi lampu indikator 3 LED dengan 1 tombol mode.</p>
+    </section>
+
+    <section class="card">
+      <h2>1. Pengantar: Mengapa Memahami ESP32 dan GPIO Itu Penting?</h2>
+      <p>Jika pada Pertemuan 1 Anda memahami gambaran besar IoT, maka pada Pertemuan 2 fokus bergeser ke “otak kecil” yang menjalankan sistem, yaitu <strong>ESP32</strong>. ESP32 adalah mikrokontroler yang dapat membaca input, memproses logika, lalu mengendalikan output. Sebelum sistem IoT bisa mengirim data ke jaringan atau dashboard, device harus terlebih dahulu mampu menjalankan input-output digital dengan benar.</p>
+      <p>Karena itu, pembahasan tentang GPIO dan struktur program menjadi fondasi yang sangat penting. Dengan memahami dasar ini, Anda tidak hanya bisa menyalakan LED, tetapi juga memahami bagaimana device mengambil keputusan berdasarkan keadaan di sekitarnya.</p>
+      <div class="analogy">
+        <strong>Analogi dunia nyata:</strong> bayangkan sebuah gedung pintar. ESP32 adalah petugas kontrol di ruang panel. GPIO adalah tombol, saklar, dan kabel yang menghubungkan petugas itu dengan dunia luar. Saat saklar tertentu ditekan, petugas tahu ada perintah masuk. Saat petugas memberi instruksi ke jalur lain, lampu atau perangkat tertentu akan menyala. Jadi, GPIO adalah pintu komunikasi antara program dan perangkat fisik.
+      </div>
+
+      <h3>1.1 Apa itu ESP32?</h3>
+      <p>ESP32 adalah mikrokontroler yang banyak dipakai dalam pembelajaran dan pengembangan IoT karena mendukung pemrograman yang relatif mudah, memiliki banyak pin I/O, serta mendukung komunikasi nirkabel. Pada tahap ini, yang paling penting dipahami bukan semua fitur lanjutannya, melainkan fungsi dasarnya sebagai device yang membaca input dan menghasilkan output.</p>
+
+      <h3>1.2 Apa itu GPIO?</h3>
+      <p>GPIO adalah singkatan dari <em>General Purpose Input/Output</em>. GPIO adalah pin serbaguna pada mikrokontroler yang dapat diatur menjadi jalur masuk (<em>input</em>) atau jalur keluar (<em>output</em>). Ketika sebuah pin diatur sebagai input, pin itu dipakai untuk membaca kondisi, misalnya tombol ditekan atau tidak. Ketika sebuah pin diatur sebagai output, pin itu dipakai untuk memberi sinyal, misalnya menyalakan LED.</p>
+      <div class="svgbox" tabindex="0">
+        <svg viewBox="0 0 980 250" width="100%" role="img" aria-label="Diagram hubungan ESP32, input, dan output">
+          <rect x="360" y="60" width="260" height="130" rx="18" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+          <rect x="50" y="85" width="180" height="80" rx="18" fill="#dcfce7" stroke="#15803d" stroke-width="2"/>
+          <rect x="750" y="85" width="180" height="80" rx="18" fill="#fee2e2" stroke="#dc2626" stroke-width="2"/>
+          <text x="490" y="110" text-anchor="middle" font-size="30" font-weight="700">ESP32</text>
+          <text x="490" y="142" text-anchor="middle" font-size="18">GPIO sebagai jalur komunikasi</text>
+          <text x="140" y="118" text-anchor="middle" font-size="28" font-weight="700">Input</text>
+          <text x="140" y="146" text-anchor="middle" font-size="16">tombol, switch, sensor digital</text>
+          <text x="840" y="118" text-anchor="middle" font-size="28" font-weight="700">Output</text>
+          <text x="840" y="146" text-anchor="middle" font-size="16">LED, buzzer, relay</text>
+          <line x1="230" y1="125" x2="360" y2="125" stroke="#2563eb" stroke-width="4"/>
+          <polygon points="360,125 346,117 346,133" fill="#2563eb"/>
+          <line x1="620" y1="125" x2="750" y2="125" stroke="#2563eb" stroke-width="4"/>
+          <polygon points="750,125 736,117 736,133" fill="#2563eb"/>
+        </svg>
+      </div>
+
+      <h3>1.3 Input digital dan output digital</h3>
+      <p>Pada sistem digital, kondisi biasanya dinyatakan dalam dua keadaan: HIGH atau LOW. Secara sederhana, HIGH dapat dipahami sebagai kondisi aktif atau bernilai 1, sedangkan LOW dapat dipahami sebagai kondisi tidak aktif atau bernilai 0. Saat membaca tombol, program memeriksa apakah input sedang HIGH atau LOW. Saat mengendalikan LED, program mengirim HIGH untuk menyalakan dan LOW untuk mematikan.</p>
+      <div class="analogy">
+        <strong>Analogi dunia nyata:</strong> logika digital seperti saklar lampu di rumah. Saklar hanya punya dua keadaan utama: ON atau OFF. Sistem digital memanfaatkan prinsip serupa agar keputusan menjadi tegas, mudah diproses, dan konsisten.</div>
+    </section>
+
+    <section class="card">
+      <h2>2. Struktur Program Arduino pada ESP32</h2>
+      <p>Pada pertemuan ini Anda perlu memahami struktur program Arduino, khususnya <code>setup()</code> dan <code>loop()</code>. Kedua fungsi ini adalah fondasi dari hampir semua program dasar pada Arduino dan ESP32.</p>
+
+      <h3>2.1 Fungsi setup()</h3>
+      <p>Fungsi <code>setup()</code> dijalankan satu kali saat board mulai aktif. Bagian ini digunakan untuk persiapan awal, misalnya menentukan mode pin, mengaktifkan komunikasi serial, atau menginisialisasi komponen lain. Jika dianalogikan, <code>setup()</code> adalah tahap membuka toko sebelum operasional dimulai: lampu dinyalakan, meja kasir disiapkan, dan sistem diperiksa.</p>
+
+      <h3>2.2 Fungsi loop()</h3>
+      <p>Fungsi <code>loop()</code> dijalankan terus-menerus setelah <code>setup()</code> selesai. Semua logika yang harus berlangsung berulang diletakkan di sini. Dalam sistem IoT, perilaku berulang ini sangat penting karena device biasanya harus terus memantau kondisi, merespons input, dan memperbarui output.</p>
+
+      <h3>2.3 Mengapa struktur ini penting?</h3>
+      <p>Anda perlu memahami bahwa device bukan program sekali jalan seperti banyak aplikasi desktop sederhana. Device bekerja terus selama mendapat daya. Karena itu, logika harus disusun dengan jelas: apa yang hanya perlu dikerjakan satu kali, dan apa yang harus diulang terus-menerus.</p>
+    </section>
+
+    <section class="card">
+      <h2>3. GPIO sebagai Jembatan antara Program dan Dunia Fisik</h2>
+      <p>GPIO memungkinkan ESP32 berinteraksi dengan komponen lain. Ketika pin difungsikan sebagai output, ESP32 dapat mengirim sinyal digital. Ketika pin difungsikan sebagai input, ESP32 dapat menerima kondisi dari luar. Konsep ini tampak sederhana, tetapi sebenarnya menjadi dasar hampir semua sistem embedded dan IoT.</p>
+
+      <h3>3.1 Mode pin</h3>
+      <div class="table-scroll" tabindex="0">
+        <table>
+        <thead>
+          <tr><th>Mode</th><th>Fungsi</th><th>Contoh penggunaan</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>OUTPUT</code></td><td>Pin mengirim sinyal keluar dari ESP32.</td><td>Menyalakan LED, mengaktifkan buzzer, mengontrol relay.</td></tr>
+          <tr><td><code>INPUT</code></td><td>Pin membaca sinyal dari luar.</td><td>Membaca tombol, switch, atau sensor digital.</td></tr>
+          <tr><td><code>INPUT_PULLUP</code></td><td>Pin input dengan resistor pull-up internal.</td><td>Membaca tombol dengan rangkaian yang lebih stabil.</td></tr>
+        </tbody>
+        </table>
+      </div>
+
+      <h3>3.2 HIGH dan LOW</h3>
+      <p>Dalam program, output digital biasanya diatur dengan <code>digitalWrite(pin, HIGH)</code> atau <code>digitalWrite(pin, LOW)</code>. Untuk input, kondisi pin dibaca dengan <code>digitalRead(pin)</code>. Hasil pembacaan akan menunjukkan apakah pin sedang berada pada logika HIGH atau LOW.</p>
+      <div class="analogy">
+        <strong>Analogi dunia nyata:</strong> GPIO seperti pintu dua arah pada ruang kontrol. Dari satu sisi, petugas bisa menerima informasi bahwa seseorang menekan bel. Dari sisi lain, petugas bisa menekan saklar untuk menyalakan lampu di koridor.</div>
+
+      <h3>3.3 Alur kerja input-output digital</h3>
+      <div class="svgbox" tabindex="0">
+        <svg viewBox="0 0 1020 240" width="100%" role="img" aria-label="Alur input-output digital pada ESP32">
+          <rect x="20" y="70" width="180" height="100" rx="18" fill="#dcfce7" stroke="#15803d"/>
+          <rect x="250" y="70" width="200" height="100" rx="18" fill="#dbeafe" stroke="#2563eb"/>
+          <rect x="500" y="70" width="180" height="100" rx="18" fill="#ede9fe" stroke="#6d28d9"/>
+          <rect x="730" y="70" width="260" height="100" rx="18" fill="#fee2e2" stroke="#dc2626"/>
+          <text x="110" y="108" text-anchor="middle" font-size="26" font-weight="700">Tombol</text>
+          <text x="110" y="136" text-anchor="middle" font-size="16">input digital</text>
+          <text x="350" y="108" text-anchor="middle" font-size="26" font-weight="700">GPIO Input</text>
+          <text x="350" y="136" text-anchor="middle" font-size="16">dibaca ESP32</text>
+          <text x="590" y="108" text-anchor="middle" font-size="26" font-weight="700">Logika</text>
+          <text x="590" y="136" text-anchor="middle" font-size="16">if / else</text>
+          <text x="860" y="108" text-anchor="middle" font-size="26" font-weight="700">LED</text>
+          <text x="860" y="136" text-anchor="middle" font-size="16">output digital</text>
+          <line x1="200" y1="120" x2="250" y2="120" stroke="#2563eb" stroke-width="4"/>
+          <polygon points="250,120 236,112 236,128" fill="#2563eb"/>
+          <line x1="450" y1="120" x2="500" y2="120" stroke="#2563eb" stroke-width="4"/>
+          <polygon points="500,120 486,112 486,128" fill="#2563eb"/>
+          <line x1="680" y1="120" x2="730" y2="120" stroke="#2563eb" stroke-width="4"/>
+          <polygon points="730,120 716,112 716,128" fill="#2563eb"/>
+        </svg>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>4. Praktik Terpandu: LED Blink, Tombol, dan Pola Blinking</h2>
+      <p>Aktivitas inti Pertemuan 2 terdiri dari tiga latihan utama. Ketiganya disusun bertahap agar Anda memahami hubungan antara output dasar, input digital, dan variasi logika program.</p>
+      <p>Ketiga latihan dikerjakan di simulator <strong>Wokwi</strong>, alat yang sama seperti pada Pertemuan 1, sehingga tidak ada perangkat fisik yang perlu disiapkan. Bagian 4.1 menyiapkan lingkungan kerjanya lebih dahulu. Setelah itu, setiap latihan diberi tiga hal yang sama: komponen dan sambungan yang harus dipasang, langkah pengerjaan, dan hasil yang harus terlihat di layar. Kode lengkap untuk ketiga latihan ada pada Bab 5, jadi bacalah bab ini dan Bab 5 secara berdampingan.</p>
+
+      <h3>4.1 Menyiapkan lingkungan kerja di simulator</h3>
+      <div class="tip">
+        <strong>Tidak ada yang perlu diinstal.</strong> Wokwi berjalan langsung di browser dan dibuka seperti membuka situs biasa. Simulasi tetap dapat dijalankan tanpa akun; akun baru diperlukan bila Anda ingin pekerjaan itu tersimpan dan dapat dibuka kembali di pertemuan berikutnya.
+      </div>
+      <ol class="step">
+        <li>Buka <strong>wokwi.com</strong> di browser, pilih <strong>New Project</strong>, lalu pilih board <strong>ESP32</strong>.</li>
+        <li>Kenali empat bagian pada layar: <strong>panel kode</strong> di sisi kiri berisi berkas <code>sketch.ino</code>, <strong>panel rangkaian</strong> di sisi kanan, tab <code>diagram.json</code> di atas panel rangkaian, dan <strong>tombol jalankan</strong> berbentuk segitiga hijau.</li>
+        <li>Tekan tanda tambah (<strong>+</strong>) pada panel rangkaian untuk membuka daftar komponen. Dari daftar inilah LED, resistor, dan tombol diambil pada latihan berikutnya.</li>
+        <li>Untuk menyambung dua kaki komponen, klik kaki pertama lalu klik kaki kedua. Satu garis kabel akan terbentuk di antara keduanya.</li>
+        <li>Sebaiknya buat tiga project terpisah untuk tiga latihan. Cara ini lebih aman daripada menimpa satu project berulang kali, karena hasil latihan sebelumnya tetap dapat Anda buka saat memeriksa checkpoint di akhir materi.</li>
+      </ol>
+      <div class="warn">
+        <strong>Project baru hanya berisi board.</strong> Area rangkaian pada project ESP32 yang baru dibuat masih kosong: belum ada LED, resistor, maupun tombol di sana. Bila kode blink dijalankan pada project yang masih kosong, pin GPIO 2 tetap berganti keadaan HIGH dan LOW, tetapi tidak ada apa pun yang terlihat di layar, sehingga kode yang sebenarnya sudah benar mudah dikira salah. Karena itu rangkaian selalu dipasang lebih dahulu, sebelum kode dijalankan.
+      </div>
+      <div class="tip">
+        <strong>Serial Monitor memang akan kosong.</strong> Berbeda dari contoh pada Pertemuan 1, ketiga contoh kode di Bab 5 tidak memuat perintah cetak apa pun, jadi jendela Serial Monitor di bagian bawah layar tidak menampilkan tulisan. Pada pertemuan ini yang diamati adalah LED di panel rangkaian, bukan tulisan di Serial Monitor.
+      </div>
+      <p>Ketiga latihan memakai pemetaan pin yang sama, mengikuti nomor pin pada contoh kode Bab 5. Tabel ini dipakai sebagai acuan saat memasang rangkaian.</p>
+      <div class="table-scroll" tabindex="0">
+        <table>
+        <thead>
+          <tr><th>Komponen</th><th>Pin ESP32</th><th>Mode di <code>setup()</code></th><th>Nama di program</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>LED melalui resistor 220 Ω</td><td>GPIO 2</td><td><code>OUTPUT</code></td><td><code>ledPin</code></td></tr>
+          <tr><td>Tombol ke GND</td><td>GPIO 4</td><td><code>INPUT_PULLUP</code></td><td><code>buttonPin</code></td></tr>
+        </tbody>
+        </table>
+      </div>
+      <p>Anda boleh memakai nomor pin lain, tetapi bila nomor pin di rangkaian diubah, angka di dalam program wajib diubah mengikutinya. Ketidaksamaan antara nomor pin di rangkaian dan di program adalah penyebab kegagalan yang paling sering terjadi pada pertemuan ini.</p>
+
+      <h3>4.2 Praktik 1: Simulasi LED blink</h3>
+      <p>Latihan pertama adalah menyalakan dan mematikan LED secara berkala. Tujuannya agar Anda memahami pin output, perintah <code>digitalWrite()</code>, dan peran <code>delay()</code>. Walaupun sederhana, latihan ini adalah fondasi untuk semua kontrol digital berikutnya.</p>
+      <p><strong>Komponen yang perlu ditambahkan:</strong> satu LED dan satu resistor bernilai 220 Ω. Keduanya diambil dari daftar komponen pada panel rangkaian.</p>
+      <div class="svgbox" tabindex="0">
+        <svg viewBox="0 36 700 190" width="100%" role="img" aria-label="Rangkaian LED: pin GPIO 2 pada ESP32 tersambung ke resistor 220 ohm, lalu ke kaki panjang LED, dan kaki pendek LED kembali ke pin GND">
+          <rect x="30" y="50" width="180" height="130" rx="14" fill="#dcfce7" stroke="#15803d" stroke-width="2"/>
+          <text x="120" y="95" text-anchor="middle" font-size="22" font-weight="700">ESP32</text>
+          <text x="120" y="120" text-anchor="middle" font-size="14" fill="#374151">board virtual</text>
+          <text x="204" y="150" text-anchor="end" font-size="15" font-weight="700" fill="#15803d">GPIO 2</text>
+          <text x="204" y="174" text-anchor="end" font-size="15" font-weight="700" fill="#111827">GND</text>
+          <line x1="210" y1="145" x2="290" y2="145" stroke="#15803d" stroke-width="4"/>
+          <rect x="290" y="125" width="110" height="40" rx="8" fill="#fef3c7" stroke="#b45309" stroke-width="2"/>
+          <text x="345" y="151" text-anchor="middle" font-size="16" font-weight="700">220 Ω</text>
+          <line x1="400" y1="145" x2="490" y2="145" stroke="#15803d" stroke-width="4"/>
+          <circle cx="528" cy="145" r="38" fill="#fee2e2" stroke="#dc2626" stroke-width="2"/>
+          <text x="528" y="151" text-anchor="middle" font-size="17" font-weight="700">LED</text>
+          <line x1="566" y1="145" x2="640" y2="145" stroke="#111827" stroke-width="4"/>
+          <line x1="640" y1="145" x2="640" y2="210" stroke="#111827" stroke-width="4"/>
+          <line x1="640" y1="210" x2="210" y2="210" stroke="#111827" stroke-width="4"/>
+          <line x1="210" y1="210" x2="210" y2="170" stroke="#111827" stroke-width="4"/>
+        </svg>
+      </div>
+      <p>Urutan sambungannya hanya tiga: <strong>GPIO 2 → resistor 220 Ω → kaki panjang LED</strong>, lalu <strong>kaki pendek LED → GND</strong>. Kaki panjang LED selalu menghadap sisi resistor; bila LED terpasang terbalik, ia tidak akan menyala walaupun program sudah benar. Resistor berfungsi membatasi arus. Di simulator LED tidak benar-benar rusak tanpa resistor, tetapi kebiasaan memasangnya perlu dibentuk sejak sekarang karena pada perangkat fisik hal itu wajib.</p>
+
+      <details>
+        <summary>Cara cepat memasang rangkaian: tempelkan isi tab <code>diagram.json</code></summary>
+        <p>Area rangkaian sebenarnya tersimpan sebagai berkas teks bernama <code>diagram.json</code>. Buka tab tersebut, hapus seluruh isinya, tempelkan kode di bawah, lalu kembali ke panel rangkaian. Rangkaian akan langsung terbentuk tanpa perlu menggeser komponen satu per satu, dan bentuknya sama persis dengan gambar di atas.</p>
+        <div class="code"><pre>{
+  "version": 1,
+  "author": "Materi IoT Pertemuan 2",
+  "editor": "wokwi",
+  "parts": [
+    { "type": "board-esp32-devkit-c-v4", "id": "esp", "top": 0, "left": 0, "attrs": {} },
+    { "type": "wokwi-led", "id": "led1", "top": -60, "left": 140, "attrs": { "color": "red" } },
+    { "type": "wokwi-resistor", "id": "r1", "top": 40, "left": 130, "attrs": { "value": "220" } }
+  ],
+  "connections": [
+    [ "esp:2", "r1:1", "green", [ "v0" ] ],
+    [ "r1:2", "led1:A", "green", [ "v0" ] ],
+    [ "led1:C", "esp:GND.1", "black", [ "v0" ] ]
+  ]
+}</pre></div>
+        <p>Bila hasil tempelan itu membuat panel rangkaian menjadi kosong, biasanya ada tanda kurung atau koma yang ikut terhapus. Tempelkan ulang seluruh isinya, jangan hanya sebagian.</p>
+      </details>
+      <ol class="step">
+        <li>Pasang rangkaian seperti gambar di atas, atau tempelkan <code>diagram.json</code> yang tersedia.</li>
+        <li>Hapus seluruh isi panel kode, lalu tempelkan contoh kode dari Bab 5.1.</li>
+        <li>Periksa bahwa angka pada <code>const int ledPin = 2;</code> sama dengan nomor pin yang tersambung ke resistor.</li>
+        <li>Tekan tombol jalankan, lalu amati LED selama beberapa kali kedipan tanpa mengubah apa pun.</li>
+        <li>Hentikan simulasi, ubah kedua <code>delay(1000)</code> menjadi <code>delay(200)</code>, jalankan kembali, dan bandingkan hasilnya dengan pengamatan sebelumnya.</li>
+      </ol>
+      <p><strong>Hasil yang harus terlihat:</strong> LED menyala sekitar satu detik, mati sekitar satu detik, lalu pola itu berulang selama simulasi berjalan. Setelah kedua nilai <code>delay</code> diubah menjadi 200, kedipannya menjadi jauh lebih cepat. Perubahan ini penting untuk Anda sadari sendiri, karena di situlah terlihat bahwa satu angka di dalam program mengubah perilaku sebuah perangkat.</p>
+
+      <h3>4.3 Praktik 2: Tombol untuk menyalakan dan mematikan LED</h3>
+      <p>Setelah LED bisa dikendalikan, langkah berikutnya adalah menambahkan tombol sebagai input digital. Dengan ini, Anda belajar bahwa program tidak hanya mengirim instruksi ke luar, tetapi juga membaca kondisi dari luar. Ketika tombol ditekan, ESP32 membaca nilai input lalu memutuskan apakah LED harus menyala atau mati.</p>
+      <div class="analogy">
+        <strong>Analogi dunia nyata:</strong> ini seperti tombol bel di pintu masuk gedung. Tombol tidak langsung menyalakan semua sistem, tetapi memberi sinyal ke panel kontrol. Panel itulah yang memutuskan aksi berikutnya.</div>
+      <p><strong>Komponen yang perlu ditambahkan:</strong> rangkaian Praktik 1 tetap dipakai, ditambah satu tombol atau <em>pushbutton</em>. Tombol tidak memerlukan resistor tambahan.</p>
+      <div class="svgbox" tabindex="0">
+        <svg viewBox="0 40 700 240" width="100%" role="img" aria-label="Rangkaian latihan tombol: GPIO 2 tersambung ke resistor 220 ohm lalu LED dan kembali ke GND, sedangkan GPIO 4 tersambung ke satu kaki tombol dan kaki seberangnya ke GND">
+          <rect x="30" y="55" width="170" height="195" rx="14" fill="#dcfce7" stroke="#15803d" stroke-width="2"/>
+          <text x="115" y="100" text-anchor="middle" font-size="22" font-weight="700">ESP32</text>
+          <text x="115" y="124" text-anchor="middle" font-size="14" fill="#374151">board virtual</text>
+          <text x="194" y="150" text-anchor="end" font-size="15" font-weight="700" fill="#15803d">GPIO 2</text>
+          <text x="194" y="186" text-anchor="end" font-size="15" font-weight="700" fill="#111827">GND</text>
+          <text x="194" y="233" text-anchor="end" font-size="15" font-weight="700" fill="#6d28d9">GPIO 4</text>
+          <line x1="200" y1="145" x2="285" y2="145" stroke="#15803d" stroke-width="4"/>
+          <rect x="285" y="125" width="100" height="40" rx="8" fill="#fef3c7" stroke="#b45309" stroke-width="2"/>
+          <text x="335" y="151" text-anchor="middle" font-size="15" font-weight="700">220 Ω</text>
+          <line x1="385" y1="145" x2="456" y2="145" stroke="#15803d" stroke-width="4"/>
+          <circle cx="492" cy="145" r="36" fill="#fee2e2" stroke="#dc2626" stroke-width="2"/>
+          <text x="492" y="151" text-anchor="middle" font-size="16" font-weight="700">LED</text>
+          <line x1="528" y1="145" x2="620" y2="145" stroke="#111827" stroke-width="4"/>
+          <line x1="620" y1="145" x2="620" y2="186" stroke="#111827" stroke-width="4"/>
+          <line x1="620" y1="186" x2="200" y2="186" stroke="#111827" stroke-width="4"/>
+          <line x1="200" y1="228" x2="300" y2="228" stroke="#6d28d9" stroke-width="4"/>
+          <rect x="300" y="206" width="112" height="44" rx="10" fill="#ede9fe" stroke="#6d28d9" stroke-width="2"/>
+          <text x="356" y="234" text-anchor="middle" font-size="16" font-weight="700">Tombol</text>
+          <line x1="412" y1="228" x2="620" y2="228" stroke="#111827" stroke-width="4"/>
+          <line x1="620" y1="228" x2="620" y2="186" stroke="#111827" stroke-width="4"/>
+        </svg>
+      </div>
+      <p>Sambungan LED tidak berubah. Yang ditambahkan hanya dua sambungan tombol: <strong>satu kaki tombol ke GPIO 4</strong> dan <strong>kaki di seberangnya ke GND</strong>. Tombol tidak memerlukan resistor karena mode <code>INPUT_PULLUP</code> sudah mengaktifkan resistor pull-up di dalam ESP32. Akibatnya GPIO 4 terbaca HIGH selama tombol tidak ditekan, lalu berubah menjadi LOW ketika tombol ditekan karena saat itu pin tersambung ke GND. Inilah sebabnya program pada Bab 5.2 menyalakan LED ketika nilai yang terbaca LOW, bukan HIGH.</p>
+
+      <details>
+        <summary>Rangkaian Praktik 2 dalam bentuk <code>diagram.json</code></summary>
+        <div class="code"><pre>{
+  "version": 1,
+  "author": "Materi IoT Pertemuan 2",
+  "editor": "wokwi",
+  "parts": [
+    { "type": "board-esp32-devkit-c-v4", "id": "esp", "top": 0, "left": 0, "attrs": {} },
+    { "type": "wokwi-led", "id": "led1", "top": -60, "left": 140, "attrs": { "color": "red" } },
+    { "type": "wokwi-resistor", "id": "r1", "top": 40, "left": 130, "attrs": { "value": "220" } },
+    { "type": "wokwi-pushbutton", "id": "btn1", "top": 130, "left": 130, "attrs": { "color": "green" } }
+  ],
+  "connections": [
+    [ "esp:2", "r1:1", "green", [ "v0" ] ],
+    [ "r1:2", "led1:A", "green", [ "v0" ] ],
+    [ "led1:C", "esp:GND.1", "black", [ "v0" ] ],
+    [ "esp:4", "btn1:1.l", "violet", [ "v0" ] ],
+    [ "btn1:2.l", "esp:GND.2", "black", [ "v0" ] ]
+  ]
+}</pre></div>
+      </details>
+      <ol class="step">
+        <li>Buka project Praktik 1, lalu tambahkan satu tombol dari daftar komponen. Bila Anda ingin menyimpan hasil Praktik 1 apa adanya, buat project baru dan pasang seluruh rangkaian dari awal.</li>
+        <li>Sambungkan satu kaki tombol ke <strong>GPIO 4</strong> dan kaki di seberangnya ke <strong>GND</strong>.</li>
+        <li>Ganti isi panel kode dengan contoh kode Bab 5.2, lalu periksa bahwa angka pada <code>ledPin</code> dan <code>buttonPin</code> sama dengan pin yang benar-benar tersambung.</li>
+        <li>Jalankan simulasi. Tombol ditekan dengan menahan klik tetikus pada gambar tombolnya, dan tombol kembali ke posisi semula begitu klik dilepaskan.</li>
+        <li>Tekan lalu lepaskan tombol beberapa kali sambil mengamati LED.</li>
+        <li>Sebagai percobaan tambahan, ubah <code>INPUT_PULLUP</code> menjadi <code>INPUT</code> lalu jalankan lagi. Pembacaan tombol dapat menjadi tidak menentu karena pin input tanpa pull-up tidak memiliki nilai yang pasti saat tombol tidak ditekan. Kembalikan ke <code>INPUT_PULLUP</code> setelah percobaan ini.</li>
+      </ol>
+      <p><strong>Hasil yang harus terlihat:</strong> LED menyala selama tombol ditahan dan mati begitu tombol dilepaskan. Bila LED justru menyala terus atau tidak pernah merespons, periksa dua hal lebih dahulu: nomor pin tombol di rangkaian dibandingkan dengan angka di program, dan kaki tombol mana yang Anda sambung. Dua kaki pada sisi yang sama sudah tersambung di dalam tombol, sehingga rangkaian menjadi tertutup terus-menerus dan pin selalu terbaca LOW. Kaki yang dipakai harus dua kaki yang berseberangan.</p>
+
+      <h3>4.4 Praktik 3: Variasi pola blinking</h3>
+      <p>Pada tahap ini Anda mulai bereksperimen dengan pola kedip LED yang berbeda, misalnya cepat-lambat, dua kali cepat lalu jeda, atau pola bergantian. Tujuannya bukan hanya estetika, melainkan memahami bahwa perubahan logika waktu dan urutan instruksi akan mengubah perilaku perangkat.</p>
+
+      <p><strong>Komponen yang perlu ditambahkan:</strong> tidak ada. Rangkaian Praktik 1 dipakai kembali apa adanya, dan yang berubah hanya kodenya. Bila Anda memakai project Praktik 2, tombolnya boleh dibiarkan terpasang karena kode pada latihan ini tidak membacanya. Satu LED tambahan baru diperlukan pada langkah terakhir sebagai persiapan tugas Bab 6.</p>
+      <details>
+        <summary>Rangkaian Praktik 3 dalam bentuk <code>diagram.json</code></summary>
+        <p>Untuk latihan pokoknya, rangkaian Praktik 1 sudah cukup dan <code>diagram.json</code> di bagian 4.2 dapat dipakai langsung. Tempelan di bawah adalah rangkaian yang sama ditambah <strong>LED kedua pada GPIO 18 beserta resistornya sendiri</strong>, sehingga langkah terakhir tentang dua LED yang menyala bergantian dapat langsung dikerjakan tanpa merakit ulang. Pin 18 dipilih karena tidak memiliki fungsi khusus saat board dinyalakan.</p>
+        <div class="code"><pre>{
+  "version": 1,
+  "author": "Materi IoT Pertemuan 2",
+  "editor": "wokwi",
+  "parts": [
+    { "type": "board-esp32-devkit-c-v4", "id": "esp", "top": 0, "left": 0, "attrs": {} },
+    { "type": "wokwi-led", "id": "led1", "top": -60, "left": 140, "attrs": { "color": "red" } },
+    { "type": "wokwi-resistor", "id": "r1", "top": 40, "left": 130, "attrs": { "value": "220" } },
+    { "type": "wokwi-led", "id": "led2", "top": -60, "left": 220, "attrs": { "color": "green" } },
+    { "type": "wokwi-resistor", "id": "r2", "top": 100, "left": 130, "attrs": { "value": "220" } }
+  ],
+  "connections": [
+    [ "esp:2", "r1:1", "green", [ "v0" ] ],
+    [ "r1:2", "led1:A", "green", [ "v0" ] ],
+    [ "led1:C", "esp:GND.1", "black", [ "v0" ] ],
+    [ "esp:18", "r2:1", "blue", [ "v0" ] ],
+    [ "r2:2", "led2:A", "blue", [ "v0" ] ],
+    [ "led2:C", "esp:GND.2", "black", [ "v0" ] ]
+  ]
+}</pre></div>
+        <p>Bila Anda memakai tempelan ini, tambahkan satu konstanta baru di program, misalnya <code>const int ledPin2 = 18;</code>, dan jangan lupa menetapkan modenya sebagai <code>OUTPUT</code> di dalam <code>setup()</code>. LED kedua tidak akan pernah menyala bila mode pinnya belum ditetapkan.</p>
+      </details>
+      <ol class="step">
+        <li>Buka kembali project yang LED-nya sudah terpasang.</li>
+        <li>Ganti seluruh isi panel kode dengan contoh kode Bab 5.3, lalu jalankan simulasi.</li>
+        <li>Hitung polanya dengan mata: berapa kali LED menyala cepat sebelum jeda panjang, dan di bagian mana jeda itu terjadi.</li>
+        <li>Cocokkan hasil hitungan tadi dengan urutan <code>delay()</code> di dalam <code>loop()</code>, sehingga terlihat baris mana yang menghasilkan bagian pola yang mana.</li>
+        <li>Ubah nilai <code>delay(800)</code> menjadi angka lain, misalnya 1500, jalankan lagi, lalu perhatikan bagian pola mana yang berubah dan bagian mana yang tetap.</li>
+        <li>Sebagai persiapan tugas Bab 6, tambahkan satu LED lagi beserta resistornya sendiri pada pin yang berbeda, lalu buat kedua LED menyala bergantian.</li>
+      </ol>
+      <p><strong>Hasil yang harus terlihat:</strong> LED berkedip dua kali dengan cepat, lalu berhenti sebentar dengan jeda yang jelas lebih panjang, kemudian pola itu berulang. Bila pola yang terlihat masih sama seperti Praktik 1, biasanya kode lama belum terhapus seluruhnya sehingga yang berjalan tetap kode sebelumnya. Pastikan panel kode benar-benar hanya memuat satu <code>void loop()</code>.</p>
+
+      <h3>4.5 Cara memastikan ketiga latihan sudah benar</h3>
+      <p>Setelah ketiga latihan di atas dikerjakan, periksa hasilnya dengan urutan yang sama seperti saat membuatnya. LED harus berkedip pada selang waktu yang Anda tetapkan, tombol harus mengubah keadaan LED setiap kali ditekan, dan pola kedip harus benar-benar berubah ketika nilai waktunya Anda ubah. Bila salah satu dari ketiga hal itu belum terjadi, kesalahannya hampir selalu ada pada nomor pin yang tidak sama antara rangkaian dan program, atau pada mode pin yang belum ditetapkan di dalam <code>setup()</code>. Daftar pemeriksaan yang lebih rinci beserta langkah perbaikannya ada pada bab Checkpoint Evaluasi Pertemuan 2 di bagian akhir materi ini.</p>
+    </section>
+
+    <section class="card">
+      <h2>5. Contoh Kode Dasar dan Penjelasan</h2>
+      <p>Berikut tiga contoh kode yang relevan dengan aktivitas praktik pertemuan ini: LED blink, tombol untuk mengendalikan LED, dan variasi pola blinking. Contoh-contoh ini dipilih karena langsung menunjukkan konsep digital output, digital input, dan logika program sederhana. Ketiganya dipakai pada latihan Bab 4, dan rangkaian yang harus terpasang lebih dahulu untuk setiap contoh dijelaskan di sana.</p>
+
+      <h3>5.1 Contoh 1: LED blink</h3>
+      <div class="code"><pre>const int ledPin = 2;
+
+void setup() {
+  pinMode(ledPin, OUTPUT);
+}
+
+void loop() {
+  digitalWrite(ledPin, HIGH);
+  delay(1000);
+  digitalWrite(ledPin, LOW);
+  delay(1000);
+}</pre></div>
+      <p>Kode ini menunjukkan penggunaan pin output. Pada <code>setup()</code>, pin LED diatur sebagai <code>OUTPUT</code>. Pada <code>loop()</code>, LED dinyalakan dan dimatikan bergantian dengan jeda waktu tertentu.</p>
+
+      <h3>5.2 Contoh 2: Tombol mengendalikan LED</h3>
+      <div class="code"><pre>const int ledPin = 2;
+const int buttonPin = 4;
+
+void setup() {
+  pinMode(ledPin, OUTPUT);
+  pinMode(buttonPin, INPUT_PULLUP);
+}
+
+void loop() {
+  int buttonState = digitalRead(buttonPin);
+
+  if (buttonState == LOW) {
+    digitalWrite(ledPin, HIGH);
+  } else {
+    digitalWrite(ledPin, LOW);
+  }
+}</pre></div>
+      <p>Pada contoh ini, tombol dibaca sebagai input digital. Mode <code>INPUT_PULLUP</code> dipakai agar pembacaan lebih stabil. Ketika tombol ditekan, nilai yang terbaca menjadi LOW, lalu LED dinyalakan. Saat tombol tidak ditekan, LED dimatikan.</p>
+
+      <h3>5.3 Contoh 3: Variasi pola blinking</h3>
+      <div class="code"><pre>const int ledPin = 2;
+
+void setup() {
+  pinMode(ledPin, OUTPUT);
+}
+
+void loop() {
+  digitalWrite(ledPin, HIGH);
+  delay(200);
+  digitalWrite(ledPin, LOW);
+  delay(200);
+
+  digitalWrite(ledPin, HIGH);
+  delay(200);
+  digitalWrite(ledPin, LOW);
+  delay(800);
+}</pre></div>
+      <p>Kode ini menghasilkan pola kedip dua kali cepat lalu jeda lebih lama. Melalui latihan seperti ini, Anda mulai memahami bahwa susunan instruksi dan nilai waktu akan mengubah perilaku output.</p>
+
+      <h3>5.4 Penjelasan perintah penting</h3>
+      <div class="table-scroll" tabindex="0">
+        <table>
+        <thead>
+          <tr><th>Perintah</th><th>Fungsi</th><th>Makna praktis</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>pinMode(pin, OUTPUT)</code></td><td>Mengatur pin sebagai output.</td><td>ESP32 siap mengirim sinyal ke perangkat seperti LED.</td></tr>
+          <tr><td><code>pinMode(pin, INPUT_PULLUP)</code></td><td>Mengatur pin sebagai input dengan pull-up internal.</td><td>Cocok untuk membaca tombol dengan lebih stabil.</td></tr>
+          <tr><td><code>digitalWrite(pin, HIGH)</code></td><td>Mengirim logika HIGH ke pin output.</td><td>Umumnya menyalakan perangkat seperti LED.</td></tr>
+          <tr><td><code>digitalWrite(pin, LOW)</code></td><td>Mengirim logika LOW ke pin output.</td><td>Umumnya mematikan perangkat.</td></tr>
+          <tr><td><code>digitalRead(pin)</code></td><td>Membaca kondisi pin input.</td><td>Mengetahui apakah tombol atau sinyal digital sedang aktif.</td></tr>
+          <tr><td><code>delay(ms)</code></td><td>Menunda program selama sejumlah milidetik.</td><td>Mengatur tempo atau jeda aksi dalam program.</td></tr>
+        </tbody>
+        </table>
+      </div>
+      <div class="analogy">
+        <strong>Analogi dunia nyata:</strong> perintah-perintah ini seperti instruksi kerja bagi petugas gedung. Ada instruksi untuk mendengarkan bel masuk, ada instruksi untuk menyalakan lampu, dan ada instruksi untuk menunggu beberapa detik sebelum tindakan berikutnya.</div>
+    </section>
+
+    <section class="card">
+      <h2>6. Tugas Latihan Pertemuan 2</h2>
+      <p>Tugas latihan pertemuan ini adalah simulasi lampu indikator 3 LED dengan 1 tombol mode. Tugas ini penting karena menuntut Anda menggabungkan konsep input digital, output digital, dan logika perubahan status.</p>
+
+      <h3>6.1 Deskripsi tugas</h3>
+      <p>Buat simulasi dengan tiga LED dan satu tombol. Setiap kali tombol ditekan, mode berpindah ke kondisi berikutnya. Misalnya, mode 1 menyalakan LED merah, mode 2 menyalakan LED kuning, mode 3 menyalakan LED hijau, lalu kembali ke mode 1.</p>
+
+      <h3>6.2 Tujuan pembelajaran dari tugas</h3>
+      <ul>
+        <li>Melatih pemahaman bahwa satu input dapat mengendalikan beberapa output.</li>
+        <li>Melatih logika pergantian state secara sederhana.</li>
+        <li>Melatih kemampuan menjelaskan pemetaan pin dan alur program.</li>
+      </ul>
+
+      <h3>6.3 Petunjuk pengerjaan</h3>
+      <p>Tugas ini dikerjakan di simulator yang sama, dengan cara kerja yang sama seperti ketiga latihan pada Bab 4. Komponen yang perlu ada di panel rangkaian adalah <strong>tiga LED</strong>, <strong>tiga resistor 220 Ω</strong>, dan <strong>satu tombol</strong>. Setiap LED memakai resistornya sendiri dan pin GPIO-nya sendiri, sedangkan tombol tetap disambungkan ke satu pin GPIO dan ke GND seperti pada Praktik 2.</p>
+      <ol class="step">
+        <li>Tentukan pin untuk tiga LED dan satu tombol. Pin 2 dan pin 4 boleh dipakai lagi, tetapi dua pin lainnya Anda pilih sendiri, dan alasan pemilihannya harus dapat Anda jelaskan karena hal itu dinilai.</li>
+        <li>Pasang rangkaiannya, lalu catat pemetaan pin dalam bentuk tabel kecil seperti tabel pada Bab 4.1 agar tidak tertukar saat menulis program.</li>
+        <li>Atur mode pin dengan benar di <code>setup()</code>: ketiga LED sebagai <code>OUTPUT</code> dan tombol sebagai <code>INPUT_PULLUP</code>.</li>
+        <li>Baca status tombol di <code>loop()</code>.</li>
+        <li>Gunakan variabel mode untuk menentukan LED mana yang aktif.</li>
+        <li>Uji apakah perubahan mode berjalan sesuai urutan yang diinginkan, dengan menekan tombol berulang kali sampai mode kembali ke awal.</li>
+      </ol>
+      <div class="tip">
+        <strong>Bila mode melompat lebih dari satu langkah dalam sekali tekan,</strong> itu bukan kesalahan rangkaian. Penyebabnya adalah <code>loop()</code> berjalan sangat cepat, sehingga satu tekanan terbaca berkali-kali. Cara paling sederhana untuk mengatasinya pada tahap ini adalah menyimpan status tombol sebelumnya di dalam sebuah variabel, lalu memindahkan mode hanya ketika status berubah dari tidak ditekan menjadi ditekan. Cara sederhana ini sudah cukup untuk tugas pertemuan ini.
+      </div>
+
+      <h3>6.4 Rubrik penilaian tugas</h3>
+      <p>Tugas ini dinilai dengan empat aspek berikut. Bacalah kolom kriteria nilai penuh sebelum mulai mengerjakan, bukan setelah selesai, karena di situlah terlihat apa yang sebenarnya diperiksa.</p>
+      <div class="table-scroll" tabindex="0">
+        <table>
+        <thead>
+          <tr><th>Aspek</th><th>Bobot</th><th>Kriteria nilai penuh</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Rangkaian dan pemilihan pin</td><td>25%</td><td>Tiga LED dan satu tombol tersambung dengan benar, nomor pin pada rangkaian sama dengan nomor pin di program, dan setiap pilihan pin dapat Anda jelaskan alasannya.</td></tr>
+          <tr><td>Logika mode berjalan benar</td><td>30%</td><td>Satu tombol menghasilkan urutan mode yang jelas, setiap mode menyalakan kombinasi LED yang berbeda, dan mode kembali ke awal setelah mode terakhir.</td></tr>
+          <tr><td>Kerapian program</td><td>25%</td><td>Nomor pin ditulis sebagai konstanta bernama, mode pin ditetapkan di <code>setup()</code>, nama variabel menjelaskan isinya, dan program bebas dari baris yang tidak terpakai.</td></tr>
+          <tr><td>Penjelasan hasil</td><td>20%</td><td>Anda dapat menjelaskan urutan kerja program dari tombol ditekan sampai LED berubah, termasuk peran variabel mode di dalamnya.</td></tr>
+        </tbody>
+        </table>
+      </div>
+      <p class="footer-note">Tugas latihan mingguan seperti tugas ini berbobot 20 persen dari nilai akhir mata kuliah.</p>
+    </section>
+
+    <section class="card">
+      <h2>7. Ringkasan Materi</h2>
+      <ul>
+        <li>ESP32 adalah mikrokontroler yang membaca input, memproses logika, dan menghasilkan output.</li>
+        <li>GPIO adalah jalur serbaguna yang bisa difungsikan sebagai input atau output.</li>
+        <li><code>setup()</code> dijalankan satu kali untuk inisialisasi, sedangkan <code>loop()</code> dijalankan terus-menerus.</li>
+        <li>Digital input dipakai untuk membaca kondisi seperti tombol, sedangkan digital output dipakai untuk mengendalikan perangkat seperti LED.</li>
+        <li>Latihan LED blink, tombol, dan pola blinking adalah fondasi sebelum masuk ke sensor, aktuator yang lebih kompleks, dan komunikasi data IoT.</li>
+      </ul>
+      <p class="footer-note">Materi Pertemuan 2 ini berfokus pada dasar ESP32, GPIO, input-output digital, simulasi LED blink, tombol untuk kontrol LED, variasi pola blinking, serta target Anda mampu membuat kontrol input-output digital dasar.</p>
+    </section>
+
+    <section class="card">
+      <h2>8. Latihan Pemahaman</h2>
+      <ol>
+        <li>Jelaskan perbedaan fungsi <code>setup()</code> dan <code>loop()</code>.</li>
+        <li>Apa yang dimaksud dengan GPIO, dan mengapa ia penting pada ESP32?</li>
+        <li>Jelaskan perbedaan input digital dan output digital beserta contohnya.</li>
+        <li>Mengapa mode <code>INPUT_PULLUP</code> sering dipakai saat membaca tombol?</li>
+        <li>Bagaimana cara kerja tugas 3 LED dengan 1 tombol mode secara logika?</li>
+      </ol>
+      <div class="analogy">
+        <strong>Analogi dunia nyata:</strong> latihan ini seperti memahami ruang kontrol gedung. Anda bukan hanya diminta menekan tombol, tetapi juga memahami jalur mana yang menerima perintah, siapa yang memprosesnya, dan perangkat mana yang akhirnya bereaksi.</div>
+    </section>
+
+    <section class="card">
+      <h2>9. Checkpoint Evaluasi Pertemuan 2</h2>
+      <p>Pertemuan 2 dianggap tuntas bila butir-butir berikut sudah dapat Anda lakukan sendiri, tanpa menyalin ulang contoh kode. Daftar ini sekaligus dipakai sebagai pemeriksaan diri: kerjakan satu per satu, dan bila ada yang belum tercapai, kolom terakhir menunjukkan bab mana yang perlu Anda baca ulang sebelum melanjutkan ke Pertemuan 3 tentang sensor dan pembacaan data.</p>
+
+      <div class="mini">
+        <div class="label">Target minimal pertemuan ini</div>
+        <ul>
+          <li>Anda mampu membuat kontrol input-output digital dasar pada ESP32.</li>
+          <li>Anda paham hubungan tombol sebagai input dan LED sebagai output.</li>
+          <li>Anda mampu membaca alur logika sederhana di dalam sebuah program.</li>
+        </ul>
+      </div>
+
+      <div class="table-scroll" tabindex="0">
+        <table>
+        <thead>
+          <tr><th>Yang diperiksa</th><th>Cara memastikan sendiri</th><th>Bila belum tercapai</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Program dapat dikompilasi tanpa error</td>
+            <td>Jalankan simulasi pada ketiga contoh kode di Bab 5. Bila ada pesan kesalahan, catat nomor barisnya dan periksa tanda titik koma serta kurung kurawal pada baris tersebut.</td>
+            <td>Baca ulang Bab 2 tentang struktur <code>setup()</code> dan <code>loop()</code>.</td>
+          </tr>
+          <tr>
+            <td>LED merespons logika program dengan benar</td>
+            <td>Untuk Praktik 1 pada Bab 4.2, hitung sendiri lama nyala dan lama mati LED, lalu bandingkan dengan nilai <code>delay()</code> di program. Untuk Praktik 2 pada Bab 4.3, tekan tombol beberapa kali dan pastikan keadaan LED berubah setiap kali ditekan, bukan hanya sekali.</td>
+            <td>Baca ulang Bab 3.3 tentang alur kerja input-output digital dan Bab 5.2 tentang contoh tombol.</td>
+          </tr>
+          <tr>
+            <td>Anda dapat menjelaskan pin yang dipakai dan fungsinya</td>
+            <td>Tutup kode Anda, lalu sebutkan dengan kata-kata sendiri: pin nomor berapa dipakai untuk LED, pin nomor berapa untuk tombol, masing-masing ditetapkan sebagai mode apa di dalam <code>setup()</code>, dan mengapa mode itu yang dipilih.</td>
+            <td>Baca ulang Bab 3.1 tentang mode pin dan tabel perintah pada Bab 5.4.</td>
+          </tr>
+          <tr>
+            <td>Tugas latihan Pertemuan 2 selesai dan dapat dijelaskan</td>
+            <td>Pastikan simulasi tiga LED dengan satu tombol mode pada Bab 6 berjalan, lalu jelaskan bagaimana satu tombol dapat menghasilkan beberapa mode tampilan yang berbeda.</td>
+            <td>Baca ulang Bab 6.3 tentang petunjuk pengerjaan, lalu bandingkan dengan pola pada Bab 5.3.</td>
+          </tr>
+        </tbody>
+        </table>
+      </div>
+
+      <p class="footer-note">Kemampuan pada pertemuan ini menjadi dasar untuk checkpoint besar pertama, CP-1, yang diperiksa pada Pertemuan 4 tentang aktuator dasar. Checkpoint besar berikutnya adalah CP-2 pada Pertemuan 8 berupa integrasi sistem, CP-3 pada Pertemuan 12 tentang keamanan dan keandalan, serta CP-4 pada Pertemuan 16 berupa demo akhir. Tugas latihan mingguan seperti tugas pada Bab 6 berbobot 20 persen dari nilai akhir mata kuliah.</p>
+    </section>
+
+    <section class="card">
+      <h2>10. Referensi Praktis</h2>
+      <p>Tiga sumber berikut adalah rujukan lanjutan untuk materi Pertemuan 2. Sebagian besar isinya berbahasa Inggris, tetapi bagian yang Anda perlukan sekarang pendek dan banyak memuat contoh kode. Sebaiknya sumber ini dibaca setelah praktik selesai, bukan sebelum, agar istilah di dalamnya sudah punya bentuk nyata dan mudah Anda kenali.</p>
+
+      <h3>10.1 Arduino Language Reference — <code>docs.arduino.cc</code></h3>
+      <p>Ini adalah daftar resmi perintah bahasa Arduino, termasuk penjelasan <code>setup()</code> dan <code>loop()</code> yang dibahas pada Bab 2 serta <code>pinMode()</code>, <code>digitalWrite()</code>, dan <code>digitalRead()</code> yang dirangkum pada tabel Bab 5.4. Bukalah halaman ini ketika Anda ingin memastikan bentuk penulisan sebuah perintah beserta nilai yang boleh dipakai sebagai argumennya, misalnya pilihan <code>OUTPUT</code>, <code>INPUT</code>, dan <code>INPUT_PULLUP</code> pada tabel Bab 3.1.</p>
+
+      <h3>10.2 Wokwi basic ESP32 projects — <code>wokwi.com</code></h3>
+      <p>Situs ini menyediakan kumpulan proyek contoh yang dapat langsung dijalankan di browser, termasuk rangkaian LED dan tombol yang serupa dengan Praktik 1 pada Bab 4.2 dan Praktik 2 pada Bab 4.3. Bila hasil simulasi Anda tidak sesuai harapan, membandingkan sambungan pada proyek contoh dengan sambungan milik Anda biasanya lebih cepat daripada menebak letak kesalahan dari kode saja.</p>
+
+      <h3>10.3 ESP32 GPIO tutorial (Random Nerd Tutorials) — <code>randomnerdtutorials.com</code></h3>
+      <p>Tutorial ini memuat peta pin ESP32 beserta keterangan pin mana yang aman dipakai sebagai input atau output biasa dan pin mana yang sebaiknya dihindari karena sudah memiliki fungsi khusus saat board dinyalakan. Keterangan tersebut langsung berguna pada tugas Bab 6, karena di sana Anda harus memilih sendiri pin untuk tiga LED dan satu tombol, tidak lagi hanya memakai pin 2 dan pin 4 seperti pada contoh kode Bab 5.</p>
+
+      <p class="footer-note">Alamat di atas ditulis sebagai nama domain, bukan tautan langsung ke halaman tertentu, karena struktur halaman situs semacam ini berubah dari waktu ke waktu. Cari judul yang disebutkan di atas dari halaman utama masing-masing situs.</p>
+    </section>
+    <footer class="pagenum">
+      <span class="pagenum-seri">Materi Pertemuan 2</span>
+      <span class="pagenum-no">Halaman 2 dari 16</span>
+    </footer>
+  </div>
+</body>
+</html>

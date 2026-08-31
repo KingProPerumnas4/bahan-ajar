@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Materi Pertemuan 7 - Dasar Komunikasi Data IoT: MQTT</title>
+  <link rel="stylesheet" href="assets/materi.css" />
+</head>
+<body>
+  <div class="wrap">
+    <section class="hero">
+      <span class="badge">Pertemuan 7</span>
+      <h1>Dasar Komunikasi Data IoT: MQTT</h1>
+      <p class="lead">Materi ini membahas konsep broker, topic, publisher, subscriber, payload, dan QoS secara pengantar, lalu dilanjutkan dengan praktik publish data dari simulator, subscribe memakai MQTTX, serta pengujian beberapa payload berbeda.</p>
+      <div>
+        <span class="pill">Broker</span>
+        <span class="pill">Topic</span>
+        <span class="pill">Publisher</span>
+        <span class="pill">Subscriber</span>
+        <span class="pill">Payload</span>
+        <span class="pill">QoS</span>
+        <span class="pill">MQTTX</span>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Capaian Pembelajaran Pertemuan 7</h2>
+      <div class="grid two">
+        <div class="mini">
+          <div class="label">Yang dipahami</div>
+          <ul>
+            <li>Makna MQTT sebagai protokol komunikasi ringan untuk IoT.</li>
+            <li>Peran broker, topic, publisher, subscriber, payload, dan QoS.</li>
+            <li>Perbedaan pola komunikasi MQTT dengan HTTP.</li>
+            <li>Alur data publish-subscribe dalam sistem IoT.</li>
+          </ul>
+        </div>
+        <div class="mini">
+          <div class="label">Yang dapat dilakukan</div>
+          <ul>
+            <li>Mem-publish data dari simulator ke topic MQTT.</li>
+            <li>Melakukan subscribe menggunakan MQTTX.</li>
+            <li>Menguji beberapa payload berbeda pada topic yang sesuai.</li>
+            <li>Menjelaskan mengapa MQTT cocok untuk komunikasi ringan dan real-time sederhana.</li>
+          </ul>
+        </div>
+      </div>
+      <p>Fokus Pertemuan 7 adalah pengantar broker, topic, publisher, subscriber, payload, dan QoS; aktivitas utamanya mencakup publish data dari simulator ke topic MQTT, subscribe dengan MQTTX, dan uji kirim beberapa payload berbeda. Target minimum pertemuan ini adalah Anda memahami pola publish-subscribe, dengan checkpoint bahwa publish berhasil, subscribe berhasil, dan Anda mampu menjelaskan perbedaan HTTP vs MQTT.</p>
+    </section>
+
+    <section class="card">
+      <h2>1. Pengantar MQTT dalam Sistem IoT</h2>
+      <p>MQTT adalah protokol komunikasi yang dirancang agar ringan, sederhana, dan efisien untuk pertukaran data antar perangkat dan layanan. Dalam IoT, MQTT sangat berguna ketika device perlu mengirim data kecil secara berkala, menerima perintah, atau berkomunikasi melalui mekanisme yang tidak membebani perangkat.</p>
+      <p>Berbeda dengan pola komunikasi yang menunggu permintaan langsung seperti HTTP, MQTT memakai pola <strong>publish-subscribe</strong>. Dalam pola ini, pengirim data tidak perlu tahu siapa penerimanya secara spesifik. Pengirim cukup mengirim data ke sebuah topic, lalu penerima yang berlangganan topic itu akan menerima datanya.</p>
+      <div class="analogy">
+        <strong>Analogi dunia nyata:</strong> bayangkan papan pengumuman digital di kampus. Seseorang menempelkan pengumuman pada kategori tertentu, misalnya “Info Akademik”. Orang yang tertarik pada kategori itu cukup melihat papan kategori tersebut. Pengirim tidak perlu mengirim pesan satu per satu ke setiap orang. MQTT bekerja dengan cara serupa: pesan dikirim ke topic, lalu subscriber yang tertarik akan menerimanya.
+      </div>
+
+      <h3>1.1 Mengapa MQTT penting untuk IoT?</h3>
+      <div class="grid three">
+        <div class="mini"><strong>Ringan</strong><br/>Ukuran overhead komunikasi relatif kecil sehingga cocok untuk perangkat terbatas.</div>
+        <div class="mini"><strong>Efisien</strong><br/>Cocok untuk pengiriman data sensor periodik atau event sederhana.</div>
+        <div class="mini"><strong>Fleksibel</strong><br/>Satu publisher dapat melayani banyak subscriber melalui topic yang sama.</div>
+      </div>
+
+      <h3>1.2 Kapan MQTT cocok digunakan?</h3>
+      <p>MQTT cocok ketika sistem membutuhkan pengiriman data telemetri, pemantauan status, notifikasi ringan, atau kontrol sederhana yang berlangsung terus-menerus. Protokol ini sering dipakai untuk sensor suhu, kelembapan, status lampu, alarm, atau data periodik lain yang perlu dikirim dengan cepat dan hemat sumber daya.</p>
+    </section>
+
+    <section class="card">
+      <h2>2. Konsep Utama MQTT</h2>
+      <h3>2.1 Broker</h3>
+      <p>Broker adalah pusat lalu lintas pesan dalam MQTT. Semua pesan dari publisher masuk ke broker, lalu broker meneruskan pesan itu ke subscriber yang berlangganan topic terkait. Jadi broker bertindak sebagai penghubung utama antara pengirim dan penerima.</p>
+      <div class="analogy">
+        <strong>Analogi dunia nyata:</strong> broker seperti kantor pos pusat. Pengirim cukup mengirim surat ke kantor pos, lalu kantor pos yang akan mendistribusikannya ke penerima yang tepat.</div>
+
+      <h3>2.2 Topic</h3>
+      <p>Topic adalah jalur atau kategori pesan. Misalnya, data suhu dapat dikirim ke topic <code>kampus/lab/suhu</code>, sedangkan data kelembapan ke topic <code>kampus/lab/kelembapan</code>. Topic membantu memisahkan jenis data sehingga subscriber hanya menerima informasi yang memang dibutuhkan.</p>
+      <div class="analogy">
+        <strong>Analogi dunia nyata:</strong> topic seperti label rak di perpustakaan. Buku fisika dan buku sejarah ditempatkan di kategori berbeda, sehingga pembaca bisa langsung menuju rak yang sesuai minatnya.</div>
+
+      <h3>2.3 Publisher</h3>
+      <p>Publisher adalah pihak yang mengirim pesan ke topic tertentu. Dalam konteks IoT, publisher sering berupa device seperti ESP32 yang mengirim data sensor.</p>
+
+      <h3>2.4 Subscriber</h3>
+      <p>Subscriber adalah pihak yang mendaftar untuk menerima pesan dari topic tertentu. MQTTX dapat berperan sebagai subscriber ketika digunakan untuk memantau data dari device.</p>
+
+      <h3>2.5 Payload</h3>
+      <p>Payload adalah isi pesan yang dikirim. Payload dapat berupa angka, teks, status, atau format data sederhana seperti JSON. Misalnya payload suhu bisa berupa <code>28.5</code> atau <code>{"suhu":28.5}</code>.</p>
+
+      <h3>2.6 QoS</h3>
+      <p>QoS atau <em>Quality of Service</em> adalah tingkat jaminan pengiriman pesan. Pada pertemuan pengantar, cukup dipahami bahwa MQTT menyediakan beberapa pilihan tingkat keandalan pengiriman. Semakin tinggi jaminannya, umumnya semakin besar biaya komunikasi atau kompleksitasnya.</p>
+      <div class="table-scroll" tabindex="0">
+        <table>
+        <thead>
+          <tr><th>Konsep</th><th>Makna sederhana</th><th>Contoh pemahaman awal</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>QoS 0</td><td>Pesan dikirim sekali tanpa jaminan ulang</td><td>Cocok untuk data yang sering diperbarui, seperti suhu periodik</td></tr>
+          <tr><td>QoS 1</td><td>Pesan diupayakan sampai minimal sekali</td><td>Cocok saat kehilangan pesan lebih merugikan</td></tr>
+          <tr><td>QoS 2</td><td>Pesan dijaga agar diterima tepat satu kali</td><td>Digunakan bila duplikasi harus dihindari</td></tr>
+        </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>3. Arsitektur Publish-Subscribe</h2>
+      <p>Pola publish-subscribe adalah inti MQTT. Pada pola ini, publisher tidak berkomunikasi langsung dengan subscriber. Keduanya bertemu melalui broker. Hal ini membuat sistem lebih longgar keterikatannya, lebih mudah dikembangkan, dan lebih fleksibel ketika jumlah device atau penerima bertambah.</p>
+      <div class="svgbox" tabindex="0">
+        <svg viewBox="0 0 1020 280" width="100%" role="img" aria-label="Diagram publish subscribe MQTT">
+          <rect x="30" y="90" width="190" height="100" rx="18" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+          <rect x="405" y="90" width="210" height="100" rx="18" fill="#dcfce7" stroke="#15803d" stroke-width="2"/>
+          <rect x="800" y="30" width="180" height="80" rx="18" fill="#ede9fe" stroke="#6d28d9" stroke-width="2"/>
+          <rect x="800" y="170" width="180" height="80" rx="18" fill="#fef3c7" stroke="#b45309" stroke-width="2"/>
+          <text x="125" y="128" text-anchor="middle" font-size="24" font-weight="700">Publisher</text>
+          <text x="125" y="156" text-anchor="middle" font-size="16">ESP32 / simulator</text>
+          <text x="510" y="128" text-anchor="middle" font-size="24" font-weight="700">Broker MQTT</text>
+          <text x="510" y="156" text-anchor="middle" font-size="16">menerima &amp; meneruskan pesan</text>
+          <text x="890" y="68" text-anchor="middle" font-size="22" font-weight="700">Subscriber A</text>
+          <text x="890" y="92" text-anchor="middle" font-size="15">MQTTX</text>
+          <text x="890" y="208" text-anchor="middle" font-size="22" font-weight="700">Subscriber B</text>
+          <text x="890" y="232" text-anchor="middle" font-size="15">dashboard / service</text>
+          <line x1="220" y1="140" x2="405" y2="140" stroke="#2563eb" stroke-width="4"/>
+          <polygon points="405,140 391,132 391,148" fill="#2563eb"/>
+          <line x1="615" y1="120" x2="800" y2="70" stroke="#2563eb" stroke-width="4"/>
+          <polygon points="800,70 787,64 790,78" fill="#2563eb"/>
+          <line x1="615" y1="160" x2="800" y2="210" stroke="#2563eb" stroke-width="4"/>
+          <polygon points="800,210 790,202 787,216" fill="#2563eb"/>
+          <text x="312" y="122" text-anchor="middle" font-size="14" fill="#374151">publish ke topic</text>
+          <text x="707" y="95" text-anchor="middle" font-size="14" fill="#374151">subscriber topic sama</text>
+          <text x="707" y="195" text-anchor="middle" font-size="14" fill="#374151">subscriber topic sama</text>
+        </svg>
+      </div>
+      <p>Diagram di atas menunjukkan bahwa satu publisher dapat melayani lebih dari satu subscriber tanpa perlu mengubah logika dasar pengiriman. Ini adalah salah satu kekuatan utama MQTT dalam ekosistem IoT.</p>
+      <div class="analogy">
+        <strong>Analogi dunia nyata:</strong> satu stasiun radio menyiarkan siaran ke frekuensi tertentu. Banyak pendengar dapat menerima siaran itu secara bersamaan selama mereka menyetel frekuensi yang sama. Publisher adalah stasiun radio, broker adalah infrastruktur penyiaran, dan subscriber adalah para pendengar.</div>
+    </section>
+
+    <section class="card">
+      <h2>4. MQTT vs HTTP</h2>
+      <p>Pertemuan 7 menuntut Anda mampu menjelaskan perbedaan HTTP dan MQTT. Keduanya sama-sama digunakan dalam komunikasi data, tetapi pola kerjanya berbeda.</p>
+      <div class="table-scroll" tabindex="0">
+        <table>
+        <thead>
+          <tr><th>Aspek</th><th>HTTP</th><th>MQTT</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Pola komunikasi</td><td>Request-response</td><td>Publish-subscribe</td></tr>
+          <tr><td>Hubungan pengirim-penerima</td><td>Client meminta langsung ke server</td><td>Publisher kirim ke broker, subscriber menerima dari topic</td></tr>
+          <tr><td>Kecocokan umum</td><td>Akses API, kirim atau ambil data sesekali</td><td>Telemetri ringan, monitoring, notifikasi, kontrol sederhana</td></tr>
+          <tr><td>Efisiensi untuk perangkat kecil</td><td>Relatif lebih berat</td><td>Relatif lebih ringan</td></tr>
+          <tr><td>Distribusi ke banyak penerima</td><td>Tidak alami, perlu mekanisme tambahan</td><td>Alami melalui subscriber pada topic yang sama</td></tr>
+        </tbody>
+        </table>
+      </div>
+      <div class="analogy">
+        <strong>Analogi dunia nyata:</strong> HTTP seperti seseorang menelepon resepsionis untuk meminta informasi tertentu, lalu menunggu jawaban. MQTT seperti siaran pengumuman di speaker gedung: siapa pun yang sedang mendengarkan kanal itu akan menerima informasi tanpa perlu meminta satu per satu.</div>
+    </section>
+
+    <section class="card">
+      <h2>5. Praktik Terpandu: Publish dari Simulator dan Subscribe dengan MQTTX</h2>
+      <p>Aktivitas inti pada pertemuan ini adalah mem-publish data dari simulator ke topic MQTT, lalu melakukan subscribe menggunakan MQTTX. Setelah koneksi dasar berhasil, Anda menguji beberapa payload berbeda dan mengamati bagaimana pesan diterima subscriber.</p>
+      <p>Praktik ini memakai dua alat sekaligus. Alat pertama adalah simulator, yang menjalankan ESP32 virtual sebagai publisher. Alat kedua adalah <strong>MQTTX</strong>, aplikasi di komputer Anda yang berperan sebagai subscriber. Kedua alat itu tidak pernah berhubungan langsung; keduanya bertemu pada broker <code>broker.hivemq.com</code> di port <code>1883</code>, persis seperti yang tertulis pada contoh kode Bab 6. Bab 5.1 sampai Bab 5.3 memuat tujuan, skenario, dan garis besar langkahnya. Bab 5.4 menyiapkan kedua alat beserta isi setiap kolom sambungan di MQTTX, dan Bab 5.5 memuat langkah rinci yang dikerjakan sampai payload benar-benar terlihat. Bacalah bab ini berdampingan dengan Bab 6, karena semua nama dan angka yang dipakai di sini diambil dari kode di sana.</p>
+
+      <h3>5.1 Tujuan praktik</h3>
+      <ul>
+        <li>Melihat alur data MQTT secara nyata.</li>
+        <li>Membedakan peran publisher dan subscriber.</li>
+        <li>Memahami fungsi topic sebagai jalur distribusi data.</li>
+        <li>Membuktikan bahwa satu pesan dapat dipantau oleh tool seperti MQTTX.</li>
+      </ul>
+
+      <h3>5.2 Skenario praktik</h3>
+      <p>Gunakan ESP32 virtual sebagai publisher yang mengirim data sensor ke broker MQTT. Lalu gunakan MQTTX untuk subscribe pada topic yang sama. Setelah itu, kirim payload berbeda, misalnya angka suhu, angka kelembapan, atau status teks sederhana.</p>
+
+      <h3>5.3 Langkah umum</h3>
+      <ol>
+        <li>Siapkan proyek simulator ESP32 yang mendukung pengiriman MQTT.</li>
+        <li>Tentukan broker MQTT yang akan dipakai.</li>
+        <li>Tetapkan topic, misalnya <code>iot/lab/suhu</code> dan <code>iot/lab/kelembapan</code>.</li>
+        <li>Jalankan simulator agar ESP32 mulai publish data.</li>
+        <li>Buka MQTTX lalu lakukan subscribe ke topic yang sama.</li>
+        <li>Amati payload yang masuk dan uji perubahan data.</li>
+      </ol>
+
+      <h3>5.4 Menyiapkan alat: project simulator dan pemasangan MQTTX</h3>
+      <p>Sebelum masuk ke langkah bernomor, dua alat harus siap: satu project ESP32 di simulator yang akan menjalankan kode publisher, dan satu aplikasi MQTTX di komputer Anda yang akan menjadi subscriber. Yang dibangun pada praktik ini adalah satu rantai data yang utuh, yaitu angka di dalam program ESP32 virtual berjalan lewat jaringan simulator ke broker, lalu turun dari broker ke MQTTX sebagai barisan pesan yang dapat Anda baca satu per satu beserta waktu datangnya.</p>
+      <p><strong>Komponen yang perlu ditambahkan:</strong> tidak ada. Contoh kode pada Bab 6 tidak membaca sensor apa pun; nilai pada <code>float suhu = 28.5;</code> dan <code>float kelembapan = 70.2;</code> adalah angka buatan program yang ditulis langsung di dalam <code>loop()</code>. Karena itu tidak ada sensor, resistor, kabel, maupun <code>diagram.json</code> yang perlu dipasang atau ditempelkan pada praktik ini. Yang dibutuhkan hanya board ESP32 yang sudah tersedia sendiri pada project baru di simulator, ditambah jaringan nirkabel simulator bernama <code>Wokwi-GUEST</code> dengan kata sandi kosong yang dipakai kode itu. Panel rangkaian akan tetap terlihat hanya berisi board, dan itu memang keadaan yang benar di sini; memasang sensor suhu di panel rangkaian tidak akan mengubah apa pun karena kode tidak pernah membacanya.</p>
+      <p>Yang harus benar pada praktik ini bukan urutan kabel, melainkan urutan empat titik sambungan yang sama-sama tidak boleh berbeda antara kedua sisi: <strong>ESP32 virtual → jaringan <code>Wokwi-GUEST</code> → broker <code>broker.hivemq.com</code> port <code>1883</code> → topic <code>iot/lab/suhu</code> dan <code>iot/lab/kelembapan</code></strong>. MQTTX menempel pada rantai yang sama dari ujung yang berlawanan: ia menyambung ke broker dan port yang sama, lalu berlangganan dua nama topic yang sama. Bila satu saja dari empat titik itu berbeda antara sisi perangkat dan sisi MQTTX, pesan tidak akan pernah muncul walaupun kedua alat tampak berjalan normal dan tidak ada pesan kesalahan sama sekali.</p>
+      <details>
+        <summary>Memasang MQTTX di komputer Anda</summary>
+        <p>MQTTX adalah aplikasi yang dipasang di komputer dan bukan bagian dari simulator, jadi pemasangannya cukup sekali dan sebaiknya diselesaikan sebelum praktik dimulai.</p>
+        <ol class="step">
+          <li>Buka situs resmi MQTTX, yaitu <code>mqttx.app</code>, lalu cari tombol unduh pada halaman utamanya.</li>
+          <li>Pilih berkas pemasang yang sesuai sistem operasi komputer Anda, yaitu Windows, macOS, atau Linux. Ambil versi desktop, bukan versi baris perintah, karena seluruh petunjuk di bawah menyebut kolom dan tombol pada antarmuka desktop.</li>
+          <li>Jalankan berkas pemasang itu sampai selesai, lalu buka aplikasinya.</li>
+          <li>Kenali tiga bagian pada jendelanya: <strong>daftar sambungan</strong> di kolom paling kiri beserta tanda tambah (<strong>+</strong>) di atasnya, <strong>panel pesan</strong> di bagian tengah, dan <strong>tombol Connect</strong> di sudut kanan atas.</li>
+        </ol>
+        <p>Tanda bahwa langkah ini berhasil: jendela MQTTX terbuka dengan daftar sambungan di kolom kiri yang masih kosong dan ajakan untuk membuat sambungan baru. Pada tahap ini MQTTX belum tersambung ke mana pun, dan keadaan itu sudah benar.</p>
+      </details>
+      <div class="tip">
+        <strong>Serial Monitor tidak akan menampilkan apa pun.</strong> Contoh kode pada Bab 6 memang membuka port serial melalui <code>Serial.begin(115200)</code>, tetapi tidak memuat satu pun perintah cetak, sehingga jendela Serial Monitor di simulator tetap kosong walaupun program berjalan dan publish sudah terkirim. Karena itu langkah pada Bab 5.5 meminta Anda menambahkan sendiri beberapa baris <code>Serial.println()</code>. Tanpa baris itu, sisi perangkat tidak memberi kabar apa pun, sehingga Anda kehilangan satu-satunya cara membedakan perangkat yang belum tersambung dari topic yang salah tulis, dan pemeriksaan diri pada Bab 11 yang meminta bukti dari Serial Monitor juga tidak dapat dikerjakan.
+      </div>
+      <p>Sambungan baru di MQTTX dibuat dengan menekan tanda tambah (<strong>+</strong>) di atas daftar sambungan, lalu memilih <strong>New Connection</strong> sehingga muncul formulir berisi kolom-kolom di bawah ini. Tabel berikut adalah isi setiap kolom untuk praktik ini. Nilainya diambil dari contoh kode Bab 6, jadi jangan menggantinya dengan nama atau angka lain.</p>
+      <div class="table-scroll" tabindex="0">
+        <table>
+        <thead>
+          <tr><th>Kolom pada formulir</th><th>Isi yang dipakai</th><th>Alasan</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Name</td><td>Nama bebas, misalnya <code>Praktik MQTT</code></td><td>Hanya label pada daftar sambungan di kolom kiri, tidak memengaruhi koneksi.</td></tr>
+          <tr><td>Client ID</td><td>Biarkan nilai acak yang sudah terisi sendiri</td><td>Client id adalah pengenal Anda di broker. Nilainya harus berbeda dari <code>esp32-client-demo</code> yang dipakai <code>client.connect()</code> pada kode Bab 6, karena dua client dengan id yang sama pada satu broker akan saling memutus sambungan.</td></tr>
+          <tr><td>Host</td><td>Kotak kecil di depannya dibiarkan pada pilihan <code>mqtt://</code>, lalu isi <code>broker.hivemq.com</code></td><td>Sama dengan nilai <code>mqttServer</code> pada kode Bab 6. Pilihan <code>mqtt://</code> adalah jalur MQTT biasa, bukan jalur lain yang memakai port berbeda.</td></tr>
+          <tr><td>Port</td><td><code>1883</code></td><td>Sama dengan nilai <code>mqttPort</code> pada kode Bab 6, yaitu port MQTT tanpa enkripsi.</td></tr>
+          <tr><td>Username dan Password</td><td>Dibiarkan kosong</td><td>Broker yang dipakai kode Bab 6 menerima sambungan tanpa akun, dan kode ESP32 juga menyambung hanya dengan client id tanpa nama pengguna. Mengisi kedua kolom ini justru membuat sambungan ditolak.</td></tr>
+          <tr><td>SSL/TLS</td><td>Sakelarnya dibiarkan mati</td><td>Port <code>1883</code> adalah jalur tanpa enkripsi. Bila sakelar ini dinyalakan, sambungan gagal walaupun host dan port sudah benar.</td></tr>
+          <tr><td>Kolom lain pada bagian lanjutan</td><td>Dibiarkan apa adanya</td><td>Nilai bawaan untuk Keep Alive, Clean Session, dan versi MQTT sudah cocok untuk praktik ini, sehingga tidak perlu disentuh.</td></tr>
+        </tbody>
+        </table>
+      </div>
+      <p>Setelah semua kolom terisi, tekan tombol <strong>Connect</strong> di sudut kanan atas formulir. Tanda bahwa langkah ini berhasil: nama sambungan yang Anda buat muncul pada daftar di kolom kiri dengan titik penanda berwarna hijau, tombol di sudut kanan atas berubah menjadi <strong>Disconnect</strong>, dan panel pesan di tengah berubah dari kosong menjadi siap dipakai. Bila yang muncul adalah pemberitahuan berwarna merah dan titik penanda tetap kelabu, MQTTX belum tersambung ke broker sama sekali, sehingga melanjutkan ke langkah berlangganan tidak ada gunanya sebelum host, port, dan sakelar SSL/TLS diperiksa ulang.</p>
+
+      <h3>5.5 Praktik: publish dari simulator lalu subscribe pada dua topic</h3>
+      <p>Bagian ini adalah pengerjaan penuh dari garis besar Bab 5.3. Dua alat yang sudah disiapkan pada Bab 5.4 dijalankan bersamaan: simulator mem-publish setiap dua detik, dan MQTTX menampilkan pesan yang masuk. Kerjakan langkahnya berurutan, karena setiap langkah punya tanda keberhasilan yang harus terlihat lebih dahulu sebelum langkah sesudahnya berguna.</p>
+      <p><strong>Komponen yang perlu ditambahkan:</strong> tidak ada, sama seperti Bab 5.4. Board ESP32 pada project baru di simulator sudah cukup, dan seluruh sisa praktik dikerjakan di panel kode simulator serta di jendela MQTTX.</p>
+      <ol class="step">
+        <li>Buka simulator di browser, pilih <strong>New Project</strong>, lalu pilih board <strong>ESP32</strong>. Panel rangkaian akan berisi board itu saja dan memang tidak perlu ditambahi komponen.</li>
+        <li>Hapus seluruh isi panel kode, lalu tempelkan contoh kode Bab 6 secara utuh, termasuk kedua baris <code>#include</code> di bagian atasnya.</li>
+        <li>Periksa empat nilai di bagian atas kode sebelum dijalankan: <code>ssid</code> berisi <code>"Wokwi-GUEST"</code>, <code>password</code> tetap kosong, <code>mqttServer</code> berisi <code>"broker.hivemq.com"</code>, dan <code>mqttPort</code> berisi <code>1883</code>. Jaringan <code>Wokwi-GUEST</code> hanya ada di dalam simulator dan tidak memakai kata sandi, jadi nama jaringan Wi-Fi tempat komputer Anda berada tidak boleh ditulis di sini.</li>
+        <li>Tambahkan tiga baris cetak agar sisi perangkat memberi kabar: <code>Serial.println("wifi tersambung");</code> pada akhir <code>setupWifi()</code>, <code>Serial.println("broker tersambung");</code> pada akhir <code>reconnectMQTT()</code> yaitu sesudah blok <code>while</code> selesai, dan <code>Serial.println("terkirim");</code> setelah kedua pemanggilan <code>client.publish()</code> di dalam <code>loop()</code>. Kedua baris pertama diletakkan di luar blok <code>while</code> karena baris di luar itu hanya tercapai ketika sambungan benar-benar sudah terbentuk; bila diletakkan di dalam blok, baris itu ikut tercetak pada percobaan yang gagal dan kabarnya menjadi menyesatkan.</li>
+        <li>Tekan tombol jalankan, lalu perhatikan Serial Monitor. Baris <code>wifi tersambung</code> harus muncul lebih dahulu, disusul <code>broker tersambung</code>, lalu <code>terkirim</code> yang berulang. Selama ketiga baris itu belum muncul berurutan, jangan berpindah ke MQTTX dahulu, karena masalahnya masih ada di sisi perangkat.</li>
+        <li>Buka MQTTX, buat sambungan baru dengan isi kolom persis seperti tabel pada Bab 5.4, tekan <strong>Connect</strong>, lalu pastikan titik penanda di samping nama sambungan sudah berwarna hijau sebelum melanjutkan.</li>
+        <li>Tekan tombol <strong>New Subscription</strong> di bagian atas panel pesan. Pada kolom <strong>Topic</strong>, tulis <code>iot/lab/suhu</code>, biarkan <strong>QoS</strong> pada angka <code>0</code>, lalu tekan tombol konfirmasi pada formulir kecil itu. Cara paling aman mengisi kolom Topic adalah menyalin nama topic langsung dari baris <code>client.publish()</code> pada kode, bukan menuliskannya ulang dari ingatan. Nama <code>kampus/lab/suhu</code> pada Bab 2.2 hanya contoh untuk menjelaskan bentuk topic bertingkat dan bukan nama yang dipakai kode Bab 6.</li>
+        <li>Ulangi langkah berlangganan sekali lagi untuk topic <code>iot/lab/kelembapan</code>. Tanda bahwa keduanya sudah aktif: daftar Subscriptions di sisi kiri panel pesan memuat dua baris topic dengan warna penanda yang berbeda.</li>
+        <li>Amati panel pesan selama beberapa kali kiriman tanpa mengubah apa pun. Setiap pesan yang masuk muncul sebagai gelembung baru yang memuat nama topic, penanda QoS, waktu penerimaan, dan isi payload-nya.</li>
+        <li>Sebagai langkah variasi, hentikan simulasi, ubah <code>float suhu = 28.5;</code> menjadi <code>float suhu = 31.7;</code>, jalankan kembali, lalu bandingkan gelembung yang baru dengan gelembung sebelumnya. Yang berubah hanya isi pesan pada topic <code>iot/lab/suhu</code>, sedangkan pesan pada <code>iot/lab/kelembapan</code> tetap sama, sehingga terlihat bahwa satu program dapat mengisi dua jalur data yang berdiri sendiri.</li>
+        <li>Lakukan satu percobaan gagal dengan sengaja: tambahkan satu subscription lagi dengan topic <code>iot/lab/Suhu</code> memakai huruf S besar, lalu tunggu beberapa kiriman. Baris topic itu tetap ada di daftar Subscriptions tetapi tidak pernah menerima gelembung apa pun, sementara kedua topic sebelumnya terus terisi dan Serial Monitor terus mencetak <code>terkirim</code>. Inilah bentuk gejala topic yang salah tulis, dan setelah percobaan ini baris tersebut boleh Anda hapus.</li>
+      </ol>
+      <p><strong>Hasil yang harus terlihat:</strong> pada panel pesan MQTTX muncul gelembung baru kira-kira setiap dua detik, mengikuti <code>delay(2000)</code> di akhir <code>loop()</code>. Gelembung dari topic <code>iot/lab/suhu</code> berisi <code>28.50</code> dan gelembung dari topic <code>iot/lab/kelembapan</code> berisi <code>70.20</code>. Kedua angka itu tampil dengan dua angka di belakang titik walaupun kode menulis <code>28.5</code> dan <code>70.2</code>, karena <code>String()</code> pada kode Bab 6 mengubah bilangan menjadi teks dengan dua desimal; inilah bentuk nyata payload sebagai teks, bukan sebagai angka. Setelah nilai <code>suhu</code> diubah menjadi <code>31.7</code>, gelembung berikutnya pada topic suhu berisi <code>31.70</code> sedangkan gelembung kelembapan tidak berubah. Subscription <code>iot/lab/Suhu</code> yang ditulis dengan huruf besar tetap kosong sepanjang percobaan, dan pada saat yang sama Serial Monitor tetap mencetak <code>terkirim</code> berulang. Gabungan dua keadaan terakhir itulah bukti bahwa perangkat tetap tersambung ke broker dan yang salah hanya penulisan nama topic.</p>
+      <div class="warn">
+        <strong>Bedakan dua gejala yang sama-sama terlihat sebagai pesan yang tidak muncul.</strong> Keduanya ditelusuri dari arah yang berbeda, jadi periksa Serial Monitor lebih dahulu sebelum menyentuh MQTTX. Bila Serial Monitor tidak mencetak apa pun atau berhenti pada baris <code>wifi tersambung</code> sehingga baris <code>broker tersambung</code> tidak pernah muncul, maka <strong>perangkat belum tersambung</strong>: yang salah ada di sisi simulator, biasanya <code>ssid</code> yang bukan <code>Wokwi-GUEST</code>, <code>mqttServer</code> atau <code>mqttPort</code> yang salah tulis, atau simulasi yang sudah berhenti sehingga <code>loop()</code> tidak berjalan lagi. Sebaliknya, bila Serial Monitor terus mencetak <code>terkirim</code> tetapi panel MQTTX tidak menerima apa pun, perangkat sudah tersambung dan yang salah ada pada <strong>penulisan topic</strong> di kolom Topic. Nama topic peka terhadap huruf besar dan kecil, dan setiap garis miring adalah pembatas tingkat, sehingga <code>iot/lab/Suhu</code>, <code>iot/lab/suhu/</code>, dan <code>iot/lab/ suhu</code> adalah tiga topic yang berbeda dan tidak satu pun sama dengan yang dipakai kode. Ada gejala ketiga yang mudah tertukar dengan keduanya: bila titik penanda sambungan di MQTTX berwarna kelabu, bukan perangkat maupun topic yang salah, melainkan MQTTX sendiri yang belum tersambung ke broker.
+      </div>
+      <div class="tip">
+        <strong>Broker yang dipakai kode Bab 6 adalah broker publik.</strong> Siapa pun dapat memakainya, termasuk kelas lain yang menyalin contoh kode yang sama. Karena itu Anda mungkin melihat gelembung berisi angka yang bukan <code>28.50</code> atau <code>70.20</code>: pesan itu bukan berasal dari program Anda, melainkan dari orang lain yang mem-publish ke nama topic yang sama. Gejala sejenis datang dari client id: bila ada dua perangkat yang menyambung dengan <code>esp32-client-demo</code> pada waktu yang sama, keduanya saling memutus sehingga pesan masuk tersendat-sendat. Keduanya diselesaikan dengan cara yang sama, yaitu menyisipkan penanda milik Anda sendiri, misalnya nomor induk mahasiswa, sebagai tingkat pertama nama topic dan sebagai bagian dari teks di dalam <code>client.connect()</code>. Bila nama topic diubah, kedua pemanggilan <code>client.publish()</code> pada kode dan kolom Topic di MQTTX wajib diubah bersamaan agar tetap sama persis. Penanda inilah yang diminta pada aspek penamaan topic di rubrik Bab 5.7.
+      </div>
+
+      <h3>5.6 Tugas latihan Pertemuan 7</h3>
+      <p>Buat sistem sensor virtual yang mem-publish data suhu dan kelembapan ke dua topic berbeda. Melalui latihan ini Anda mengalami sendiri bahwa setiap parameter dapat dikelompokkan pada topic yang jelas, sehingga subscriber dapat memilih data yang relevan tanpa harus menerima semuanya.</p>
+
+      <h3>5.7 Rubrik penilaian tugas</h3>
+      <p>Tugas pada Bab 5.6 dinilai dengan empat aspek berikut. Bacalah kolom kriteria nilai penuh sebelum mulai mengerjakan, karena di situ terlihat bahwa yang diperiksa bukan hanya keberhasilan publish, tetapi juga cara Anda menyusun nama topic dan menjelaskan hasilnya.</p>
+      <div class="table-scroll" tabindex="0">
+        <table>
+        <thead>
+          <tr><th>Aspek</th><th>Bobot</th><th>Kriteria nilai penuh</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Publish ke dua topic berhasil</td><td>30%</td><td>Nilai suhu dan kelembapan terkirim ke dua topic yang berbeda, dan keduanya benar-benar muncul saat Anda subscribe dari MQTTX.</td></tr>
+          <tr><td>Penamaan topic yang tertata</td><td>20%</td><td>Nama topic tersusun bertingkat dan memuat penanda milik Anda sendiri agar tidak bertabrakan dengan pengguna lain pada broker publik, serta ditulis sebagai konstanta di satu tempat di dalam program.</td></tr>
+          <tr><td>Bukti hasil subscribe</td><td>25%</td><td>Ada bukti tangkapan layar MQTTX yang memperlihatkan payload dari kedua topic beserta perubahan nilainya, bukan hanya status koneksi berhasil.</td></tr>
+          <tr><td>Penjelasan hasil</td><td>25%</td><td>Anda dapat menjelaskan perjalanan satu pesan dari program sampai muncul di MQTTX, dan menyebutkan alasan pemisahan dua topic dibanding menggabungkan keduanya menjadi satu.</td></tr>
+        </tbody>
+        </table>
+      </div>
+      <p class="footer-note">Tugas latihan mingguan seperti tugas ini berbobot 20 persen dari nilai akhir mata kuliah.</p>
+    </section>
+
+    <section class="card">
+      <h2>6. Contoh Kode Dasar MQTT pada ESP32</h2>
+      <p>Contoh berikut menunjukkan pola umum program ESP32 yang terhubung ke Wi-Fi lalu mem-publish dua data berbeda ke dua topic MQTT. Contoh ini bersifat dasar dan ditujukan untuk memahami alur logika program.</p>
+      <div class="code"><pre>#include &lt;WiFi.h&gt;
+#include &lt;PubSubClient.h&gt;
+
+const char* ssid = "Wokwi-GUEST";
+const char* password = "";
+const char* mqttServer = "broker.hivemq.com";
+const int mqttPort = 1883;
+
+WiFiClient espClient;
+PubSubClient client(espClient);
+
+void setupWifi() {
+  WiFi.begin(ssid, password);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+  }
+}
+
+void reconnectMQTT() {
+  while (!client.connected()) {
+    client.connect("esp32-client-demo");
+    delay(500);
+  }
+}
+
+void setup() {
+  Serial.begin(115200);
+  setupWifi();
+  client.setServer(mqttServer, mqttPort);
+}
+
+void loop() {
+  if (!client.connected()) {
+    reconnectMQTT();
+  }
+
+  client.loop();
+
+  float suhu = 28.5;
+  float kelembapan = 70.2;
+
+  client.publish("iot/lab/suhu", String(suhu).c_str());
+  client.publish("iot/lab/kelembapan", String(kelembapan).c_str());
+
+  delay(2000);
+}</pre></div>
+
+      <h3>6.1 Gambaran umum kode</h3>
+      <p>Kode ini memperlihatkan empat tahap penting: menghubungkan device ke Wi-Fi, menyiapkan koneksi ke broker MQTT, memastikan koneksi tetap aktif, lalu mem-publish data ke topic yang sesuai. Dari sudut pandang teori, inilah implementasi konkret dari peran device sebagai publisher.</p>
+
+      <h3>6.2 Penjelasan setiap bagian kode</h3>
+      <div class="table-scroll" tabindex="0">
+        <table>
+        <thead>
+          <tr><th>Potongan kode</th><th>Fungsi</th><th>Kaitan dengan teori</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>#include &lt;WiFi.h&gt;</code> dan <code>#include &lt;PubSubClient.h&gt;</code></td>
+            <td>Memanggil pustaka untuk koneksi Wi-Fi dan MQTT.</td>
+            <td>Menunjukkan bahwa device membutuhkan dukungan jaringan dan protokol komunikasi.</td>
+          </tr>
+          <tr>
+            <td><code>ssid</code>, <code>password</code>, <code>mqttServer</code>, <code>mqttPort</code></td>
+            <td>Menyimpan parameter koneksi.</td>
+            <td>Dalam sistem IoT, device harus tahu ke jaringan mana ia terhubung dan ke broker mana ia mengirim data.</td>
+          </tr>
+          <tr>
+            <td><code>WiFiClient espClient;</code></td>
+            <td>Membuat objek klien jaringan dasar.</td>
+            <td>Objek ini menjadi jalur komunikasi bagi MQTT.</td>
+          </tr>
+          <tr>
+            <td><code>PubSubClient client(espClient);</code></td>
+            <td>Membuat klien MQTT di atas koneksi jaringan.</td>
+            <td>Ini adalah implementasi langsung konsep publisher/subscriber client.</td>
+          </tr>
+          <tr>
+            <td><code>setupWifi()</code></td>
+            <td>Menghubungkan ESP32 ke Wi-Fi.</td>
+            <td>Sebelum publish ke broker, device harus lebih dulu terhubung ke jaringan.</td>
+          </tr>
+          <tr>
+            <td><code>reconnectMQTT()</code></td>
+            <td>Mencoba menghubungkan ulang ke broker jika koneksi putus.</td>
+            <td>Menunjukkan pentingnya keandalan koneksi dalam sistem IoT.</td>
+          </tr>
+          <tr>
+            <td><code>client.setServer(mqttServer, mqttPort);</code></td>
+            <td>Menentukan alamat broker dan port MQTT.</td>
+            <td>Broker adalah pusat distribusi pesan, sehingga alamat broker harus diketahui device.</td>
+          </tr>
+          <tr>
+            <td><code>client.publish(...)</code></td>
+            <td>Mengirim payload ke topic tertentu.</td>
+            <td>Ini adalah inti pola publish-subscribe: publisher mengirim pesan ke topic.</td>
+          </tr>
+        </tbody>
+        </table>
+      </div>
+
+      <h3>6.3 Penjelasan alur program</h3>
+      <p>Saat program mulai, ESP32 terlebih dahulu membuka serial monitor agar informasi debug bisa ditampilkan. Setelah itu, fungsi <code>setupWifi()</code> dijalankan untuk memastikan board masuk ke jaringan. Kemudian, program mengatur broker tujuan menggunakan <code>client.setServer()</code>.</p>
+      <p>Pada fungsi <code>loop()</code>, program terus memeriksa apakah koneksi ke broker masih aktif. Jika belum, fungsi <code>reconnectMQTT()</code> akan mencoba menyambung ulang. Setelah koneksi aman, data suhu dan kelembapan dipublikasikan ke dua topic berbeda. Dengan demikian, subscriber dapat memilih apakah ingin memantau suhu, kelembapan, atau keduanya.</p>
+
+      <h3>6.4 Mengapa dua topic digunakan?</h3>
+      <p>Menggunakan dua topic berbeda membantu pemisahan data. Jika semua data dicampur dalam satu topic tanpa struktur jelas, subscriber akan lebih sulit mengolah informasi. Pemisahan topic adalah kebiasaan penting dalam desain MQTT karena membuat sistem lebih rapi, mudah diuji, dan mudah dikembangkan.</p>
+      <div class="analogy">
+        <strong>Analogi dunia nyata:</strong> dua topic berbeda seperti dua laci arsip yang diberi label “Suhu” dan “Kelembapan”. Jika semua dokumen dimasukkan ke satu laci tanpa label, proses pencarian akan membingungkan.</div>
+    </section>
+
+    <section class="card">
+      <h2>7. Membaca Hasil di MQTTX</h2>
+      <p>MQTTX digunakan untuk membuktikan bahwa pesan dari publisher benar-benar dikirim dan diterima. Saat MQTTX melakukan subscribe pada topic yang sama, setiap payload yang dipublikasikan ESP32 akan muncul di antarmuka MQTTX. Dengan cara ini, Anda dapat melihat arus data secara lebih jelas daripada hanya mengandalkan asumsi bahwa program “sudah jalan”.</p>
+      <h3>7.1 Apa yang diamati?</h3>
+      <ul>
+        <li>Apakah koneksi ke broker berhasil.</li>
+        <li>Apakah topic yang dipakai sudah benar.</li>
+        <li>Apakah payload muncul sesuai format yang diharapkan.</li>
+        <li>Apakah perubahan nilai pada publisher terlihat pada sisi subscriber.</li>
+      </ul>
+      <p>Jika payload tidak muncul, maka kemungkinan masalah ada pada alamat broker, nama topic, koneksi jaringan, atau logika publish pada program.</p>
+    </section>
+
+    <section class="card">
+      <h2>8. Menghubungkan Teori dan Praktik</h2>
+      <div class="grid two">
+        <div class="mini"><strong>Teori:</strong> broker adalah pusat distribusi pesan.<br/><strong>Praktik:</strong> ESP32 mengirim ke broker, lalu MQTTX menerima dari broker.</div>
+        <div class="mini"><strong>Teori:</strong> topic mengelompokkan data.<br/><strong>Praktik:</strong> suhu dan kelembapan dikirim ke topic berbeda.</div>
+        <div class="mini"><strong>Teori:</strong> publisher tidak perlu tahu semua penerima.<br/><strong>Praktik:</strong> satu ESP32 dapat dilihat oleh banyak subscriber tanpa ubah kode besar.</div>
+        <div class="mini"><strong>Teori:</strong> payload adalah isi pesan.<br/><strong>Praktik:</strong> nilai suhu dan kelembapan tampil sebagai data yang diterima MQTTX.</div>
+      </div>
+      <p>Dari praktik ini, Anda dapat melihat bahwa MQTT bukan sekadar istilah, melainkan mekanisme nyata yang dapat diuji secara langsung. Setiap konsep teori memiliki pasangan implementasi yang tampak jelas saat publisher dan subscriber berjalan bersamaan.</p>
+    </section>
+
+    <section class="card">
+      <h2>9. Ringkasan Materi</h2>
+      <ul>
+        <li>MQTT adalah protokol komunikasi ringan yang sangat cocok untuk IoT.</li>
+        <li>Komponen utamanya meliputi broker, topic, publisher, subscriber, payload, dan QoS.</li>
+        <li>Pola komunikasi MQTT adalah publish-subscribe, berbeda dari HTTP yang berbasis request-response.</li>
+        <li>ESP32 dapat berperan sebagai publisher yang mengirim data sensor ke broker.</li>
+        <li>MQTTX membantu memantau dan menguji pesan sebagai subscriber.</li>
+        <li>Pemisahan topic membuat data lebih rapi dan mudah dikelola.</li>
+      </ul>
+    </section>
+
+    <section class="card">
+      <h2>10. Latihan Pemahaman</h2>
+      <h3>10.1 Pertanyaan reflektif</h3>
+      <ol>
+        <li>Jelaskan dengan kata-kata sendiri apa itu pola publish-subscribe.</li>
+        <li>Apa peran broker dalam MQTT?</li>
+        <li>Mengapa topic penting dalam pengelolaan data IoT?</li>
+        <li>Apa perbedaan utama HTTP dan MQTT dalam pola komunikasi?</li>
+        <li>Mengapa MQTTX berguna pada praktik pertemuan ini?</li>
+      </ol>
+      <h3>10.2 Tugas kecil</h3>
+      <p>Buat rancangan sederhana sistem monitoring ruangan yang mengirim dua data berbeda melalui MQTT. Tentukan:</p>
+      <ul>
+        <li>publisher yang digunakan,</li>
+        <li>dua nama topic yang dipakai,</li>
+        <li>contoh payload masing-masing topic,</li>
+        <li>siapa subscriber-nya,</li>
+        <li>dan informasi apa yang ingin dipantau pengguna.</li>
+      </ul>
+      <div class="analogy">
+        <strong>Analogi dunia nyata:</strong> latihan ini seperti merancang sistem pengumuman dalam gedung. Anda harus menentukan siapa yang mengumumkan, kanal apa yang dipakai, isi pengumumannya, dan siapa saja yang harus mendengarkan.</div>
+    </section>
+
+    <section class="card">
+      <h2>11. Checkpoint Evaluasi Pertemuan 7</h2>
+      <p>Pertemuan 7 dianggap tuntas bila tiga hal berikut dapat Anda lakukan. Ketiganya sudah dibahas pada bab-bab di atas, sehingga daftar ini sekaligus dipakai sebagai pemeriksaan diri sebelum Anda melanjutkan ke materi berikutnya.</p>
+      <div class="mini">
+        <div class="label">Target minimal pertemuan ini</div>
+        <ul>
+          <li>Memahami pola publish-subscribe, yaitu bahwa pengirim data dan penerima data tidak berhubungan langsung, melainkan bertemu pada topic yang dikelola broker.</li>
+        </ul>
+      </div>
+      <div class="table-scroll" tabindex="0">
+        <table>
+        <thead><tr><th>Yang diperiksa</th><th>Cara memastikan sendiri</th><th>Bila belum tercapai</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>Publish berhasil</td>
+            <td>Kerjakan tugas latihan pada Bab 5.6 dengan mengikuti urutan langkah Bab 5.3, lalu pastikan Serial Monitor menunjukkan koneksi ke broker berhasil dan nilai suhu serta kelembapan dikirim berulang ke dua topic yang berbeda.</td>
+            <td>Baca ulang Bab 6.2 dan Bab 6.3, terutama bagian koneksi ke broker dan pemanggilan publish untuk masing-masing topic.</td>
+          </tr>
+          <tr>
+            <td>Subscribe berhasil</td>
+            <td>Buka MQTTX, lakukan subscribe pada kedua topic yang Anda pakai di Bab 5.6, lalu periksa keempat butir pengamatan pada Bab 7.1: payload muncul, formatnya sesuai, dan perubahan nilai di sisi publisher benar-benar terlihat di sisi subscriber.</td>
+            <td>Kembali ke Bab 5.3 langkah kelima dan keenam, lalu ke paragraf penutup Bab 7 yang menyebut alamat broker, nama topic, koneksi jaringan, dan logika publish sebagai sumber masalah yang paling sering. Periksa juga penulisan topic pada Bab 2.2.</td>
+          </tr>
+          <tr>
+            <td>Dapat menjelaskan perbedaan HTTP dan MQTT</td>
+            <td>Tutup materi ini, lalu tulis ulang minimal tiga baris tabel Bab 4 dari ingatan dan bandingkan hasilnya. Setelah itu jawab pertanyaan keempat pada Bab 10.1 memakai kasus tugas Bab 5.6, termasuk alasan mengapa dua subscriber dapat menerima data yang sama tanpa mengubah kode publisher.</td>
+            <td>Baca ulang Bab 3 tentang arsitektur publish-subscribe, kemudian Bab 4 beserta analogi di akhirnya, lalu cocokkan dengan pasangan teori dan praktik pada Bab 8.</td>
+          </tr>
+        </tbody>
+        </table>
+      </div>
+      <p class="footer-note">Mata kuliah ini memiliki empat checkpoint besar, yaitu CP-1 pada Pertemuan 4, CP-2 pada Pertemuan 8, CP-3 pada Pertemuan 12, dan CP-4 pada Pertemuan 16. Pertemuan 8 adalah UTS sekaligus CP-2, yang berupa integrasi simulator dasar dengan sensor virtual, aktuator, dan komunikasi data dalam satu sistem kecil yang utuh. Pertemuan 7 adalah bekal terakhir sebelum checkpoint itu, sehingga bagian yang belum tercapai sebaiknya dituntaskan sekarang, bukan ditunda. Perlu diingat juga bahwa tugas latihan mingguan menyumbang 20 persen dari nilai akhir, sehingga tugas pada Bab 5.6 dan Bab 10.2 tetap terhitung.</p>
+    </section>
+
+    <section class="card">
+      <h2>12. Referensi Praktis</h2>
+      <p>Tiga sumber berikut adalah rujukan yang paling dekat dengan materi Pertemuan 7. Sebagian besar isinya berbahasa Inggris, dan sebaiknya dibaca setelah praktik selesai, bukan sebelum, agar istilah di dalamnya sudah memiliki bentuk nyata yang pernah Anda lihat sendiri.</p>
+      <h3>HiveMQ MQTT Essentials — <code>hivemq.com</code></h3>
+      <p>Seri artikel pendek yang membahas satu konsep MQTT per bagian, mulai dari peran broker sampai tiga tingkat QoS. Bagian ini memperdalam Bab 2, khususnya Bab 2.6 tentang QoS yang di materi ini hanya diberikan sebagai pengantar.</p>
+      <h3>MQTTX docs — <code>mqttx.app</code></h3>
+      <p>Dokumentasi resmi alat yang Anda pakai sebagai subscriber pada praktik ini, termasuk cara membuat koneksi baru, mengatur subscription, dan mengirim pesan uji dari sisi MQTTX. Pakai sebagai rujukan ketika langkah Bab 5.3 atau pengamatan Bab 7.1 tidak memberi hasil seperti yang diharapkan.</p>
+      <h3>Wokwi MQTT examples — <code>wokwi.com</code></h3>
+      <p>Kumpulan proyek simulasi yang sudah memuat koneksi MQTT dari ESP32, sehingga dapat dibandingkan dengan contoh kode pada Bab 6. Berguna untuk melihat variasi penulisan program yang tetap mengikuti pola yang sama, yaitu menghubungkan diri ke broker lalu mem-publish ke topic tertentu.</p>
+      <p class="footer-note">Alamat di atas ditulis sebagai nama domain, bukan tautan langsung ke halaman tertentu, karena struktur halaman situs semacam ini berubah dari waktu ke waktu. Cari judul yang disebutkan di atas dari halaman utama masing-masing situs.</p>
+    </section>
+    <footer class="pagenum">
+      <span class="pagenum-seri">Materi Pertemuan 7</span>
+      <span class="pagenum-no">Halaman 7 dari 16</span>
+    </footer>
+  </div>
+</body>
+</html>

@@ -1,0 +1,617 @@
+/* ==========================================================================
+   materi.css - Gaya bersama untuk seluruh halaman Materi Pertemuan IoT
+   Dipakai oleh: materi_pertemuan1_iot.html ... materi_pertemuan16_uas.html
+   Hasil penggabungan blok <style> yang sebelumnya ditulis ulang di tiap file.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. Token warna dan dasar dokumen
+   -------------------------------------------------------------------------- */
+:root {
+  --bg: #f5f7fb;
+  --card: #ffffff;
+  --ink: #1f2937;
+  /* Alias --text dipertahankan karena sebagian halaman memakai nama ini. */
+  --text: #1f2937;
+  --muted: #5b6472;
+  --line: #d7deea;
+  --soft: #eef4ff;
+  --blue: #2563eb;
+  --green: #15803d;
+  --teal: #0f766e;
+  --amber: #b45309;
+  --orange: #b45309;
+  --violet: #6d28d9;
+  --purple: #6d28d9;
+  --red: #dc2626;
+  --rose: #be123c;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, Helvetica, sans-serif;
+  color: var(--ink);
+  background: linear-gradient(180deg, #eef4ff 0%, var(--bg) 240px);
+  line-height: 1.7;
+  /* Cegah Safari iOS membesarkan huruf sendiri saat layar diputar. */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+/* --------------------------------------------------------------------------
+   2. Tata letak: pembungkus, hero, dan kartu
+   -------------------------------------------------------------------------- */
+.wrap {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 32px 20px 60px;
+}
+
+.hero,
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  box-shadow: 0 10px 30px rgba(37, 99, 235, 0.08);
+}
+
+.hero {
+  padding: 32px;
+  margin-bottom: 24px;
+}
+
+.card {
+  padding: 24px;
+  margin-bottom: 20px;
+}
+
+/* --------------------------------------------------------------------------
+   3. Tipografi
+   -------------------------------------------------------------------------- */
+h1,
+h2,
+h3 {
+  line-height: 1.25;
+  margin-top: 0;
+}
+
+h1 {
+  font-size: 34px;
+  margin: 14px 0;
+}
+
+h2 {
+  font-size: 28px;
+  margin-bottom: 14px;
+}
+
+h3 {
+  font-size: 21px;
+  margin-bottom: 10px;
+}
+
+p {
+  margin: 0 0 14px;
+}
+
+.lead {
+  font-size: 18px;
+  color: var(--muted);
+}
+
+ul,
+ol {
+  padding-left: 22px;
+  margin: 10px 0 14px;
+}
+
+li {
+  margin-bottom: 8px;
+}
+
+.footer-note {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.notice {
+  margin: 16px 0 0;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+/* --------------------------------------------------------------------------
+   4. Label, lencana, dan pil
+   -------------------------------------------------------------------------- */
+.badge {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: #dbeafe;
+  color: #1d4ed8;
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.pill {
+  display: inline-block;
+  margin: 4px 6px 0 0;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: var(--soft);
+  color: var(--blue);
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.label {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--blue);
+  font-weight: 700;
+}
+
+.tag {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: #fef3c7;
+  color: var(--amber);
+  font-weight: 700;
+  font-size: 12px;
+  vertical-align: middle;
+  margin-left: 8px;
+}
+
+.tag.now {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+/* --------------------------------------------------------------------------
+   5. Grid dan panel kecil
+   -------------------------------------------------------------------------- */
+.grid {
+  display: grid;
+  gap: 18px;
+}
+
+/* min() menjaga agar lebar minimum kolom tidak pernah melebihi ruang yang
+   tersedia, sehingga pada layar 320px kartu tidak mendorong halaman
+   ke samping. */
+.two {
+  grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr));
+}
+
+.three {
+  grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
+}
+
+.mini {
+  background: #f8fbff;
+  border: 1px solid #dbe7ff;
+  border-radius: 14px;
+  padding: 16px;
+}
+
+/* --------------------------------------------------------------------------
+   6. Kotak penekanan: analogi, tip, peringatan
+   -------------------------------------------------------------------------- */
+.analogy {
+  border-left: 5px solid var(--amber);
+  background: #fff8eb;
+  padding: 14px 16px;
+  border-radius: 10px;
+  margin: 14px 0;
+}
+
+.tip {
+  border-left: 5px solid var(--teal);
+  background: #f0fdfa;
+  padding: 14px 16px;
+  border-radius: 10px;
+  margin: 14px 0;
+}
+
+.warn {
+  border-left: 5px solid var(--red);
+  background: #fef2f2;
+  padding: 14px 16px;
+  border-radius: 10px;
+  margin: 14px 0;
+}
+
+/* --------------------------------------------------------------------------
+   7. Daftar bertahap dan blok yang dapat dilipat
+   -------------------------------------------------------------------------- */
+.step {
+  counter-reset: item;
+}
+
+.step li::marker {
+  font-weight: 700;
+  color: var(--blue);
+}
+
+details {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 12px 16px;
+  margin: 10px 0;
+  background: #fbfdff;
+}
+
+details > *:not(summary) {
+  margin-top: 10px;
+}
+
+summary {
+  cursor: pointer;
+  font-weight: 700;
+  color: var(--blue);
+}
+
+/* --------------------------------------------------------------------------
+   8. Kode dan diagram
+   -------------------------------------------------------------------------- */
+.code {
+  background: #111827;
+  color: #e5eefc;
+  padding: 18px;
+  border-radius: 14px;
+  overflow-x: auto;
+  /* Gulir kode terasa alami saat disentuh di ponsel. */
+  -webkit-overflow-scrolling: touch;
+  font-family: Consolas, monospace;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.code pre {
+  margin: 0;
+  font-family: Consolas, monospace;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* Nama topik, URL, dan potongan kode sebaris tidak boleh mendorong
+   lebar halaman di layar sempit. */
+code {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.svgbox {
+  background: linear-gradient(180deg, #fcfdff, #f4f8ff);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 16px;
+  margin: 14px 0 18px;
+}
+
+.svgbox svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+/* Wilayah yang bisa digulir harus dapat dijangkau papan tuts, sehingga
+   fokusnya perlu terlihat jelas. */
+.table-scroll:focus-visible,
+.svgbox:focus-visible {
+  outline: 3px solid var(--blue);
+  outline-offset: 2px;
+}
+
+/* --------------------------------------------------------------------------
+   9. Tabel
+   -------------------------------------------------------------------------- */
+/* Setiap <table> dibungkus .table-scroll agar pada layar sempit tabel
+   digulir sendiri, bukan mendorong lebar seluruh halaman. */
+.table-scroll {
+  margin-top: 10px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.table-scroll table {
+  margin-top: 0;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+th,
+td {
+  border: 1px solid var(--line);
+  padding: 12px;
+  text-align: left;
+  vertical-align: top;
+}
+
+th {
+  background: #eef4ff;
+}
+
+/* --------------------------------------------------------------------------
+   10. Peta perjalanan (roadmap) antar pertemuan
+   -------------------------------------------------------------------------- */
+.road {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(min(230px, 100%), 1fr));
+  margin: 14px 0;
+}
+
+.road .stop {
+  border: 1px solid #dbe7ff;
+  border-radius: 12px;
+  padding: 12px;
+  background: #f8fbff;
+  font-size: 14px;
+}
+
+.road .stop.here {
+  background: #dbeafe;
+  border-color: var(--blue);
+}
+
+.road .stop b {
+  display: block;
+  color: var(--blue);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 4px;
+}
+
+/* --------------------------------------------------------------------------
+   11. Glosarium
+   -------------------------------------------------------------------------- */
+dl.gloss {
+  margin: 10px 0 0;
+}
+
+dl.gloss dt {
+  font-weight: 700;
+  margin-top: 14px;
+}
+
+dl.gloss dd {
+  margin: 4px 0 0;
+  color: var(--muted);
+}
+
+/* --------------------------------------------------------------------------
+   12. Penyesuaian layar kecil
+   -------------------------------------------------------------------------- */
+@media (max-width: 760px) {
+  .wrap {
+    padding: 20px 14px 44px;
+  }
+
+  h1 {
+    font-size: 28px;
+  }
+
+  h2 {
+    font-size: 24px;
+  }
+
+  h3 {
+    font-size: 19px;
+  }
+
+  .lead {
+    font-size: 17px;
+  }
+
+  .hero,
+  .card {
+    padding: 20px;
+    border-radius: 14px;
+  }
+
+  .grid {
+    gap: 14px;
+  }
+
+  /* Ruang sisa terlalu sempit untuk dua kolom; paksa satu kolom
+     agar isi kartu tetap terbaca. */
+  .two,
+  .three {
+    grid-template-columns: 1fr;
+  }
+
+  ul,
+  ol {
+    padding-left: 20px;
+  }
+
+  .code {
+    padding: 14px;
+    font-size: 13px;
+    border-radius: 12px;
+  }
+
+  .code pre {
+    font-size: 13px;
+  }
+
+  .svgbox {
+    padding: 10px;
+    /* Diagram tidak dikecilkan sampai tak terbaca; ia digulir menyamping
+       dengan lebar minimum yang menjaga label tetap jelas. */
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .svgbox svg {
+    min-width: 560px;
+  }
+
+  th,
+  td {
+    padding: 10px;
+  }
+
+  /* Tabel bergulir menyamping; lebar minimum menjaga kolom tetap terbaca
+     alih-alih memampat menjadi satu huruf per baris. */
+  .table-scroll table {
+    min-width: 520px;
+  }
+
+  details {
+    padding: 10px 14px;
+  }
+}
+
+/* Ponsel kecil, sekitar 360px ke bawah. */
+@media (max-width: 400px) {
+  .wrap {
+    padding: 16px 12px 36px;
+  }
+
+  h1 {
+    font-size: 25px;
+  }
+
+  h2 {
+    font-size: 21px;
+  }
+
+  .hero,
+  .card {
+    padding: 16px;
+  }
+
+  .code,
+  .code pre {
+    font-size: 12px;
+  }
+
+  .table-scroll table {
+    min-width: 460px;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   13. Penanda nomor halaman materi
+   -------------------------------------------------------------------------- */
+.pagenum {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px 16px;
+  margin-top: 24px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.pagenum-no {
+  font-weight: 700;
+  color: var(--blue);
+}
+
+/* --------------------------------------------------------------------------
+   14. Cetak dan simpan sebagai PDF
+   Blok ini harus tetap berada paling bawah, sebab lebar kertas membuat aturan
+   layar sempit di bagian 12 ikut aktif dan perlu ditimpa dari sini.
+   -------------------------------------------------------------------------- */
+@page {
+  /* Sisi bawah dilebihkan sebagai tempat nomor lembar yang dicetak browser
+     lewat opsi "Headers and footers" pada dialog cetak. */
+  margin: 16mm 14mm 18mm;
+}
+
+@media print {
+  body {
+    background: #fff;
+    font-size: 11pt;
+    line-height: 1.55;
+  }
+
+  .wrap {
+    max-width: none;
+    padding: 0;
+  }
+
+  .hero,
+  .card {
+    background: #fff;
+    border: 0;
+    border-top: 1px solid var(--line);
+    border-radius: 0;
+    box-shadow: none;
+    padding: 10pt 0 0;
+    margin: 0 0 12pt;
+  }
+
+  /* Judul tidak ditinggalkan sendiri di dasar lembar. */
+  h1,
+  h2,
+  h3 {
+    break-after: avoid;
+    page-break-after: avoid;
+  }
+
+  /* Satuan kecil dijaga utuh, sedangkan kartu dibiarkan terbelah karena
+     banyak di antaranya lebih panjang daripada satu lembar. */
+  .mini,
+  .tip,
+  .warn,
+  .analogy,
+  .code,
+  .svgbox,
+  .road .stop,
+  .pagenum,
+  tr {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* Warna latar tidak dicetak secara bawaan, sehingga blok kode gelap harus
+     dibalik agar tulisannya tidak hilang di kertas putih. */
+  .code,
+  .code pre {
+    background: #fff;
+    color: #111827;
+  }
+
+  .code {
+    border: 1px solid var(--line);
+  }
+
+  /* Isi yang terlipat ikut tercetak, bukan hilang tanpa jejak. */
+  details:not([open]) > *:not(summary) {
+    display: block;
+  }
+
+  details::details-content {
+    content-visibility: visible;
+  }
+
+  /* Tidak ada wilayah bergulir di kertas; lebar minimumnya dilepas supaya
+     tabel dan diagram tidak terpotong di sisi kanan. */
+  .table-scroll,
+  .svgbox {
+    overflow: visible;
+  }
+
+  .table-scroll table,
+  .svgbox svg {
+    min-width: 0;
+  }
+}
+
