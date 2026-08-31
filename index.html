@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bahan Ajar Internet of Things</title>
+  <link rel="stylesheet" href="IoT/assets/materi.css" />
+  <style>
+    /* Gaya khusus halaman daftar. Sengaja tidak dimasukkan ke materi.css
+       agar tidak mengubah tampilan enam belas halaman materi. */
+    a.item {
+      display: block;
+      text-decoration: none;
+      color: inherit;
+      transition: border-color .15s, box-shadow .15s, transform .15s;
+    }
+    a.item:hover,
+    a.item:focus-visible {
+      border-color: var(--blue);
+      box-shadow: 0 8px 20px rgba(37, 99, 235, .12);
+      transform: translateY(-2px);
+    }
+    a.item .num {
+      display: block;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--blue);
+      margin-bottom: 4px;
+    }
+    a.item .name {
+      font-weight: 700;
+      font-size: 16px;
+    }
+    a.inline {
+      color: var(--blue);
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <section class="hero">
+      <span class="badge">Bahan Ajar</span>
+      <h1>Internet of Things</h1>
+      <p class="lead">Materi enam belas pertemuan, dari orientasi IoT sampai demo akhir. Seluruh praktik dapat dijalankan dari browser dengan Wokwi, MQTTX, dan Node-RED, tanpa membeli perangkat keras.</p>
+      <div>
+        <span class="pill">ESP32</span>
+        <span class="pill">Sensor dan Aktuator</span>
+        <span class="pill">HTTP</span>
+        <span class="pill">MQTT</span>
+        <span class="pill">Node-RED</span>
+        <span class="pill">Mini Project</span>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Daftar Pertemuan</h2>
+      <div class="grid two">
+        <a class="mini item" href="IoT/materi_pertemuan1_iot.html"><span class="num">Pertemuan 1</span><span class="name">Orientasi IoT dan Lingkungan Kerja Simulator</span></a>
+        <a class="mini item" href="IoT/materi_pertemuan2_iot.html"><span class="num">Pertemuan 2</span><span class="name">Dasar ESP32, GPIO, Input-Output Digital</span></a>
+        <a class="mini item" href="IoT/materi_pertemuan3_iot.html"><span class="num">Pertemuan 3</span><span class="name">Input Analog dan Sensor Virtual</span></a>
+        <a class="mini item" href="IoT/materi_pertemuan4_iot.html"><span class="num">Pertemuan 4</span><span class="name">Aktuator Dasar IoT</span></a>
+        <a class="mini item" href="IoT/materi_pertemuan5_iot.html"><span class="num">Pertemuan 5</span><span class="name">Struktur Program dan Debugging Dasar</span></a>
+        <a class="mini item" href="IoT/materi_pertemuan6_http.html"><span class="num">Pertemuan 6</span><span class="name">HTTP pada IoT</span></a>
+        <a class="mini item" href="IoT/materi_pertemuan7_mqtt.html"><span class="num">Pertemuan 7</span><span class="name">Dasar Komunikasi Data IoT: MQTT</span></a>
+        <a class="mini item" href="IoT/materi_pertemuan8_uts.html"><span class="num">Pertemuan 8</span><span class="name">UTS Praktik: Integrasi Sistem IoT Sederhana</span></a>
+        <a class="mini item" href="IoT/materi_pertemuan9_timing.html"><span class="num">Pertemuan 9</span><span class="name">Pengaturan Waktu Pengiriman Data dan Payload</span></a>
+        <a class="mini item" href="IoT/materi_pertemuan10_nodered.html"><span class="num">Pertemuan 10</span><span class="name">Dashboard IoT dengan Node-RED</span></a>
+        <a class="mini item" href="IoT/materi_pertemuan11_data.html"><span class="num">Pertemuan 11</span><span class="name">Penyimpanan Data, Riwayat, dan Visualisasi Tren</span></a>
+        <a class="mini item" href="IoT/materi_pertemuan12_keamanan.html"><span class="num">Pertemuan 12</span><span class="name">Keamanan dan Keandalan Dasar Sistem IoT</span></a>
+        <a class="mini item" href="IoT/materi_pertemuan13_perancangan.html"><span class="num">Pertemuan 13</span><span class="name">Perancangan Mini Project IoT</span></a>
+        <a class="mini item" href="IoT/materi_pertemuan14_miniproject.html"><span class="num">Pertemuan 14</span><span class="name">Implementasi Mini Project di Simulator</span></a>
+        <a class="mini item" href="IoT/materi_pertemuan15_hardware.html"><span class="num">Pertemuan 15</span><span class="name">Dari Simulator ke Perangkat Fisik</span></a>
+        <a class="mini item" href="IoT/materi_pertemuan16_uas.html"><span class="num">Pertemuan 16</span><span class="name">UAS: Demo Akhir dan Laporan</span></a>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Berkas Pendukung</h2>
+      <p>Ringkasan tiap pertemuan dalam bentuk poin presentasi tersedia di folder <a class="inline" href="https://github.com/KingProPerumnas4/bahan-ajar/tree/main/IoT/prezi">IoT/prezi</a>, satu berkas Markdown per pertemuan. Peta keseluruhan mata kuliah ada pada <a class="inline" href="IoT/RoadmapInternetofThings.docx">Roadmap Internet of Things</a>.</p>
+      <p class="footer-note">Halaman ini diterbitkan otomatis dari cabang <code>main</code> setiap kali ada perubahan.</p>
+    </section>
+  </div>
+</body>
+</html>
