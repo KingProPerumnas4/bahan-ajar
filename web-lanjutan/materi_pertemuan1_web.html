@@ -1,0 +1,986 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Materi Pertemuan 1 - Pengantar Aplikasi Web Dinamis</title>
+  <link rel="stylesheet" href="assets/materi.css" />
+</head>
+<body>
+  <div class="wrap">
+    <section class="hero">
+      <span class="badge">Pertemuan 1</span>
+      <h1>Pengantar Aplikasi Web Dinamis: Client, Server, dan Database</h1>
+      <p class="lead">Materi ini membahas batas dari apa yang sudah dipelajari di Pemrograman Website 1, konsep client-server, siklus request-response, peran Express sebagai server, peran MySQL sebagai penyimpan data, serta gambaran arsitektur aplikasi web dinamis. Praktiknya adalah menelusuri sendiri satu siklus request-response yang sungguhan di dalam browser.</p>
+      <div>
+        <span class="pill">Statis vs Dinamis</span>
+        <span class="pill">Client-Server</span>
+        <span class="pill">Request-Response</span>
+        <span class="pill">Peran Express</span>
+        <span class="pill">Peran MySQL</span>
+        <span class="pill">Arsitektur Aplikasi</span>
+      </div>
+      <p class="notice">Pertemuan ini hanya membutuhkan browser dan koneksi internet. Node.js, Express, dan MySQL baru dipasang menjelang Pertemuan 2, sehingga hari ini tidak ada perangkat lunak yang perlu diinstal dan tidak ada kode yang perlu dijalankan.</p>
+    </section>
+
+    <section class="card">
+      <h2>0. Gambaran Hasil Akhir: Seperti Apa Aplikasi Web Dinamis yang Sudah Jadi</h2>
+      <p>Sebelum masuk ke istilah, ada gunanya melihat lebih dulu wujud akhir dari yang akan dibangun sepanjang semester ini. Bayangkan sebuah sistem peminjaman buku perpustakaan yang sudah berjalan. Petugas membuka halaman login, memasukkan nama pengguna dan kata sandi, lalu masuk ke halaman daftar buku. Ia menambahkan satu buku baru melalui sebuah formulir, dan buku itu langsung muncul di daftar. Komputer dimatikan, besoknya dinyalakan lagi, dan buku itu masih ada. Rekan kerjanya membuka sistem yang sama dari komputer lain, dan melihat buku yang sama.</p>
+      <p>Tiga kejadian kecil pada cerita di atas justru yang paling penting, karena tidak satu pun di antaranya dapat dilakukan hanya dengan HTML, CSS, dan JavaScript di browser: data bertahan setelah komputer dimatikan, data yang sama terlihat dari komputer lain, dan ada pembatasan siapa yang boleh masuk. Ketiganya membutuhkan sesuatu yang berjalan di luar browser.</p>
+      <p>Sistem seperti itu sesungguhnya hanya menjawab empat pertanyaan, dan keempatnya akan dikenali satu per satu pada pertemuan ini:</p>
+      <div class="grid two">
+        <div class="mini"><strong>Siapa yang meminta?</strong><br/>Browser, yang mengirim permintaan setiap kali pengguna menekan tautan atau tombol kirim.</div>
+        <div class="mini"><strong>Siapa yang menjawab?</strong><br/>Server, sebuah program yang menunggu permintaan lalu menyusun jawaban. Di mata kuliah ini programnya ditulis dengan Express.</div>
+        <div class="mini"><strong>Di mana datanya disimpan?</strong><br/>Database, yaitu MySQL, yang menyimpan data dalam tabel dan tetap ada meski aplikasi ditutup.</div>
+        <div class="mini"><strong>Siapa yang boleh melakukan apa?</strong><br/>Diatur oleh login dan hak akses, sehingga tidak semua pengunjung dapat menghapus data.</div>
+      </div>
+      <p>Aplikasi seutuhnya belum akan dibangun hari ini. Hari ini bagian-bagiannya dikenali lebih dulu, lalu ditutup dengan praktik menelusuri satu permintaan yang sungguhan di panel pengembang browser. Empat pertanyaan di atas layak dipegang selama membaca materi ini, sebab setiap bagian berikutnya sesungguhnya sedang menjawab salah satu di antaranya.</p>
+    </section>
+
+    <section class="card">
+      <h2>Capaian Pembelajaran Pertemuan 1</h2>
+      <div class="grid two">
+        <div class="mini">
+          <div class="label">Yang dipahami</div>
+          <ul>
+            <li>Perbedaan halaman web statis dengan aplikasi web dinamis, beserta alasan mengapa Pemrograman Website 1 saja tidak cukup.</li>
+            <li>Pembagian tugas antara client dan server: siapa yang meminta, siapa yang menjawab, dan siapa yang menyimpan.</li>
+            <li>Siklus request-response beserta bagian-bagian pesannya: metode, alamat, header, badan pesan, dan kode status.</li>
+            <li>Peran Express sebagai penerima permintaan dan peran MySQL sebagai penyimpan data, serta gambaran arsitektur aplikasi secara utuh.</li>
+          </ul>
+        </div>
+        <div class="mini">
+          <div class="label">Yang dapat dilakukan</div>
+          <ul>
+            <li>Menelusuri satu siklus request-response memakai panel Network pada peralatan pengembang browser.</li>
+            <li>Menyebutkan metode HTTP, alamat, dan kode status dari sebuah permintaan yang sungguhan.</li>
+            <li>Menggambar alur browser &rarr; server &rarr; database &rarr; browser untuk satu kasus sederhana.</li>
+            <li>Membaca kode server Express paling sederhana dan menunjuk bagian mana yang menerima permintaan serta bagian mana yang mengirim jawaban.</li>
+          </ul>
+        </div>
+      </div>
+      <p>Fokus Pertemuan 1 ada pada empat hal: review Pemrograman Website 1 beserta batasnya, konsep client-server, siklus request-response, dan gambaran arsitektur aplikasi termasuk peran Express serta peran database. Aktivitas praktiknya satu saja, yaitu menelusuri alur browser &rarr; server &rarr; database &rarr; browser pada layanan yang sudah berjalan, sehingga alur itu terlihat sebagai kejadian nyata dan bukan sekadar gambar di papan tulis.</p>
+    </section>
+
+    <section class="card">
+      <h2>Peta Perjalanan Mata Kuliah</h2>
+      <p>Mata kuliah ini berjalan 16 pertemuan dengan satu stack tetap, yaitu <strong>Node.js + Express + MySQL</strong>. Materi hari ini adalah pemberhentian pertama. Peta di bawah memperlihatkan seluruh urutannya, agar setiap istilah yang muncul hari ini punya tempat yang jelas di kemudian hari.</p>
+      <div class="road">
+        <div class="stop here"><b>Pertemuan 1</b>Pengantar aplikasi web dinamis <em>(Anda di sini)</em></div>
+        <div class="stop"><b>Pertemuan 2</b>Setup proyek Node.js dan Express</div>
+        <div class="stop"><b>Pertemuan 3</b>Routing dan middleware <em>&mdash; milestone M1</em></div>
+        <div class="stop"><b>Pertemuan 4</b>Rendering halaman dan pengiriman data dari form</div>
+        <div class="stop"><b>Pertemuan 5</b>Dasar database relasional dan desain skema</div>
+        <div class="stop"><b>Pertemuan 6</b>SQL dasar dengan MySQL</div>
+        <div class="stop"><b>Pertemuan 7</b>Koneksi Node.js ke MySQL <em>&mdash; milestone M2</em></div>
+        <div class="stop"><b>Pertemuan 8</b>UTS, praktik terstruktur Express dan MySQL</div>
+        <div class="stop"><b>Pertemuan 9</b>CRUD bagian 1: Create dan Read</div>
+        <div class="stop"><b>Pertemuan 10</b>CRUD bagian 2: Update dan Delete <em>&mdash; milestone M3</em></div>
+        <div class="stop"><b>Pertemuan 11</b>Struktur aplikasi yang lebih rapi dan penggunaan .env</div>
+        <div class="stop"><b>Pertemuan 12</b>Authentication: registrasi, login, hashing password <em>&mdash; milestone M4</em></div>
+        <div class="stop"><b>Pertemuan 13</b>Authorization dan keamanan dasar</div>
+        <div class="stop"><b>Pertemuan 14</b>API dasar dan konsumsi data dengan fetch</div>
+        <div class="stop"><b>Pertemuan 15</b>Testing ringan, debugging, deployment, dan audit kode AI</div>
+        <div class="stop"><b>Pertemuan 16</b>UAS, presentasi proyek akhir</div>
+      </div>
+      <p>Perhatikan bahwa empat pertemuan pertama belum menyentuh database sama sekali. Fokusnya masih pada server, route, middleware, dan bagaimana data dari sebuah formulir masuk ke server. Database baru dibuka pada Pertemuan 5, dan baru benar-benar disambungkan ke Express pada Pertemuan 7. Urutan ini disengaja, karena mahasiswa yang belum paham perjalanan sebuah permintaan akan jauh lebih sulit menelusuri kesalahan begitu database ikut terlibat.</p>
+      <p>Empat pertemuan bertanda milestone adalah titik ketika Anda pulang membawa hasil yang nyata: <strong>M1</strong> berarti Anda sudah punya server dengan beberapa route yang berjalan, <strong>M2</strong> berarti data dari MySQL sudah tampil di browser, <strong>M3</strong> berarti CRUD lengkap untuk satu entitas sudah jalan, dan <strong>M4</strong> berarti sistem login dasar sudah berfungsi. Empat titik inilah tulang punggung proyek akhir, sehingga tidak ada satu pun yang boleh ditunda sampai pekan terakhir.</p>
+
+      <h3>Yang Dituju di Akhir Semester</h3>
+      <p>Delapan kemampuan berikut adalah capaian akhir mata kuliah ini, disusun berurutan karena masing-masing menjadi pijakan bagi yang berikutnya. Semuanya dibangun bertahap mulai dari pertemuan pertama, sehingga tidak ada satu pun yang dituntut sudah dikuasai hari ini.</p>
+      <ol>
+        <li>Memahami server dan route.</li>
+        <li>Memahami database dan query.</li>
+        <li>Menghubungkan route ke database.</li>
+        <li>Membangun CRUD yang lengkap.</li>
+        <li>Merapikan struktur aplikasi.</li>
+        <li>Menambahkan login dan proteksi halaman.</li>
+        <li>Membuat API sederhana.</li>
+        <li>Menguji, men-debug, dan mempresentasikan hasilnya.</li>
+      </ol>
+      <p>Bandingkan daftar ini dengan <em>Capaian Pembelajaran Pertemuan 1</em> di bagian sebelumnya: hari ini baru menyiapkan pijakan untuk nomor satu, yaitu memahami apa itu server dan mengapa ia diperlukan. Tujuh sisanya menyusul pada pertemuan-pertemuan berikutnya.</p>
+
+      <h3>Proyek Akhir yang Akan Dituju</h3>
+      <p>Nilai terbesar mata kuliah ini ada pada proyek akhir. Proyeknya tidak perlu besar; yang dinilai adalah fungsional, terstruktur, dan dapat dipertanggungjawabkan saat ditanya. Beberapa kasus yang cocok: sistem manajemen data mahasiswa, sistem peminjaman buku perpustakaan, aplikasi inventaris barang, aplikasi pencatatan kehadiran, blog sederhana dengan login admin, sistem pendaftaran kegiatan kampus, atau katalog produk dengan login admin.</p>
+      <div class="tip">
+        <strong>Tiga yang paling seimbang</strong> antara tantangan dan waktu yang tersedia adalah <strong>sistem perpustakaan</strong>, <strong>inventaris barang</strong>, dan <strong>pendaftaran kegiatan</strong>, karena ketiganya cukup kaya untuk melatih CRUD, login, relasi antar tabel, dan pembedaan peran pengguna sekaligus. Anda belum perlu memutuskan hari ini, tetapi mulai memikirkannya sejak sekarang akan sangat membantu, sebab tugas latihan kedua pada Bab 11 sudah meminta Anda memilih satu kasus untuk digambar alurnya.</div>
+
+      <h3>Susunan Setiap Pertemuan</h3>
+      <p>Setiap pertemuan berlangsung 2 jam dengan pembagian waktu yang relatif tetap:</p>
+      <ul>
+        <li><strong>20 menit</strong> penjelasan konsep.</li>
+        <li><strong>25 menit</strong> demo dosen.</li>
+        <li><strong>55 menit</strong> praktik mandiri atau berpasangan.</li>
+        <li><strong>20 menit</strong> review hasil, tanya jawab, dan checkpoint.</li>
+      </ul>
+      <p>Porsi terbesar ada pada praktik, bukan pada penjelasan. Karena itu materi ini sebaiknya dibaca lebih dulu sebelum pertemuan berlangsung, agar 55 menit praktik benar-benar terpakai untuk mengetik, menjalankan, gagal, lalu memperbaiki &mdash; bukan untuk mengejar konsep dasar. Pada topik seperti CRUD, authentication, dan API, pembagian ini menjadi sangat menentukan, sebab menonton orang lain mengetik tidak pernah menghasilkan kemampuan yang sama dengan mengetik sendiri.</p>
+
+      <h3>Bagaimana Penilaian Dihitung</h3>
+      <div class="table-scroll" tabindex="0">
+        <table>
+        <thead><tr><th>Komponen</th><th>Bobot</th><th>Apa yang dinilai</th></tr></thead>
+        <tbody>
+          <tr><td>Tugas mingguan / modul</td><td>20%</td><td>Hasil latihan tiap pertemuan, termasuk dua tugas pada Bab 11 materi ini.</td></tr>
+          <tr><td>Kuis / praktik singkat</td><td>15%</td><td>Pemeriksaan pemahaman berdurasi pendek, biasanya di awal atau akhir pertemuan.</td></tr>
+          <tr><td>UTS praktik</td><td>20%</td><td>Membuat server Express sederhana yang terhubung ke MySQL, pada Pertemuan 8.</td></tr>
+          <tr><td>Proyek akhir</td><td>35%</td><td>Aplikasi full-stack yang berfungsi, terstruktur, dan terdokumentasi.</td></tr>
+          <tr><td>Presentasi / viva / audit kode</td><td>10%</td><td>Kemampuan menjelaskan route, query, alur login, dan alasan di balik struktur kode Anda sendiri.</td></tr>
+        </tbody>
+        </table>
+      </div>
+      <p>Komponen terakhir tampak kecil, tetapi justru komponen itu yang paling sulit dipalsukan. Mahasiswa yang benar-benar paham biasanya lancar menjelaskan alur aplikasinya, sedangkan yang hanya menyalin biasanya cepat terlihat begitu ditanya route mana yang dipanggil atau mengapa strukturnya dibuat seperti itu.</p>
+
+      <h3>Prasyarat</h3>
+      <p>Pertemuan ini dirancang untuk Anda yang sudah menempuh Pemrograman Website 1, jadi HTML, CSS, dan JavaScript dasar diasumsikan sudah pernah dipakai. Tidak ada prasyarat perangkat lunak untuk hari ini, karena seluruh kegiatan dilakukan di browser.</p>
+      <div class="tip">
+        <strong>Merasa JavaScript Anda masih tipis?</strong> Tidak menjadi masalah hari ini. Empat hal berikut cukup Anda kenali bentuknya tanpa perlu langsung menguasainya: <code>const</code> untuk menampung nilai, fungsi panah <code>(a, b) =&gt; { }</code>, objek dengan pasangan <code>kunci: nilai</code>, dan pemanggilan metode dengan titik seperti <code>res.send()</code>. Keempatnya muncul terus-menerus mulai Pertemuan 2 dan akan menjadi akrab karena pemakaian, bukan karena dihafal. Sasaran hari ini adalah memahami <em>alur perjalanan data</em>, bukan menguasai sintaks.
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>1. Review Pemrograman Website 1 dan Di Mana Batasnya</h2>
+      <p>Pada Pemrograman Website 1, Anda sudah membangun halaman web dengan tiga bahan: <strong>HTML</strong> untuk menyusun isi, <strong>CSS</strong> untuk mengatur tampilan, dan <strong>JavaScript</strong> untuk membuat halaman merespons perbuatan pengguna. Halaman semacam itu sudah bisa terlihat bagus dan terasa hidup: menu bisa dibuka-tutup, gambar bisa bergeser, dan hasil hitungan bisa muncul tanpa halaman dimuat ulang.</p>
+      <p>Namun ada satu hal yang perlu disadari tentang semua itu: <strong>seluruhnya berjalan di komputer pengunjung</strong>. Ketika sebuah halaman dibuka, berkas HTML, CSS, dan JavaScript dikirim ke browser, lalu browser yang menjalankannya. Tidak ada bagian dari program itu yang bekerja di tempat lain. Akibatnya muncul empat batasan yang tidak bisa diatasi dengan menambah JavaScript sebanyak apa pun.</p>
+      <ol class="step">
+        <li><strong>Data tidak bertahan.</strong> Nilai yang tersimpan di variabel hilang begitu halaman dimuat ulang. Bahkan bila dipaksa disimpan di <code>localStorage</code>, data itu hanya ada di satu browser pada satu komputer.</li>
+        <li><strong>Data tidak dapat dibagi.</strong> Apa yang diisi seorang pengguna tidak akan pernah terlihat oleh pengguna lain, karena tidak ada tempat bersama untuk menampungnya.</li>
+        <li><strong>Semua kode terbuka dan dapat diubah.</strong> Pengunjung dapat membaca seluruh JavaScript halaman Anda, mengubah nilainya, atau melewati pemeriksaan yang Anda tulis. Karena itu, apa pun yang penting tidak boleh hanya diperiksa di browser.</li>
+        <li><strong>Tidak ada penjaga pintu.</strong> Tanpa pihak lain yang memutuskan siapa berhak melihat apa, gagasan seperti login, peran admin, dan halaman terbatas tidak mungkin diwujudkan dengan sungguh-sungguh.</li>
+      </ol>
+      <div class="analogy">
+        <strong>Analogi dunia nyata:</strong> Pemrograman Website 1 seperti papan tulis di ruang kelas. Anda bisa menulis, menghapus, dan mengatur tata letaknya sesuka hati, dan hasilnya terlihat bagus bagi siapa pun yang sedang berada di ruangan itu. Tetapi papan tulis akan dihapus, isinya tidak tercatat, dan orang di ruangan sebelah tidak dapat melihatnya. Pemrograman Website 2 menambahkan <em>kantor administrasi</em>: ada petugas yang menerima permintaan, ada buku arsip yang menyimpan catatan permanen, dan ada aturan siapa yang boleh membuka lemari mana.
+      </div>
+
+      <h3>1.1 Halaman statis dan aplikasi dinamis</h3>
+      <p>Perbedaan pokoknya bukan soal tampilan, dan bukan soal apakah ada animasi atau tidak. Perbedaannya ada pada <strong>siapa yang menyusun HTML yang sampai di browser</strong>. Pada halaman statis, HTML sudah ditulis manusia sekali, disimpan sebagai berkas, lalu dikirim apa adanya kepada siapa pun yang meminta. Pada aplikasi dinamis, HTML atau data disusun oleh sebuah program tepat pada saat permintaan itu datang, sering kali dengan mengambil isinya dari database lebih dulu.</p>
+      <div class="table-scroll" tabindex="0">
+        <table>
+        <thead><tr><th>Pertanyaan</th><th>Halaman statis (Website 1)</th><th>Aplikasi dinamis (Website 2)</th></tr></thead>
+        <tbody>
+          <tr><td>Siapa yang menyusun HTML?</td><td>Ditulis manusia satu kali, lalu dikirim apa adanya</td><td>Disusun program setiap kali ada permintaan</td></tr>
+          <tr><td>Apakah isinya bisa berbeda?</td><td>Sama untuk semua pengunjung sampai berkasnya diedit manual</td><td>Bisa berbeda menurut siapa yang meminta, apa yang diminta, dan data terbaru</td></tr>
+          <tr><td>Di mana data disimpan?</td><td>Tidak ada penyimpanan bersama; paling jauh di <code>localStorage</code> satu browser</td><td>Di database pada sisi server, terpusat dan permanen</td></tr>
+          <tr><td>Bisa dipakai bersama-sama?</td><td>Tidak, setiap pengunjung terpisah sendiri-sendiri</td><td>Ya, satu data dapat dilihat semua pengguna yang berhak</td></tr>
+          <tr><td>Contoh</td><td>Profil kampus, portofolio, halaman dokumentasi</td><td>Sistem perpustakaan, toko daring, media sosial, sistem akademik</td></tr>
+        </tbody>
+        </table>
+      </div>
+      <p>Satu catatan yang sering menjadi salah paham: halaman statis bukan halaman yang buruk. Untuk profil kampus atau dokumentasi, halaman statis justru pilihan terbaik karena cepat, murah, dan hampir tidak mungkin rusak. Yang dipelajari di mata kuliah ini adalah kemampuan tambahan untuk kasus yang memang membutuhkannya, yaitu ketika ada data yang harus disimpan, dibagi, dan dijaga.</p>
+
+      <h3>1.2 Apa yang tetap terpakai dari Website 1</h3>
+      <p>Tidak ada yang terbuang. HTML tetap menjadi bentuk akhir yang dilihat pengguna, hanya saja sebagiannya kini disusun oleh program di server. CSS tetap mengatur tampilan dengan cara yang sama persis. JavaScript tetap dipakai di browser, dan pada Pertemuan 14 ia akan mendapat tugas baru: memanggil server dengan <code>fetch()</code> lalu memperbarui sebagian halaman tanpa memuat ulang seluruhnya. Formulir HTML yang dulu hanya berupa tampilan akan mulai benar-benar mengirimkan isinya ke server pada Pertemuan 4.</p>
+      <p>Yang berubah bukan bahannya, melainkan bertambahnya satu tempat kerja baru. Sampai semester lalu Anda hanya menulis program untuk browser. Mulai sekarang Anda juga menulis program untuk server, dan pekerjaan terbesar mata kuliah ini adalah membiasakan diri membedakan keduanya.</p>
+    </section>
+
+    <section class="card">
+      <h2>2. Client dan Server: Dua Peran, Dua Tugas</h2>
+      <p>Istilah <strong>client</strong> dan <strong>server</strong> menunjuk pada <em>peran</em>, bukan pada merek atau bentuk perangkat. Client adalah pihak yang meminta. Server adalah pihak yang menunggu permintaan lalu menjawabnya. Browser Anda adalah client. Program Express yang akan Anda tulis mulai Pertemuan 2 adalah server.</p>
+      <p>Yang perlu ditegaskan sejak awal: <strong>server hanyalah sebuah program yang sedang berjalan dan menunggu</strong>. Ia bukan lemari besi di ruang berpendingin, walaupun pada aplikasi sungguhan program itu memang dijalankan di komputer khusus. Selama masa belajar ini, server Anda berjalan di laptop Anda sendiri. Ketika sebuah program Node.js dijalankan dan ia menunggu di sebuah pintu bernomor, saat itulah laptop Anda menjadi server.</p>
+      <div class="analogy">
+        <strong>Analogi dunia nyata:</strong> bayangkan sebuah rumah makan. <strong>Pelanggan</strong> adalah client: ia menyebutkan apa yang diinginkan, lalu menunggu. <strong>Pelayan</strong> adalah server, dalam hal ini Express: ia menerima pesanan, tahu pesanan mana ditangani siapa, lalu mengantarkan hasilnya. <strong>Gudang bahan</strong> adalah database, yaitu MySQL: tempat bahan disimpan rapi, diambil saat dibutuhkan, dan tidak pernah dimasuki langsung oleh pelanggan. Perhatikan bahwa pelanggan tidak pernah masuk ke gudang sendiri, dan itu bukan kebetulan &mdash; itu adalah aturan keamanan yang sama persis dengan aturan pada aplikasi web.
+      </div>
+
+      <h3>2.1 Pembagian tugas antar tiga tempat</h3>
+      <p>Salah satu sebab mahasiswa tersesat di mata kuliah ini adalah tidak membedakan di mana sebuah kode dijalankan. Tabel berikut sebaiknya sering ditengok kembali sepanjang semester.</p>
+      <div class="table-scroll" tabindex="0">
+        <table>
+        <thead><tr><th>Tempat</th><th>Yang dikerjakan</th><th>Contoh</th><th>Dapat dilihat pengguna?</th></tr></thead>
+        <tbody>
+          <tr><td>Browser (client)</td><td>Menggambar halaman, menanggapi klik, mengirim permintaan</td><td>HTML, CSS, JavaScript halaman, <code>fetch()</code></td><td>Ya, seluruhnya</td></tr>
+          <tr><td>Server (Express di atas Node.js)</td><td>Menerima permintaan, memutuskan jawabannya, memeriksa hak akses, menyusun response</td><td>Route, middleware, validasi, session</td><td>Tidak, hanya hasilnya</td></tr>
+          <tr><td>Database (MySQL)</td><td>Menyimpan dan mencari data secara permanen</td><td>Tabel, relasi, query <code>SELECT</code> dan <code>INSERT</code></td><td>Tidak, dan tidak boleh diakses langsung dari browser</td></tr>
+        </tbody>
+        </table>
+      </div>
+      <p>Kolom terakhir adalah yang paling sering dilupakan. Segala hal di sisi browser dapat dibaca dan diubah oleh pengguna, sedangkan segala hal di sisi server tidak. Dari kenyataan sederhana ini lahir hampir seluruh aturan keamanan yang akan dibahas pada Pertemuan 13.</p>
+
+      <h3>2.2 Mengapa JavaScript di browser saja tidak cukup</h3>
+      <p>Pertanyaan ini wajar muncul, sebab JavaScript sudah mampu banyak hal di browser. Ada empat alasan yang membuat sisi server tetap diperlukan.</p>
+      <div class="grid two">
+        <div class="mini"><strong>Data harus bertahan</strong><br/>Catatan peminjaman buku harus tetap ada besok, bulan depan, dan setelah komputer diganti. Hanya penyimpanan di sisi server yang dapat menjamin itu.</div>
+        <div class="mini"><strong>Data harus dapat dibagi</strong><br/>Buku yang ditambahkan seorang petugas harus terlihat oleh petugas lain di komputer lain. Itu menuntut satu tempat bersama.</div>
+        <div class="mini"><strong>Pemeriksaan harus dapat dipercaya</strong><br/>Pemeriksaan yang hanya ada di browser dapat dilewati pengguna. Karena itu validasi wajib diulang di server, seberapa pun rapi pemeriksaan di halaman.</div>
+        <div class="mini"><strong>Ada hal yang harus dirahasiakan</strong><br/>Kata sandi database, kunci layanan, dan aturan bisnis tidak boleh ikut terkirim ke browser. Tempatnya hanya di server.</div>
+      </div>
+      <div class="warn">
+        <strong>Kekeliruan yang paling mahal bagi pemula:</strong> mencoba menghubungi database langsung dari JavaScript di browser. Cara itu berarti nama pengguna dan kata sandi database ikut terkirim ke setiap pengunjung, sehingga siapa pun dapat membaca dan menghapus seluruh data. Database <strong>hanya</strong> dihubungi oleh server. Browser berbicara kepada server, dan server yang berbicara kepada database. Aturan ini tidak punya pengecualian di mata kuliah ini.
+      </div>
+
+      <h3>2.3 Alamat, host, dan port</h3>
+      <p>Sepanjang semester ini Anda akan sering menjumpai alamat seperti <code>http://localhost:3000/buku</code>. Alamat itu terdiri dari empat bagian yang masing-masing punya arti.</p>
+      <ul>
+        <li><code>http://</code> adalah <strong>protokol</strong>, yaitu aturan tata bahasa yang dipakai browser dan server agar saling mengerti.</li>
+        <li><code>localhost</code> adalah <strong>host</strong>, yaitu komputer yang dituju. Nama <code>localhost</code> selalu berarti &ldquo;komputer ini sendiri&rdquo;, sehingga permintaan tidak keluar ke internet sama sekali.</li>
+        <li><code>3000</code> adalah <strong>port</strong>, yaitu nomor pintu. Satu komputer bisa menjalankan banyak program yang menunggu sekaligus, dan nomor port membedakan permintaan itu ditujukan kepada program yang mana.</li>
+        <li><code>/buku</code> adalah <strong>path</strong>, yaitu bagian yang menyatakan apa yang diminta. Inilah bagian yang akan Anda cocokkan dengan route pada Pertemuan 3.</li>
+      </ul>
+      <div class="analogy">
+        <strong>Analogi dunia nyata:</strong> host adalah alamat gedung, port adalah nomor pintu pada gedung itu, dan path adalah nama ruangan yang ingin dituju. Kalau nomor pintunya salah, tidak ada yang membukakan meskipun gedungnya benar. Inilah sebab galat <em>connection refused</em> muncul saat server belum dijalankan: gedungnya ada, tetapi tidak ada seorang pun yang menunggu di pintu nomor 3000.
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>3. Siklus Request-Response</h2>
+      <p>Seluruh isi mata kuliah ini berpusat pada satu pola yang berulang tanpa henti: browser mengirim <strong>request</strong>, server menjawab dengan <strong>response</strong>, lalu keduanya selesai. Satu klik tautan adalah satu siklus. Satu penekanan tombol kirim pada formulir adalah satu siklus. Setiap kali Anda memuat ulang halaman, siklus itu terjadi lagi dari awal.</p>
+      <p>Ada satu sifat pada pola ini yang perlu diingat sejak sekarang: <strong>server tidak pernah memulai</strong>. Ia tidak mengirim apa pun sebelum ada yang meminta. Selama tidak ada permintaan, program server hanya menunggu tanpa mengerjakan apa-apa. Karena itu, ketika sebuah aplikasi web terasa &ldquo;tidak melakukan apa pun&rdquo;, yang perlu dicari lebih dulu bukan kesalahan pada server, melainkan apakah permintaannya benar-benar terkirim.</p>
+
+      <h3>3.1 Bentuk pesan request dan response</h3>
+      <p>Request dan response sebenarnya hanyalah teks yang dikirim melalui jaringan, dengan susunan yang sudah dibakukan. Keduanya punya bentuk yang mirip: satu baris pembuka, beberapa baris keterangan yang disebut <strong>header</strong>, lalu bagian isi yang disebut <strong>badan pesan</strong> atau <em>body</em>.</p>
+      <div class="svgbox" tabindex="0">
+        <svg viewBox="0 0 720 540" width="100%" role="img" aria-label="Anatomi pesan HTTP. Panel atas adalah request dari browser ke server, berisi baris permintaan GET garis miring buku garis miring tujuh, header Host dan Accept, serta badan pesan yang kosong. Panel bawah adalah response dari server ke browser, berisi baris status HTTP 200 OK, header Content-Type dan Content-Length, serta badan pesan berupa potongan HTML.">
+          <rect x="20" y="24" width="680" height="210" rx="14" fill="#f8fbff" stroke="#2563eb" stroke-width="2"/>
+          <rect x="20" y="24" width="680" height="42" rx="14" fill="#dbeafe"/>
+          <text x="360" y="52" text-anchor="middle" font-size="18" font-weight="700" fill="#1d4ed8">REQUEST &mdash; dari browser ke server</text>
+          <text x="45" y="101" font-size="20" font-weight="700" font-family="Consolas, monospace" fill="#111827">GET /buku/7 HTTP/1.1</text>
+          <text x="45" y="123" font-size="13" fill="#5b6472">metode &nbsp;&middot;&nbsp; alamat yang diminta &nbsp;&middot;&nbsp; versi protokol</text>
+          <text x="45" y="157" font-size="17" font-family="Consolas, monospace" fill="#111827">Host: localhost:3000</text>
+          <text x="45" y="181" font-size="17" font-family="Consolas, monospace" fill="#111827">Accept: text/html</text>
+          <text x="45" y="203" font-size="13" fill="#5b6472">dua baris di atas adalah header, yaitu keterangan tentang permintaan</text>
+          <text x="45" y="226" font-size="14" font-style="italic" fill="#5b6472">badan pesan kosong, sebab GET hanya meminta tanpa mengirim isi</text>
+          <rect x="20" y="264" width="680" height="250" rx="14" fill="#f7fdf9" stroke="#15803d" stroke-width="2"/>
+          <rect x="20" y="264" width="680" height="42" rx="14" fill="#dcfce7"/>
+          <text x="360" y="292" text-anchor="middle" font-size="18" font-weight="700" fill="#15803d">RESPONSE &mdash; dari server ke browser</text>
+          <text x="45" y="341" font-size="20" font-weight="700" font-family="Consolas, monospace" fill="#111827">HTTP/1.1 200 OK</text>
+          <text x="45" y="363" font-size="13" fill="#5b6472">versi protokol &nbsp;&middot;&nbsp; kode status &nbsp;&middot;&nbsp; keterangan singkat</text>
+          <text x="45" y="397" font-size="17" font-family="Consolas, monospace" fill="#111827">Content-Type: text/html; charset=utf-8</text>
+          <text x="45" y="421" font-size="17" font-family="Consolas, monospace" fill="#111827">Content-Length: 812</text>
+          <text x="45" y="443" font-size="13" fill="#5b6472">header response, antara lain menyatakan jenis isi yang dikirim</text>
+          <text x="45" y="477" font-size="17" font-family="Consolas, monospace" fill="#111827">&lt;h1&gt;Laskar Pelangi&lt;/h1&gt;</text>
+          <text x="45" y="500" font-size="13" fill="#5b6472">badan pesan, inilah bagian yang digambar browser di layar</text>
+        </svg>
+      </div>
+      <p>Perhatikan bahwa pada gambar di atas tidak ada yang ajaib. Yang berpindah antara browser dan server hanyalah teks. Header <code>Content-Type</code> pada response itulah yang memberi tahu browser bagaimana isi harus diperlakukan: bila nilainya <code>text/html</code> maka isi digambar sebagai halaman, bila <code>application/json</code> maka isi dianggap data, dan bila <code>image/png</code> maka isi digambar sebagai gambar. Badan pesannya sendiri sama-sama hanya kumpulan huruf.</p>
+
+      <h3>3.2 Metode HTTP dan kaitannya dengan CRUD</h3>
+      <p>Bagian pertama pada baris permintaan disebut <strong>metode</strong>. Metode menyatakan <em>maksud</em> dari permintaan itu. Ada belasan metode dalam HTTP, tetapi empat yang berikut sudah mencukupi hampir seluruh kebutuhan mata kuliah ini, dan keempatnya berpasangan rapi dengan empat operasi data yang disebut CRUD.</p>
+      <div class="table-scroll" tabindex="0">
+        <table>
+        <thead><tr><th>Metode</th><th>Maksud</th><th>Contoh alamat</th><th>Operasi CRUD</th><th>Dibahas pada</th></tr></thead>
+        <tbody>
+          <tr><td><code>GET</code></td><td>Meminta data tanpa mengubah apa pun</td><td><code>GET /buku</code></td><td>Read</td><td>Pertemuan 3 dan 9</td></tr>
+          <tr><td><code>POST</code></td><td>Mengirim data baru untuk disimpan</td><td><code>POST /buku</code></td><td>Create</td><td>Pertemuan 4 dan 9</td></tr>
+          <tr><td><code>PUT</code> atau <code>PATCH</code></td><td>Mengubah data yang sudah ada</td><td><code>PUT /buku/7</code></td><td>Update</td><td>Pertemuan 10</td></tr>
+          <tr><td><code>DELETE</code></td><td>Menghapus data</td><td><code>DELETE /buku/7</code></td><td>Delete</td><td>Pertemuan 10</td></tr>
+        </tbody>
+        </table>
+      </div>
+      <p>Kolom paling kanan pada tabel itu sebaiknya diperhatikan: seluruh Pertemuan 9 dan 10, yaitu dua pertemuan yang oleh roadmap disebut sebagai jantung aplikasi bisnis, sesungguhnya hanya mengerjakan empat baris pada tabel ini. Karena itu, memahami maksud tiap metode sekarang akan sangat memudahkan nanti.</p>
+      <div class="tip">
+        <strong>Satu perbedaan penting antara GET dan POST</strong> yang layak diingat sejak hari ini: isi permintaan <code>GET</code> ikut terlihat pada alamat, misalnya <code>/cari?judul=laskar</code>, sehingga tercatat di riwayat browser dan mudah dibagikan. Isi permintaan <code>POST</code> dikirim pada badan pesan, sehingga tidak muncul di alamat. Itulah sebab formulir login selalu memakai <code>POST</code>: kata sandi tidak boleh tercetak di kolom alamat.
+      </div>
+
+      <h3>3.3 Kode status: jawaban singkat sebelum isinya dibaca</h3>
+      <p>Setiap response membawa satu bilangan tiga angka yang menyatakan hasil permintaan. Angka pertamanya sudah cukup untuk mengetahui garis besarnya, dan kebiasaan membaca angka ini akan menghemat banyak waktu Anda saat mencari kesalahan nanti.</p>
+      <div class="table-scroll" tabindex="0">
+        <table>
+        <thead><tr><th>Kelompok</th><th>Arti</th><th>Yang sering dijumpai</th><th>Siapa yang perlu diperbaiki</th></tr></thead>
+        <tbody>
+          <tr><td><code>2xx</code></td><td>Berhasil</td><td><code>200 OK</code> berhasil, <code>201 Created</code> data baru tersimpan</td><td>Tidak ada, semuanya baik</td></tr>
+          <tr><td><code>3xx</code></td><td>Dialihkan ke alamat lain</td><td><code>302 Found</code>, misalnya setelah login berhasil</td><td>Tidak ada, ini memang disengaja</td></tr>
+          <tr><td><code>4xx</code></td><td>Permintaannya bermasalah</td><td><code>400</code> data kiriman tidak sah, <code>401</code> belum login, <code>403</code> tidak berhak, <code>404</code> alamat tidak ada</td><td>Sisi yang meminta, atau route yang belum dibuat</td></tr>
+          <tr><td><code>5xx</code></td><td>Servernya bermasalah</td><td><code>500 Internal Server Error</code>, biasanya program server berhenti karena galat</td><td>Sisi server, yaitu kode Anda sendiri</td></tr>
+        </tbody>
+        </table>
+      </div>
+      <p>Pembedaan antara <code>4xx</code> dan <code>5xx</code> adalah alat penunjuk arah yang sangat berguna. Bila muncul <code>404</code>, kemungkinan besar alamat yang diminta tidak cocok dengan route mana pun, jadi periksalah penulisan alamat dan daftar route. Bila muncul <code>500</code>, alamatnya sudah benar dan route-nya ditemukan, tetapi program di dalamnya berhenti karena galat &mdash; jadi yang perlu dibaca adalah pesan galat di terminal, bukan halaman di browser.</p>
+
+      <h3>3.4 Satu halaman, banyak request</h3>
+      <p>Satu halaman web yang tampak sebagai satu benda utuh sesungguhnya hasil dari puluhan siklus request-response. Browser mula-mula meminta dokumen HTML-nya. Setelah HTML itu dibaca, browser menemukan rujukan ke berkas CSS, berkas JavaScript, gambar, dan huruf, lalu meminta semuanya sebagai permintaan terpisah. Barulah setelah itu halaman tampak utuh.</p>
+      <p>Kenyataan ini bukan hal sepele, dan Anda akan membuktikannya sendiri pada praktik Bab 5. Kenyataan ini pula yang menjelaskan mengapa panel Network berisi banyak baris hanya untuk satu halaman, dan mengapa <code>fetch()</code> pada Pertemuan 14 dapat memperbarui sebagian halaman: <code>fetch()</code> sekadar menambahkan satu permintaan lagi tanpa mengulang permintaan dokumen utamanya.</p>
+
+      <h3>3.5 HTTP tidak mengingat: sifat stateless</h3>
+      <p>Sifat berikut ini termasuk yang paling sering membingungkan pemula, dan sekaligus menjadi alasan keberadaan seluruh materi Pertemuan 12. HTTP bersifat <strong>stateless</strong>, artinya <strong>setiap permintaan berdiri sendiri</strong>. Server tidak menyimpan ingatan apa pun tentang permintaan sebelumnya. Setelah sebuah response terkirim, hubungan itu selesai, dan permintaan berikutnya dari orang yang sama diterima seolah-olah datang dari orang yang belum pernah dikenal.</p>
+      <div class="analogy">
+        <strong>Analogi dunia nyata:</strong> bayangkan sebuah loket yang petugasnya berganti setiap kali Anda datang, dan petugas baru itu tidak diberi tahu apa pun tentang kunjungan Anda sebelumnya. Agar tetap dilayani, Anda harus membawa sesuatu yang membuktikan siapa Anda, misalnya kartu antrean. Dalam aplikasi web, kartu antrean itulah yang disebut <strong>cookie</strong>, dan catatan di sisi loket yang bersesuaian dengan kartu itu disebut <strong>session</strong>.
+      </div>
+      <p>Karena itu, fitur login tidak bekerja dengan cara &ldquo;server mengingat bahwa Anda sudah masuk&rdquo;. Yang sesungguhnya terjadi adalah browser menyertakan tanda pengenal pada setiap permintaan berikutnya, dan server memeriksa tanda itu setiap kali. Mekanismenya dibahas tuntas pada Pertemuan 12, tetapi sifat stateless-nya perlu dipahami sekarang, sebab tanpa itu login akan terasa sebagai keajaiban dan bukan sebagai rangkaian langkah yang dapat ditelusuri.</p>
+    </section>
+
+    <section class="card">
+      <h2>4. Peran Express, Peran MySQL, dan Arsitektur Aplikasi</h2>
+      <p>Tiga nama akan menemani seluruh semester ini: <strong>Node.js</strong>, <strong>Express</strong>, dan <strong>MySQL</strong>. Ketiganya sering disebut bersamaan sehingga mudah tertukar, padahal tugasnya jelas berbeda. Bagian ini memisahkannya satu per satu, lalu menyatukannya kembali menjadi satu gambar alur.</p>
+
+      <h3>4.1 Node.js: JavaScript di luar browser</h3>
+      <p>Sampai semester lalu, JavaScript hanya Anda kenal sebagai bahasa yang dijalankan browser. <strong>Node.js</strong> adalah program yang memungkinkan JavaScript dijalankan langsung oleh sistem operasi, tanpa browser sama sekali. Dengan Node.js, JavaScript memperoleh kemampuan yang tidak pernah dimilikinya di dalam browser: membaca dan menulis berkas di cakram, membuka koneksi jaringan, dan menunggu permintaan masuk di sebuah port.</p>
+      <p>Keuntungan pilihan ini bagi Anda cukup besar. Bahasa yang dipakai di sisi browser dan di sisi server menjadi sama, sehingga tidak ada bahasa baru yang harus dipelajari dari nol pada minggu-minggu pertama. Yang baru adalah <em>tempat</em> kode itu berjalan dan <em>tugas</em> yang diembannya.</p>
+
+      <h3>4.2 Express: yang menerima permintaan dan menentukan jawabannya</h3>
+      <p>Node.js sendiri sudah mampu menerima permintaan HTTP, tetapi caranya masih terlalu mentah: setiap permintaan datang sebagai satu tumpukan teks yang harus Anda pilah sendiri. <strong>Express</strong> adalah pustaka tambahan yang merapikan pekerjaan itu. Dengan Express, Anda cukup menyatakan pasangan &ldquo;metode dan alamat&rdquo; beserta fungsi yang menanganinya, lalu Express mengurus sisanya.</p>
+      <p>Pasangan itulah yang disebut <strong>route</strong>. Sebuah aplikasi yang sudah jadi umumnya berisi belasan route, misalnya <code>GET /buku</code> untuk menampilkan daftar, <code>POST /buku</code> untuk menyimpan yang baru, dan <code>GET /login</code> untuk menampilkan formulir masuk. Selain route, Express juga menyediakan <strong>middleware</strong>, yaitu fungsi yang dijalankan sebelum route dan dapat memeriksa, mengubah, atau menolak permintaan &mdash; misalnya untuk mencatat log atau menolak pengunjung yang belum login. Keduanya dibahas rinci pada Pertemuan 3.</p>
+      <div class="analogy">
+        <strong>Analogi dunia nyata:</strong> Express seperti resepsionis yang memegang daftar. Ia tidak menyelesaikan pekerjaan sendiri, tetapi tahu persis siapa yang menangani apa. Ketika ada tamu bertanya soal peminjaman, ia meneruskan ke bagian peminjaman. Ketika ada tamu bertanya soal alamat yang tidak ada dalam daftarnya, ia menjawab dengan sopan bahwa hal itu tidak ada &mdash; dan jawaban itulah yang sampai ke pengunjung sebagai <code>404</code>.
+      </div>
+
+      <h3>4.3 MySQL: tempat data disimpan dengan rapi</h3>
+      <p><strong>MySQL</strong> adalah sistem database relasional. Kata <em>relasional</em> berarti data disimpan dalam <strong>tabel</strong> yang saling berhubungan. Setiap tabel punya <strong>kolom</strong> yang tetap, misalnya tabel <code>buku</code> memiliki kolom <code>id</code>, <code>judul</code>, dan <code>penulis</code>. Setiap catatan menjadi satu <strong>baris</strong>. Untuk mengambil, menambah, mengubah, atau menghapus baris, dipakai bahasa khusus bernama <strong>SQL</strong>.</p>
+      <p>Pertanyaan yang wajar: mengapa tidak cukup menyimpan data di dalam berkas teks biasa? Sebab MySQL menangani hal-hal yang sangat merepotkan bila dikerjakan sendiri: mencari satu baris di antara ratusan ribu baris dengan cepat, melayani beberapa pengguna yang menulis pada saat yang sama tanpa data saling menimpa, menolak data yang bentuknya tidak sesuai, dan menjaga hubungan antar tabel tetap masuk akal. Semua itu dibahas mulai Pertemuan 5.</p>
+      <div class="analogy">
+        <strong>Analogi dunia nyata:</strong> berkas teks seperti tumpukan catatan lepas di atas meja &mdash; cepat untuk satu dua lembar, tetapi mustahil ditelusuri begitu jumlahnya ratusan dan ada beberapa orang yang menulis di atasnya bersamaan. Database seperti buku induk yang berkolom tetap, bernomor, dan punya aturan pengisian: lebih kaku, tetapi justru karena itu masih terbaca sepuluh tahun kemudian.
+      </div>
+
+      <h3>4.4 Tiga lapisan dan letak setiap pertemuan</h3>
+      <p>Bila ketiganya disusun, terbentuk tiga lapisan yang menjadi kerangka seluruh mata kuliah ini. Gambar berikut sekaligus memperlihatkan pertemuan mana yang mengerjakan lapisan mana, sehingga setiap topik yang muncul nanti punya tempatnya.</p>
+      <div class="svgbox" tabindex="0">
+        <svg viewBox="0 0 860 330" width="100%" role="img" aria-label="Tiga lapisan aplikasi web. Lapisan browser dikerjakan pada Pertemuan 4 dan 14. Lapisan server Express dikerjakan pada Pertemuan 2, 3, 4, dan 11 sampai 14. Lapisan database MySQL dikerjakan pada Pertemuan 5, 6, 7, 9, dan 10.">
+          <rect x="20" y="25" width="820" height="85" rx="16" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+          <text x="45" y="59" font-size="20" font-weight="700" fill="#111827">Sisi Browser (client)</text>
+          <text x="45" y="85" font-size="14" fill="#374151">HTML, CSS, JavaScript halaman, formulir, dan pemanggilan fetch()</text>
+          <text x="815" y="59" text-anchor="end" font-size="14" font-weight="700" fill="#1d4ed8">Pertemuan 4 dan 14</text>
+          <rect x="20" y="125" width="820" height="85" rx="16" fill="#dcfce7" stroke="#15803d" stroke-width="2"/>
+          <text x="45" y="159" font-size="20" font-weight="700" fill="#111827">Sisi Server: Express di atas Node.js</text>
+          <text x="45" y="185" font-size="14" fill="#374151">route, middleware, controller, validasi, session, dan penyusunan response</text>
+          <text x="815" y="159" text-anchor="end" font-size="14" font-weight="700" fill="#15803d">Pertemuan 2, 3, 4, 11&ndash;14</text>
+          <rect x="20" y="225" width="820" height="85" rx="16" fill="#fef3c7" stroke="#b45309" stroke-width="2"/>
+          <text x="45" y="259" font-size="20" font-weight="700" fill="#111827">Database: MySQL</text>
+          <text x="45" y="285" font-size="14" fill="#374151">tabel, kolom, relasi antar tabel, query SQL, penyimpanan permanen</text>
+          <text x="815" y="259" text-anchor="end" font-size="14" font-weight="700" fill="#b45309">Pertemuan 5, 6, 7, 9, 10</text>
+        </svg>
+      </div>
+      <p>Dua pertemuan tidak muncul pada gambar itu, yaitu Pertemuan 8 dan 16, sebab keduanya adalah penilaian yang menguji ketiga lapisan sekaligus. Pertemuan 15 juga tidak terikat pada satu lapisan, karena debugging dan deployment menyentuh semuanya.</p>
+
+      <h3>4.5 Alur lengkap: browser &rarr; server &rarr; database &rarr; browser</h3>
+      <p>Inilah inti Pertemuan 1, dan inilah satu gambar yang paling perlu Anda ingat dari hari ini. Perhatikan bahwa perjalanannya <strong>bolak-balik</strong>: permintaan bergerak ke kanan, jawaban kembali ke kiri, dan siklusnya berakhir di tempat ia dimulai.</p>
+      <div class="svgbox" tabindex="0">
+        <svg viewBox="0 0 860 280" width="100%" role="img" aria-label="Alur bolak-balik aplikasi web. Browser mengirim request ke Express, Express mengirim query SQL ke MySQL, MySQL mengembalikan hasil query ke Express, lalu Express mengirim response kembali ke browser.">
+          <rect x="15" y="70" width="190" height="130" rx="18" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+          <rect x="335" y="70" width="190" height="130" rx="18" fill="#dcfce7" stroke="#15803d" stroke-width="2"/>
+          <rect x="655" y="70" width="190" height="130" rx="18" fill="#fef3c7" stroke="#b45309" stroke-width="2"/>
+          <text x="110" y="104" text-anchor="middle" font-size="22" font-weight="700" fill="#111827">Browser</text>
+          <text x="110" y="130" text-anchor="middle" font-size="14" fill="#374151">mengirim permintaan,</text>
+          <text x="110" y="152" text-anchor="middle" font-size="14" fill="#374151">menggambar hasilnya</text>
+          <text x="110" y="176" text-anchor="middle" font-size="13" fill="#5b6472">HTML, CSS, JavaScript</text>
+          <text x="430" y="104" text-anchor="middle" font-size="22" font-weight="700" fill="#111827">Express</text>
+          <text x="430" y="130" text-anchor="middle" font-size="14" fill="#374151">menerima permintaan,</text>
+          <text x="430" y="152" text-anchor="middle" font-size="14" fill="#374151">mencocokkan route,</text>
+          <text x="430" y="174" text-anchor="middle" font-size="14" fill="#374151">menyusun jawaban</text>
+          <text x="750" y="104" text-anchor="middle" font-size="22" font-weight="700" fill="#111827">MySQL</text>
+          <text x="750" y="130" text-anchor="middle" font-size="14" fill="#374151">menyimpan data</text>
+          <text x="750" y="152" text-anchor="middle" font-size="14" fill="#374151">dalam tabel,</text>
+          <text x="750" y="174" text-anchor="middle" font-size="14" fill="#374151">menjawab query</text>
+          <line x1="210" y1="110" x2="330" y2="110" stroke="#2563eb" stroke-width="4"/>
+          <polygon points="330,110 316,102 316,118" fill="#2563eb"/>
+          <line x1="530" y1="110" x2="650" y2="110" stroke="#2563eb" stroke-width="4"/>
+          <polygon points="650,110 636,102 636,118" fill="#2563eb"/>
+          <line x1="650" y1="165" x2="530" y2="165" stroke="#6d28d9" stroke-width="4"/>
+          <polygon points="530,165 544,157 544,173" fill="#6d28d9"/>
+          <line x1="330" y1="165" x2="210" y2="165" stroke="#6d28d9" stroke-width="4"/>
+          <polygon points="210,165 224,157 224,173" fill="#6d28d9"/>
+          <text x="270" y="98" text-anchor="middle" font-size="14" font-weight="700" fill="#1d4ed8">1. request</text>
+          <text x="590" y="98" text-anchor="middle" font-size="14" font-weight="700" fill="#1d4ed8">2. query SQL</text>
+          <text x="590" y="188" text-anchor="middle" font-size="14" font-weight="700" fill="#6d28d9">3. hasil query</text>
+          <text x="270" y="188" text-anchor="middle" font-size="14" font-weight="700" fill="#6d28d9">4. response</text>
+        </svg>
+      </div>
+      <p>Agar tidak berhenti sebagai gambar, mari kita telusuri satu kejadian yang sangat biasa: seorang petugas menekan tautan <em>Daftar Buku</em>. Tujuh langkah berikut terjadi dalam waktu kurang dari sedetik.</p>
+      <ol class="step">
+        <li>Pengguna menekan tautan <em>Daftar Buku</em> pada halaman.</li>
+        <li>Browser menyusun sebuah request, yaitu <code>GET /buku</code>, mengirimkannya ke server, lalu menunggu.</li>
+        <li>Express menerima request itu dan mencari di daftar route-nya, mana yang cocok dengan metode <code>GET</code> dan alamat <code>/buku</code>.</li>
+        <li>Fungsi pada route tersebut dijalankan, dan fungsi itu mengirim query <code>SELECT id, judul, penulis FROM buku</code> ke MySQL.</li>
+        <li>MySQL mencari baris-baris yang diminta lalu mengembalikannya kepada Express.</li>
+        <li>Express mengubah baris-baris itu menjadi HTML atau JSON, lalu mengirimkannya sebagai response dengan kode status <code>200</code>.</li>
+        <li>Browser menerima response dan menggambar daftarnya di layar. Siklus selesai, dan server kembali menunggu tanpa mengingat apa pun.</li>
+      </ol>
+      <p>Perhatikan bahwa langkah 3 sampai 6 adalah bagian yang harus Anda tulis sendiri, dan bagian itulah yang mengisi hampir seluruh Pertemuan 2 sampai 10. Langkah 1, 2, dan 7 dikerjakan oleh browser tanpa perlu Anda program. Dari sudut pandang ini, mata kuliah ini sesungguhnya hanya mengajarkan cara mengisi empat langkah di tengah.</p>
+      <div class="tip">
+        <strong>Cara memakai alur ini saat mencari kesalahan.</strong> Jika sesuatu tidak berjalan, tentukan lebih dulu langkah keberapa yang gagal, jangan langsung mengubah kode. Tidak ada baris baru di panel Network berarti langkah 2 gagal, permintaannya bahkan tidak terkirim. Muncul <code>404</code> berarti langkah 3 gagal, route-nya tidak ditemukan. Muncul <code>500</code> berarti langkah 4 atau 5 gagal, biasanya query yang salah tulis. Halaman kosong dengan status <code>200</code> berarti langkah 6 berhasil tetapi isinya memang kosong. Kebiasaan menempatkan gejala pada langkah tertentu inilah yang dilatih khusus pada Pertemuan 15.
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>5. Implementasi Praktis: Menelusuri Siklus Request-Response yang Sungguhan</h2>
+      <p>Aktivitas praktik Pertemuan 1 adalah membuktikan sendiri bahwa siklus pada Bab 3 dan alur pada Bab 4.5 benar-benar terjadi. Semuanya dikerjakan dari browser, tanpa memasang apa pun, dan tanpa menulis satu baris kode. Yang dipakai adalah <strong>peralatan pengembang</strong> atau <em>developer tools</em>, yaitu panel bawaan browser yang memperlihatkan seluruh permintaan yang keluar-masuk.</p>
+
+      <h3>5.1 Tujuan praktik</h3>
+      <ul>
+        <li>Melihat dengan mata sendiri bahwa satu halaman terdiri dari banyak siklus request-response.</li>
+        <li>Membaca metode, alamat, kode status, dan jenis isi dari sebuah permintaan yang nyata.</li>
+        <li>Membuktikan bahwa alamat yang berbeda menghasilkan data yang berbeda, karena ada program dan penyimpanan di seberang sana.</li>
+        <li>Mengenali panel yang akan dipakai berulang kali sepanjang semester untuk memeriksa pekerjaan sendiri.</li>
+      </ul>
+
+      <h3>5.2 Membuka panel Network</h3>
+      <p>Langkahnya sama pada Chrome, Edge, dan Brave. Pada Firefox namanya juga <em>Network</em> dengan susunan yang serupa.</p>
+      <ol class="step">
+        <li>Tekan <strong>F12</strong>, atau <strong>Ctrl+Shift+I</strong> bila F12 tidak berfungsi. Pada macOS gunakan <strong>Cmd+Option+I</strong>.</li>
+        <li>Pilih tab <strong>Network</strong> pada baris tab di bagian atas panel yang muncul.</li>
+        <li>Biarkan panel itu tetap terbuka, lalu muat ulang halaman dengan <strong>Ctrl+R</strong>. Baris-baris akan mulai terisi.</li>
+      </ol>
+      <div class="warn">
+        <strong>Kesalahan yang paling sering terjadi pada langkah ini:</strong> panel dibuka <em>setelah</em> halaman selesai dimuat, sehingga daftarnya kosong dan tampak seperti tidak berfungsi. Panel Network hanya mencatat permintaan yang terjadi selagi ia terbuka. Jadi urutannya wajib: buka panel dulu, baru muat ulang halaman.
+      </div>
+
+      <h3>5.3 Praktik A: satu halaman, berapa banyak permintaan?</h3>
+      <p>Bagian ini membuktikan pembahasan Bab 3.4.</p>
+      <ol class="step">
+        <li>Buka sebuah halaman umum yang biasa Anda kunjungi, misalnya situs kampus atau <code>id.wikipedia.org</code>. Cukup dibaca seperti biasa; tidak ada yang perlu dikirim ke situs itu.</li>
+        <li>Dengan panel Network terbuka, muat ulang halaman.</li>
+        <li>Lihat keterangan di bagian bawah panel. Di sana tertulis jumlah permintaan dan besar data yang terkirim, misalnya <em>62 requests</em>. Catat angkanya.</li>
+        <li>Perhatikan kolom <strong>Type</strong>. Anda akan melihat nilai seperti <code>document</code>, <code>stylesheet</code>, <code>script</code>, <code>font</code>, dan <code>image</code>. Catat berapa banyak jenis yang berbeda yang Anda temukan.</li>
+        <li>Klik tombol filter <strong>Doc</strong> di baris atas panel. Daftar menyusut, biasanya menjadi satu baris saja. Itulah dokumen HTML utama halaman tersebut, yaitu permintaan pertama dari seluruh rangkaian.</li>
+        <li>Klik <strong>All</strong> untuk mengembalikan daftar seperti semula.</li>
+      </ol>
+      <p>Yang perlu disadari dari langkah-langkah di atas: HTML utama datang lebih dulu dan sendirian, lalu segala berkas pendukung diminta menyusul karena disebutkan di dalam HTML itu. Urutan ini persis yang nanti terjadi pada aplikasi Anda sendiri.</p>
+
+      <h3>5.4 Praktik B: membaca satu pesan request dan response</h3>
+      <p>Bagian ini menghubungkan gambar pada Bab 3.1 dengan kejadian nyata.</p>
+      <ol class="step">
+        <li>Masih pada halaman yang sama, klik baris paling atas pada daftar, yaitu baris berjenis <code>document</code>.</li>
+        <li>Panel di sebelah kanan akan terbuka. Pilih tab <strong>Headers</strong>.</li>
+        <li>Pada bagian <strong>General</strong>, catat tiga hal: <em>Request URL</em>, <em>Request Method</em>, dan <em>Status Code</em>. Bandingkan ketiganya dengan panel REQUEST pada gambar Bab 3.1.</li>
+        <li>Buka bagian <strong>Response Headers</strong>. Cari <code>Content-Type</code> dan catat nilainya. Kemungkinan besar nilainya <code>text/html</code>.</li>
+        <li>Buka bagian <strong>Request Headers</strong>. Cari <code>Host</code> dan <code>User-Agent</code>. Perhatikan bahwa browser mengirimkan banyak keterangan tentang dirinya tanpa pernah Anda perintahkan.</li>
+        <li>Pindah ke tab <strong>Response</strong>. Di sana tampak isi yang dikirim server, yaitu teks HTML. Inilah badan pesan pada gambar Bab 3.1.</li>
+        <li>Sekarang klik salah satu baris yang jenisnya <code>stylesheet</code>, lalu periksa <code>Content-Type</code>-nya. Nilainya berbeda, yaitu <code>text/css</code>. Bandingkan pula isi tab <strong>Response</strong>-nya.</li>
+      </ol>
+      <p>Langkah terakhir itu penting: dengan protokol yang sama dan cara yang sama, server dapat mengirim jenis isi yang berbeda-beda. Yang membedakan perlakuan browser hanyalah header <code>Content-Type</code>. Pada Pertemuan 4 Anda akan mengatur nilai ini sendiri, ketika memilih apakah sebuah route menjawab dengan HTML atau dengan JSON.</p>
+
+      <h3>5.5 Praktik C: membuktikan bahwa alamat menentukan data yang keluar</h3>
+      <p>Dua praktik sebelumnya baru menyentuh dua kotak pertama pada alur Bab 4.5, yaitu browser dan server. Praktik ini menyentuh kotak ketiga. Kita akan memakai <code>jsonplaceholder.typicode.com</code>, sebuah layanan gratis yang memang disediakan untuk latihan semacam ini. Layanan itu menyimpan sekumpulan data contoh dan menjawab permintaan dalam bentuk JSON &mdash; persis seperti yang akan dilakukan API buatan Anda sendiri pada Pertemuan 14.</p>
+      <ol class="step">
+        <li>Buka <code>https://jsonplaceholder.typicode.com/posts/1</code> di sebuah tab baru, dengan panel Network tetap terbuka.</li>
+        <li>Amati isi halaman. Yang tampak bukan HTML, melainkan data terstruktur dengan pasangan nama dan nilai. Catat nilai <code>title</code>-nya.</li>
+        <li>Pada panel Network, klik baris permintaan itu dan catat <em>Status Code</em> serta <code>Content-Type</code>-nya. Bandingkan dengan yang Anda catat pada Praktik B &mdash; keduanya berbeda.</li>
+        <li>Ubah alamatnya menjadi <code>.../posts/2</code>. Data yang muncul berbeda, padahal bentuk alamatnya sama. Catat nilai <code>title</code> yang baru.</li>
+        <li>Ubah alamatnya menjadi <code>.../posts/99999</code>, yaitu nomor yang hampir pasti tidak ada. Catat apa yang muncul di halaman <strong>dan</strong> kode status yang tercatat di panel Network. Keduanya berubah.</li>
+        <li>Terakhir, buka <code>https://jsonplaceholder.typicode.com/posts</code> tanpa nomor apa pun. Yang muncul adalah kumpulan data, bukan satu data.</li>
+      </ol>
+      <p>Enam langkah itu sesungguhnya sudah memperagakan seluruh gagasan yang akan Anda bangun sendiri pada Pertemuan 9 dan 10. Bagian <code>/posts</code> adalah route untuk menampilkan daftar. Bagian <code>/posts/1</code> adalah route dengan <strong>parameter</strong>, yaitu bagian alamat yang berubah-ubah dan dipakai untuk memilih satu baris tertentu dari database. Nomor yang tidak ada menghasilkan kode status yang berbeda, karena program di seberang sana memeriksa lebih dulu apakah datanya ditemukan. Kode untuk melakukan semua itu ada pada Bab 6.3 di bawah, dan panjangnya hanya beberapa baris.</p>
+
+      <h3>5.6 Hasil yang diharapkan</h3>
+      <p>Praktik ini dinyatakan berhasil bila empat hal berikut sudah Anda peroleh dan tercatat:</p>
+      <ul>
+        <li>Sebuah angka jumlah permintaan untuk satu halaman biasa, yang hampir pasti jauh lebih dari satu.</li>
+        <li>Metode, alamat, kode status, dan <code>Content-Type</code> dari satu dokumen HTML yang nyata.</li>
+        <li>Dua nilai <code>Content-Type</code> yang berbeda dari dua jenis berkas yang berbeda.</li>
+        <li>Bukti bahwa <code>/posts/1</code> dan <code>/posts/2</code> memberi data yang berbeda, sedangkan nomor yang tidak ada memberi kode status yang berbeda pula.</li>
+      </ul>
+      <p>Butir terakhir adalah yang paling penting untuk disadari: <strong>satu bagian kecil pada alamat menentukan baris mana yang diambil dari sebuah tabel</strong>. Inilah bentuk paling sederhana dari gagasan bahwa alamat adalah pertanyaan dan response adalah jawabannya, dan gagasan itulah yang nanti dipakai untuk menampilkan detail buku, mengubah data mahasiswa, atau menghapus satu barang inventaris.</p>
+
+      <h3>5.7 Jika hasilnya tidak seperti itu</h3>
+      <p>Gagal pada percobaan pertama adalah hal yang normal. Tabel berikut memuat masalah yang paling sering muncul pada praktik ini beserta cara memeriksanya.</p>
+      <div class="table-scroll" tabindex="0">
+        <table>
+        <thead><tr><th>Gejala</th><th>Kemungkinan penyebab</th><th>Yang perlu diperiksa</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>Panel Network kosong sama sekali</td>
+            <td>Panel dibuka setelah halaman selesai dimuat, sehingga tidak ada yang tercatat</td>
+            <td>Biarkan panel tetap terbuka, lalu tekan Ctrl+R untuk memuat ulang</td>
+          </tr>
+          <tr>
+            <td>Hanya muncul satu atau dua baris</td>
+            <td>Filter jenis masih aktif pada satu jenis saja, misalnya masih di <code>Doc</code></td>
+            <td>Klik tombol <strong>All</strong> pada baris filter di atas daftar</td>
+          </tr>
+          <tr>
+            <td>Kolom Status kosong atau bertuliskan <em>from disk cache</em></td>
+            <td>Jawaban diambil dari simpanan browser, jadi permintaannya tidak sampai ke server</td>
+            <td>Centang <strong>Disable cache</strong> di panel Network, lalu muat ulang. Centang ini hanya aktif selagi panel terbuka</td>
+          </tr>
+          <tr>
+            <td>Tab Response berisi teks yang tampak berantakan</td>
+            <td>Isinya memang bukan HTML, misalnya JavaScript hasil pemadatan, JSON, atau data gambar</td>
+            <td>Periksa <code>Content-Type</code> pada Response Headers untuk mengetahui jenis isinya</td>
+          </tr>
+          <tr>
+            <td>Menekan F12 tidak membuka apa pun</td>
+            <td>Papan tuts laptop memerlukan tombol Fn, atau tombol itu dipakai fungsi lain</td>
+            <td>Gunakan Ctrl+Shift+I, atau menu tiga titik &rarr; <em>More tools</em> &rarr; <em>Developer tools</em></td>
+          </tr>
+          <tr>
+            <td>Alamat jsonplaceholder tidak dapat dibuka</td>
+            <td>Tidak ada koneksi internet, atau jaringan kampus memblokir alamat tersebut</td>
+            <td>Praktik C dapat digantikan dengan mengamati permintaan berjenis <code>fetch/xhr</code> pada situs mana pun yang punya kolom pencarian</td>
+          </tr>
+        </tbody>
+        </table>
+      </div>
+      <div class="tip">
+        <strong>Kebiasaan yang perlu dibangun sejak hari ini:</strong> ketika sesuatu tidak berjalan, jangan langsung mengubah kode secara acak. Tentukan dulu langkah keberapa yang gagal pada alur Bab 4.5, periksa satu hal, jalankan lagi, lihat perubahannya. Cara berpikir inilah yang membedakan orang yang men-debug dari orang yang menebak, dan cara ini dilatih secara khusus pada Pertemuan 15.
+      </div>
+
+      <h3>5.8 Keterkaitan dengan teori</h3>
+      <p>Pada praktik ini Anda berperan sebagai client, situs yang dibuka berperan sebagai server, dan setiap baris pada panel Network adalah satu siklus request-response yang utuh. Ketika data dari <code>/posts/1</code> berbeda dengan <code>/posts/2</code>, yang Anda saksikan adalah bukti bahwa di seberang sana ada program yang membaca alamat, mencari baris yang sesuai di suatu penyimpanan, lalu menyusun jawaban. Belum ada satu pun kode yang Anda tulis, tetapi keempat kotak pada alur Bab 4.5 sudah terlihat bekerja. Mulai Pertemuan 2, kotak yang berada di tengah itulah yang berpindah tangan menjadi tanggung jawab Anda.</p>
+    </section>
+
+    <section class="card">
+      <h2>6. Membaca Kode Server Pertama</h2>
+      <p>Bagian ini memperlihatkan wujud kode dari alur yang baru saja Anda telusuri. <strong>Kode di bawah tidak dijalankan hari ini</strong>, sebab Node.js dan Express baru dipasang pada Pertemuan 2. Hari ini kode itu hanya dibaca, dengan satu sasaran: mengenali bagian mana yang menerima permintaan dan bagian mana yang mengirim jawaban. Bila hari ini Anda sudah dapat menunjuk kedua bagian itu, Pertemuan 2 akan terasa jauh lebih ringan.</p>
+
+      <h3>6.1 Server Express yang paling sederhana</h3>
+      <p>Program berikut adalah keseluruhan sebuah server web. Panjangnya sembilan baris, dan begitu dijalankan ia sudah dapat melayani permintaan dari browser.</p>
+      <div class="code"><pre>const express = require('express');
+const app = express();
+
+app.get('/', (req, res) =&gt; {
+  res.send('&lt;h1&gt;Halo dari server&lt;/h1&gt;');
+});
+
+app.listen(3000, () =&gt; {
+  console.log('Server berjalan di http://localhost:3000');
+});</pre></div>
+      <p>Setelah program itu dijalankan dan alamat <code>http://localhost:3000</code> dibuka di browser, tulisan <em>Halo dari server</em> akan muncul di layar. Yang perlu disadari: teks HTML itu tidak berasal dari berkas mana pun. Tidak ada berkas <code>index.html</code> di dalam proyek tersebut. HTML-nya disusun oleh program pada saat permintaan datang &mdash; dan tepat inilah yang dimaksud &ldquo;dinamis&rdquo; pada Bab 1.1.</p>
+
+      <h3>6.2 Penjelasan baris per baris</h3>
+      <div class="table-scroll" tabindex="0">
+        <table>
+        <thead><tr><th>Potongan kode</th><th>Fungsi</th><th>Kaitan dengan teori</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><code>const express = require('express');</code></td>
+            <td>Memuat pustaka Express agar dapat dipakai di program ini.</td>
+            <td>Express bukan bagian bawaan Node.js, melainkan tambahan yang dipasang lebih dulu. Cara memasangnya dibahas pada Pertemuan 2.</td>
+          </tr>
+          <tr>
+            <td><code>const app = express();</code></td>
+            <td>Membuat satu objek aplikasi yang akan menampung seluruh route.</td>
+            <td>Inilah &ldquo;resepsionis&rdquo; pada analogi Bab 4.2. Semua daftar layanan dilekatkan padanya.</td>
+          </tr>
+          <tr>
+            <td><code>app.get('/', ...)</code></td>
+            <td>Mendaftarkan jawaban untuk permintaan bermetode <code>GET</code> ke alamat <code>/</code>.</td>
+            <td>Wujud nyata dari pasangan metode dan path pada Bab 3.2. Satu baris ini adalah satu route.</td>
+          </tr>
+          <tr>
+            <td><code>(req, res) =&gt; { ... }</code></td>
+            <td>Fungsi yang dijalankan setiap kali route itu dipanggil. <code>req</code> berisi permintaan yang masuk, <code>res</code> adalah alat untuk menyusun jawaban.</td>
+            <td>Kedua sisi siklus request-response hadir di dalam satu baris ini. Nama <code>req</code> dan <code>res</code> hanyalah kebiasaan, bukan keharusan.</td>
+          </tr>
+          <tr>
+            <td><code>res.send('&lt;h1&gt;...&lt;/h1&gt;')</code></td>
+            <td>Mengirim badan pesan response ke browser, lalu siklus ditutup.</td>
+            <td>Inilah bagian yang muncul sebagai badan pesan pada gambar Bab 3.1, dan yang digambar browser di layar.</td>
+          </tr>
+          <tr>
+            <td><code>app.listen(3000, ...)</code></td>
+            <td>Menyuruh server mulai menunggu permintaan di port 3000.</td>
+            <td>Tanpa baris ini program langsung berhenti dan tidak ada yang menunggu di pintu, sehingga browser menerima galat <em>connection refused</em> seperti pada Bab 2.3.</td>
+          </tr>
+          <tr>
+            <td><code>console.log(...)</code></td>
+            <td>Menulis pesan ke <strong>terminal</strong>, bukan ke browser.</td>
+            <td>Inilah jalur pertama untuk mengetahui apa yang sedang dikerjakan server. Bedakan dengan <code>res.send()</code> yang menulis ke browser.</td>
+          </tr>
+        </tbody>
+        </table>
+      </div>
+      <div class="tip">
+        <strong>Dua baris terakhir pada tabel itu sering tertukar,</strong> dan pertukaran itu menyebabkan kebingungan yang tidak perlu selama berminggu-minggu. Ingat pembagiannya: <code>console.log()</code> berbicara kepada Anda sebagai pemrogram melalui terminal, sedangkan <code>res.send()</code> berbicara kepada pengguna melalui browser. Sepanjang semester ini Anda perlu membiasakan diri memandang <strong>dua jendela sekaligus</strong>: browser untuk melihat hasil, dan terminal untuk melihat apa yang terjadi di dalam server.
+      </div>
+
+      <h3>6.3 Ketika database ikut terlibat</h3>
+      <p>Program berikut adalah bentuk lengkap dari alur Bab 4.5, yaitu route yang benar-benar mengambil data dari MySQL. Program ini adalah gambaran akhir dari Pertemuan 7, jadi tidak ada tuntutan untuk memahaminya sekarang. Bacalah sebagai peta, bukan sebagai bahan hafalan.</p>
+      <div class="code"><pre>const express = require('express');
+const mysql = require('mysql2/promise');
+
+const app = express();
+
+const db = mysql.createPool({
+  host: 'localhost',
+  user: 'root',
+  password: process.env.DB_PASSWORD,
+  database: 'perpustakaan'
+});
+
+app.get('/buku', async (req, res) =&gt; {
+  const [rows] = await db.query('SELECT id, judul, penulis FROM buku');
+  res.json(rows);
+});
+
+app.listen(3000);</pre></div>
+      <p>Lima hal terjadi di dalamnya, dan kelimanya bersesuaian dengan langkah 3 sampai 6 pada Bab 4.5. Pertama, <code>mysql.createPool</code> menyiapkan sekumpulan koneksi ke database sehingga tidak perlu membuka hubungan baru pada setiap permintaan. Kedua, route <code>GET /buku</code> didaftarkan seperti pada contoh sebelumnya. Ketiga, <code>db.query(...)</code> mengirimkan perintah SQL ke MySQL. Keempat, kata <code>await</code> menyatakan bahwa program menunggu jawaban database selesai sebelum melanjutkan, sebab database tidak menjawab seketika. Kelima, <code>res.json(rows)</code> mengirimkan baris-baris hasil query sebagai JSON, yaitu bentuk yang Anda lihat sendiri pada Praktik C.</p>
+      <p>Dua hal kecil layak dijelaskan sekarang agar tidak mengganggu. Tanda kurung siku pada <code>const [rows]</code> ada karena <code>mysql2</code> mengembalikan dua hal sekaligus, yaitu baris data dan keterangan kolom; kurung siku itu cara mengambil bagian pertama saja. Kata <code>async</code> di depan fungsi diperlukan agar <code>await</code> boleh dipakai di dalamnya. Keduanya dibahas tuntas pada Pertemuan 7.</p>
+
+      <h3>6.4 Alamat sebagai pertanyaan: route dengan parameter</h3>
+      <p>Berikut kode yang menghasilkan perilaku yang Anda amati pada Praktik C. Perhatikan tanda titik dua pada <code>:id</code>: bagian itu menyatakan bahwa potongan alamat tersebut boleh berisi apa saja, dan nilainya dapat dibaca dari <code>req.params.id</code>.</p>
+      <div class="code"><pre>app.get('/buku/:id', async (req, res) =&gt; {
+  const [rows] = await db.query(
+    'SELECT id, judul, penulis FROM buku WHERE id = ?',
+    [req.params.id]
+  );
+
+  if (rows.length === 0) {
+    return res.status(404).send('Buku tidak ditemukan');
+  }
+
+  res.json(rows[0]);
+});</pre></div>
+      <p>Sembilan baris itu memuat empat gagasan yang seluruhnya sudah Anda lihat bekerja pada praktik tadi. Alamat <code>/buku/7</code> dan <code>/buku/8</code> ditangani oleh satu route yang sama. Nomor pada alamat dipakai untuk memilih satu baris tertentu di tabel. Bila barisnya tidak ada, server menjawab dengan kode status <code>404</code> dan bukan dengan halaman kosong. Dan bila barisnya ada, isinya dikirim sebagai JSON. Bandingkan keempatnya dengan catatan yang Anda buat pada langkah 4 dan 5 Praktik C &mdash; perilakunya sama persis.</p>
+
+      <h3>6.5 Dua kebiasaan aman yang sudah tampak pada kode di atas</h3>
+      <p>Ada dua hal pada kode di atas yang sengaja ditulis dengan cara tertentu, dan alasannya termasuk materi wajib mata kuliah ini. Keduanya dibahas tuntas nanti, tetapi bentuknya perlu Anda kenali sejak sekarang agar tidak terbiasa dengan cara yang salah.</p>
+      <p><strong>Pertama, tanda tanya pada query.</strong> Nilai dari pengguna tidak pernah disambung langsung ke dalam teks query. Yang ditulis adalah tanda tanya sebagai tempat kosong, lalu nilainya diserahkan terpisah dalam kurung siku. Cara ini disebut <em>prepared statement</em> atau <em>parameterized query</em>.</p>
+      <div class="warn">
+        <strong>Bandingkan dengan cara yang salah berikut, dan jangan pernah menulis seperti ini:</strong>
+        <div class="code"><pre>// SALAH: nilai dari pengguna disambung langsung ke dalam query
+db.query('SELECT * FROM buku WHERE id = ' + req.params.id);</pre></div>
+        Pada cara yang salah itu, apa pun yang dikirim pengguna menjadi bagian dari perintah SQL yang dijalankan database. Artinya pengguna dapat menyelipkan perintah tambahan untuk membaca atau menghapus tabel lain. Celah ini disebut <strong>SQL injection</strong>, dan bahasannya ada pada Pertemuan 13. Kebiasaan memakai tanda tanya sebaiknya dibentuk sejak query pertama yang Anda tulis pada Pertemuan 6, bukan ditunda sampai bab keamanan.
+      </div>
+      <p><strong>Kedua, kata sandi database tidak tertulis di dalam kode.</strong> Perhatikan bahwa yang tertulis adalah <code>process.env.DB_PASSWORD</code>, yaitu rujukan ke nilai yang disimpan di luar berkas program, pada sebuah berkas bernama <code>.env</code>. Alasannya sederhana: kode program biasanya ikut terunggah ke tempat berbagi seperti GitHub, sedangkan kata sandi tidak boleh ikut. Cara mengatur berkas <code>.env</code> dibahas pada Pertemuan 11.</p>
+    </section>
+
+    <section class="card">
+      <h2>7. Menghubungkan Teori dan Praktik</h2>
+      <p>Teori dan praktik sering dianggap dua hal yang terpisah. Padahal pada pertemuan ini keduanya berdempetan: setiap gagasan pada Bab 1 sampai 4 punya wujud yang dapat Anda tunjuk pada panel Network.</p>
+      <div class="grid two">
+        <div class="mini">
+          <strong>Teori:</strong> client meminta, server menjawab, dan server tidak pernah memulai.<br/>
+          <strong>Praktik:</strong> setiap baris pada panel Network hanya muncul setelah Anda melakukan sesuatu, tidak pernah dengan sendirinya.
+        </div>
+        <div class="mini">
+          <strong>Teori:</strong> alamat menentukan jawaban yang keluar.<br/>
+          <strong>Praktik:</strong> <code>/posts/1</code> dan <code>/posts/2</code> menghasilkan data yang berbeda dari satu program yang sama.
+        </div>
+        <div class="mini">
+          <strong>Teori:</strong> setiap response membawa kode status.<br/>
+          <strong>Praktik:</strong> kolom Status menunjukkan <code>200</code> untuk data yang ada dan kode lain untuk nomor yang tidak ada.
+        </div>
+        <div class="mini">
+          <strong>Teori:</strong> satu halaman terdiri dari banyak siklus.<br/>
+          <strong>Praktik:</strong> keterangan di bawah panel menyebut puluhan permintaan untuk satu halaman biasa.
+        </div>
+        <div class="mini">
+          <strong>Teori:</strong> jenis isi diberitahukan lewat header, bukan lewat nama berkas.<br/>
+          <strong>Praktik:</strong> <code>Content-Type</code> bernilai <code>text/html</code> pada dokumen dan <code>text/css</code> pada berkas gaya.
+        </div>
+        <div class="mini">
+          <strong>Teori:</strong> HTML dapat disusun oleh program, bukan hanya diambil dari berkas.<br/>
+          <strong>Praktik:</strong> tab Response memperlihatkan teks yang dikirim server, dan pada Bab 6.1 teks itu memang tidak berasal dari berkas mana pun.
+        </div>
+      </div>
+      <p>Dari sini dapat dipahami bahwa praktik yang tampak ringan tadi sesungguhnya sudah memuat konsep besar. Anda bukan hanya diminta membuka panel dan membaca angka, tetapi memahami bahwa di balik setiap baris pada panel itu ada satu program yang menerima pertanyaan, mencari jawabannya, lalu mengirimkannya kembali &mdash; dan mulai pertemuan depan, program itu adalah program Anda sendiri.</p>
+    </section>
+
+    <section class="card">
+      <h2>8. Kedudukan AI di Mata Kuliah Ini</h2>
+      <p>Perkakas AI boleh dipakai di mata kuliah ini, dan tidak ada gunanya berpura-pura sebaliknya. Yang perlu disepakati sejak pertemuan pertama adalah batasnya, sebab sepuluh persen nilai akhir Anda ditentukan oleh kemampuan menjelaskan kode Anda sendiri &mdash; dan bagian itu tidak dapat diwakilkan kepada siapa pun.</p>
+      <div class="grid two">
+        <div class="mini">
+          <div class="label">AI boleh dipakai untuk</div>
+          <ul>
+            <li>Menjelaskan pesan galat yang muncul pada Express.</li>
+            <li>Memberi contoh bentuk route atau middleware.</li>
+            <li>Membantu menyusun query SQL tahap awal.</li>
+            <li>Memberi saran perbaikan struktur pada controller.</li>
+            <li>Membuat draf dokumentasi API.</li>
+          </ul>
+        </div>
+        <div class="mini">
+          <div class="label">Anda tetap harus bisa</div>
+          <ul>
+            <li>Menjelaskan fungsi setiap route pada aplikasi Anda.</li>
+            <li>Menjelaskan query yang Anda jalankan, baris demi baris.</li>
+            <li>Menjelaskan alur login dan session pada sistem Anda.</li>
+            <li>Menunjukkan bagian mana dari hasil AI yang Anda perbaiki, dan mengapa.</li>
+            <li>Menunjukkan potensi bug atau celah keamanan pada kode Anda sendiri.</li>
+          </ul>
+        </div>
+      </div>
+      <p>Dengan kata lain, AI boleh menjadi copilot, tetapi bukan pengganti pemahaman. Perbedaannya akan terasa pada Pertemuan 15, ketika satu pertemuan penuh dipakai khusus untuk mengaudit kode hasil AI, dan pada Pertemuan 16, ketika Anda harus menjawab pertanyaan tentang aplikasi Anda sendiri tanpa bantuan apa pun.</p>
+      <div class="tip">
+        <strong>Cara memakai AI yang menambah pemahaman, bukan menggantikannya.</strong> Mintalah penjelasan lebih dulu, baru kodenya. Setelah menerima kode, jalankan sendiri dan pastikan Anda tahu route mana yang dipanggil ketika sebuah tombol ditekan. Lalu ubah satu bagian dengan sengaja &mdash; misalnya nama route atau nama kolom &mdash; jalankan lagi, dan perhatikan galat apa yang muncul. Kemampuan memperkirakan galat sebelum ia muncul adalah tanda paling jujur bahwa sebuah kode benar-benar Anda pahami.
+      </div>
+      <div class="warn">
+        <strong>Pola yang paling sering terlihat saat viva:</strong> aplikasinya berjalan mulus, tetapi mahasiswanya tidak dapat menunjukkan route mana yang dipanggil ketika tombol simpan ditekan, atau tidak tahu mengapa ada dua berkas yang isinya hampir sama. Itu bukan soal AI-nya, melainkan soal kode yang diterima tanpa pernah dibaca. Cegahlah dengan kebiasaan sederhana: jangan pernah menempelkan kode yang belum Anda baca sampai selesai.
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>9. Persiapan Pertemuan 2</h2>
+      <p>Pertemuan 2 dimulai dengan pemasangan proyek, dan pemasangan itu jauh lebih lancar bila perkakasnya sudah siap sebelum kelas dimulai. Berikut daftar yang perlu ada beserta kapan masing-masing mulai dipakai.</p>
+      <div class="table-scroll" tabindex="0">
+        <table>
+        <thead><tr><th>Perkakas</th><th>Untuk apa</th><th>Mulai dipakai</th></tr></thead>
+        <tbody>
+          <tr><td>Peramban dengan panel pengembang</td><td>Menguji halaman dan menelusuri permintaan</td><td><span class="tag now">Dipakai hari ini</span></td></tr>
+          <tr><td>Node.js versi LTS</td><td>Menjalankan JavaScript di luar browser</td><td><span class="tag">Pertemuan 2</span></td></tr>
+          <tr><td>npm, terpasang otomatis bersama Node.js</td><td>Memasang pustaka seperti Express dan mysql2</td><td><span class="tag">Pertemuan 2</span></td></tr>
+          <tr><td>Editor kode, misalnya Visual Studio Code</td><td>Menulis dan menata berkas proyek</td><td><span class="tag">Pertemuan 2</span></td></tr>
+          <tr><td>MySQL Server beserta kliennya</td><td>Menyimpan data dan menguji query</td><td><span class="tag">Pertemuan 5</span></td></tr>
+        </tbody>
+        </table>
+      </div>
+      <p>Pilih versi Node.js yang bertanda <strong>LTS</strong>, singkatan dari <em>long term support</em>. Versi itu yang paling stabil dan paling cocok untuk perkuliahan. Untuk MySQL, paket seperti XAMPP atau Laragon sudah memuat MySQL beserta phpMyAdmin sekaligus, sehingga cukup memasang satu hal saja; alternatifnya adalah MySQL Server tersendiri dengan klien seperti MySQL Workbench atau DBeaver. Keduanya sama-sama diterima, dan pembahasannya menunggu sampai Pertemuan 5.</p>
+
+      <h3>9.1 Cara memastikan Node.js sudah terpasang</h3>
+      <p>Bila Anda ingin memeriksanya sendiri sebelum pertemuan depan, buka terminal &mdash; pada Windows namanya Command Prompt atau PowerShell, pada Linux dan macOS namanya Terminal &mdash; lalu jalankan dua perintah ini satu per satu:</p>
+      <div class="code"><pre>node -v
+npm -v</pre></div>
+      <p>Bila keduanya menjawab dengan nomor versi, misalnya <code>v22.11.0</code> dan <code>10.9.0</code>, maka perkakasnya sudah siap dan tidak ada lagi yang perlu dilakukan. Bila yang muncul adalah pesan seperti <em>command not found</em> atau <em>bukan merupakan perintah internal atau eksternal</em>, artinya Node.js belum terpasang. Pesan itu bukan galat pada program Anda, melainkan pemberitahuan bahwa perintah bernama <code>node</code> memang belum ada di komputer tersebut.</p>
+      <div class="tip">
+        <strong>Membiasakan diri dengan terminal mulai sekarang akan sangat menolong.</strong> Sepanjang semester ini, terminal adalah tempat Anda menjalankan server, memasang pustaka, dan membaca pesan galat dari sisi server. Tiga perintah dasar sudah mencukupi untuk awal: <code>cd</code> untuk berpindah folder, <code>dir</code> pada Windows atau <code>ls</code> pada Linux dan macOS untuk melihat isi folder, serta <strong>Ctrl+C</strong> untuk menghentikan program yang sedang berjalan. Yang terakhir itu paling sering diperlukan, karena server yang sudah dijalankan akan terus menunggu sampai dihentikan.
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>10. Ringkasan Materi</h2>
+      <ul>
+        <li>Pemrograman Website 1 seluruhnya berjalan di browser pengunjung, sehingga datanya tidak bertahan, tidak dapat dibagi, dan seluruh pemeriksaannya dapat dilewati pengguna. Empat batasan itulah yang menjadi alasan keberadaan mata kuliah ini.</li>
+        <li>Client adalah pihak yang meminta dan server adalah pihak yang menjawab. Server hanyalah program yang berjalan dan menunggu di sebuah port, dan browser tidak pernah berbicara langsung kepada database.</li>
+        <li>Seluruh aplikasi web berdiri di atas satu pola yang berulang: request dari browser, response dari server. Setiap pesan memuat metode, alamat, header, dan badan pesan; setiap jawaban memuat kode status yang menunjukkan hasilnya.</li>
+        <li>HTTP bersifat stateless, artinya server tidak mengingat permintaan sebelumnya. Dari sifat inilah kebutuhan akan cookie dan session pada fitur login berasal.</li>
+        <li>Node.js menjalankan JavaScript di luar browser, Express menerima permintaan dan menentukan jawabannya melalui route, dan MySQL menyimpan data dalam tabel. Ketiganya membentuk tiga lapisan yang menjadi kerangka seluruh mata kuliah.</li>
+        <li>Alur dasar yang perlu dipegang adalah browser &rarr; server &rarr; database &rarr; browser, dengan tujuh langkah pada Bab 4.5. Langkah 3 sampai 6 adalah bagian yang akan Anda tulis sendiri mulai Pertemuan 2.</li>
+      </ul>
+      <p class="footer-note">Fokus Pertemuan 1: review Pemrograman Website 1 dan batasnya, konsep client-server, siklus request-response, peran Express, peran database, serta gambaran arsitektur aplikasi. Pertemuan 2 melanjutkan dengan pemasangan proyek Node.js dan Express, struktur folder, berkas <code>package.json</code>, dan menjalankan server pertama sendiri di <code>localhost</code>.</p>
+    </section>
+
+    <section class="card">
+      <h2>11. Latihan Pemahaman</h2>
+      <h3>11.1 Cek cepat</h3>
+      <p>Lima pertanyaan berikut hanya menguji ingatan dan dapat dijawab dalam satu kalimat. Jawab dulu tanpa membuka materi, baru kemudian cocokkan.</p>
+      <ol class="step">
+        <li>Dalam satu siklus request-response, siapa yang selalu memulai: client atau server?</li>
+        <li>Apa perbedaan pokok antara halaman statis dan aplikasi web dinamis?</li>
+        <li>Metode HTTP mana yang dipakai untuk mengambil data, dan mana untuk mengirim data baru?</li>
+        <li>Kode status <code>4xx</code> dan <code>5xx</code> masing-masing menunjuk masalah di sisi mana?</li>
+        <li>Pada alamat <code>http://localhost:3000/buku</code>, sebutkan mana yang disebut host, mana port, dan mana path.</li>
+      </ol>
+      <details>
+        <summary>Buka kunci jawaban cek cepat</summary>
+        <ol>
+          <li>Client. Server tidak mengirim apa pun sebelum ada yang meminta.</li>
+          <li>Pada halaman statis, HTML sudah ditulis manusia dan dikirim apa adanya. Pada aplikasi dinamis, HTML atau data disusun program saat permintaan datang, sering kali dengan mengambil isinya dari database.</li>
+          <li><code>GET</code> untuk mengambil data, <code>POST</code> untuk mengirim data baru.</li>
+          <li><code>4xx</code> menunjuk masalah pada sisi permintaan, misalnya alamat salah atau belum berhak. <code>5xx</code> menunjuk masalah pada sisi server, yaitu program di dalam route berhenti karena galat.</li>
+          <li>Host adalah <code>localhost</code>, port adalah <code>3000</code>, dan path adalah <code>/buku</code>. Bagian <code>http://</code> adalah protokolnya.</li>
+        </ol>
+      </details>
+
+      <h3>11.2 Pertanyaan reflektif</h3>
+      <ol class="step">
+        <li>Jelaskan dengan kata-kata sendiri apa yang terjadi antara saat Anda menekan sebuah tautan dan saat halaman baru muncul di layar.</li>
+        <li>Mengapa pemeriksaan data tidak boleh hanya dilakukan di browser, meskipun pemeriksaan itu sudah rapi?</li>
+        <li>HTTP disebut stateless. Apa akibatnya bagi fitur login, dan mengapa cookie atau session menjadi diperlukan?</li>
+        <li>Mengapa data aplikasi disimpan di database pada sisi server, bukan di penyimpanan browser?</li>
+        <li>Pada tiga lapisan di Bab 4.4, di lapisan mana pekerjaan Pertemuan 3, Pertemuan 6, dan Pertemuan 14 berada?</li>
+      </ol>
+
+      <h3>11.3 Tugas latihan 1: laporan penelusuran satu siklus request-response</h3>
+      <p>Tugas ini adalah pencatatan hasil praktik pada Bab 5, ditulis sebagai <strong>laporan satu halaman</strong>. Pilih satu situs yang boleh Anda buka bebas, lalu sertakan:</p>
+      <ul>
+        <li>Nama situs yang diamati dan jumlah permintaan yang tercatat untuk satu kali memuat halaman.</li>
+        <li>Sebuah tabel berisi <strong>lima</strong> permintaan dari daftar itu, dengan empat kolom: alamat, metode, kode status, dan <code>Content-Type</code>.</li>
+        <li>Satu tangkapan layar panel Network yang memperlihatkan daftar permintaan tersebut.</li>
+        <li>Satu paragraf singkat yang menjawab: mengapa satu halaman membutuhkan lebih dari satu permintaan?</li>
+        <li>Hasil Praktik C, yaitu nilai <code>title</code> dari <code>/posts/1</code> dan <code>/posts/2</code>, serta kode status yang muncul untuk nomor yang tidak ada.</li>
+      </ul>
+      <details>
+        <summary>Contoh satu baris tabel yang sudah terisi, sebagai acuan bentuk</summary>
+        <div class="table-scroll" tabindex="0">
+          <table>
+          <thead><tr><th>Alamat</th><th>Metode</th><th>Status</th><th>Content-Type</th></tr></thead>
+          <tbody>
+            <tr><td><code>https://contoh.ac.id/</code></td><td><code>GET</code></td><td><code>200</code></td><td><code>text/html; charset=utf-8</code></td></tr>
+            <tr><td><code>https://contoh.ac.id/css/gaya.css</code></td><td><code>GET</code></td><td><code>200</code></td><td><code>text/css</code></td></tr>
+            <tr><td><code>https://contoh.ac.id/img/logo.png</code></td><td><code>GET</code></td><td><code>304</code></td><td><code>image/png</code></td></tr>
+          </tbody>
+          </table>
+        </div>
+        <p>Perhatikan baris ketiga: kode <code>304</code> berarti berkasnya tidak berubah sejak terakhir diminta, sehingga server menyuruh browser memakai simpanannya sendiri. Bila Anda menjumpai kode yang belum dibahas pada Bab 3.3, cukup catat apa adanya dan tuliskan dugaan artinya &mdash; dugaan yang masuk akal tetap bernilai, dan justru pertanyaan semacam itu yang berguna dibawa ke kelas.</p>
+      </details>
+
+      <h3>11.4 Tugas latihan 2: diagram alur dan daftar route awal untuk satu kasus</h3>
+      <p>Pilih <strong>satu</strong> kasus dari daftar proyek akhir pada bagian Peta Perjalanan &mdash; misalnya perpustakaan, inventaris barang, atau pendaftaran kegiatan. Kasus yang Anda pilih di sini tidak mengikat pilihan proyek akhir Anda nanti, tetapi memilih dengan sungguh-sungguh akan menghemat pekerjaan di kemudian hari. Kerjakan dua bagian berikut.</p>
+      <p><strong>Bagian a &mdash; diagram alur satu fitur.</strong> Pilih satu fitur saja, misalnya &ldquo;melihat daftar barang&rdquo;. Gambar perjalanan datanya memakai kotak dan panah saja, tanpa kode. Aturannya dua:</p>
+      <ul>
+        <li><strong>Kotak</strong> mewakili satu tempat: browser, server, atau database. Beri nama yang spesifik, bukan &ldquo;server&rdquo; saja, tetapi misalnya &ldquo;Express, route GET /barang&rdquo;.</li>
+        <li><strong>Panah</strong> mewakili arah perjalanan dan diberi keterangan apa yang dibawanya, misalnya &ldquo;request GET /barang&rdquo; atau &ldquo;12 baris data barang&rdquo;. Panah balik harus digambar, sebab siklusnya memang bolak-balik.</li>
+      </ul>
+      <p><strong>Bagian b &mdash; daftar route awal.</strong> Tuliskan <strong>empat</strong> hal yang dapat dilakukan pengguna pada sistem itu, lalu untuk masing-masing tentukan metode HTTP dan alamat yang menurut Anda tepat. Gunakan Bab 3.2 sebagai acuan. Belum ada tuntutan bahwa jawabannya sempurna; yang dinilai adalah kelayakan pilihan Anda dan alasan di baliknya.</p>
+      <details>
+        <summary>Contoh jawaban lengkap untuk kasus inventaris barang, sebagai acuan bentuk</summary>
+        <p><strong>Bagian a &mdash; fitur &ldquo;melihat daftar barang&rdquo;:</strong></p>
+        <p><code>[Browser]</code> &rarr; <em>request GET /barang</em> &rarr; <code>[Express, route GET /barang]</code> &rarr; <em>query SELECT id, nama, jumlah FROM barang</em> &rarr; <code>[MySQL, tabel barang]</code></p>
+        <p><code>[MySQL, tabel barang]</code> &rarr; <em>12 baris data</em> &rarr; <code>[Express]</code> &rarr; <em>response 200, HTML berisi tabel</em> &rarr; <code>[Browser]</code></p>
+        <p><strong>Bagian b &mdash; empat hal yang dapat dilakukan pengguna:</strong></p>
+        <div class="table-scroll" tabindex="0">
+          <table>
+          <thead><tr><th>Yang dilakukan pengguna</th><th>Metode</th><th>Alamat</th><th>Alasan</th></tr></thead>
+          <tbody>
+            <tr><td>Melihat seluruh barang</td><td><code>GET</code></td><td><code>/barang</code></td><td>Hanya mengambil data, tidak mengubah apa pun</td></tr>
+            <tr><td>Melihat detail satu barang</td><td><code>GET</code></td><td><code>/barang/:id</code></td><td>Tetap mengambil, tetapi perlu penanda barang yang mana</td></tr>
+            <tr><td>Menambah barang baru</td><td><code>POST</code></td><td><code>/barang</code></td><td>Mengirim data baru, isinya dibawa pada badan pesan</td></tr>
+            <tr><td>Menghapus satu barang</td><td><code>DELETE</code></td><td><code>/barang/:id</code></td><td>Menghapus data tertentu, jadi penandanya wajib ada</td></tr>
+          </tbody>
+          </table>
+        </div>
+        <p>Dua hal yang membuat jawaban ini benar: alamat yang menunjuk satu data tertentu selalu memuat penanda seperti <code>:id</code>, dan metode dipilih menurut maksudnya, bukan menurut selera. Perhatikan pula bahwa <code>/barang</code> dipakai dua kali dengan metode yang berbeda, dan itu memang lazim &mdash; alamat yang sama dengan maksud yang berbeda adalah dua route yang berbeda.</p>
+      </details>
+      <div class="warn">
+        <strong>Kesalahan yang paling sering muncul pada bagian a:</strong> menggambar panah dari browser langsung ke database. Browser tidak pernah berbicara kepada database, dan bila panah pada diagram Anda melompati kotak server, hampir pasti ada langkah yang terlewat. Kesalahan kedua yang sering terjadi adalah lupa menggambar panah balik, sehingga diagramnya berhenti di database &mdash; padahal siklus baru selesai ketika jawabannya sampai kembali ke browser.
+      </div>
+      <p>Diagram Anda tidak perlu serapi gambar pada Bab 4.5. Digambar dengan tangan di kertas lalu difoto pun diterima, selama nama kotak dan keterangan panahnya terbaca.</p>
+
+      <h3>11.5 Rubrik penilaian kedua tugas</h3>
+      <p><strong>Tugas latihan 1 &mdash; laporan penelusuran request-response:</strong></p>
+      <div class="table-scroll" tabindex="0">
+        <table>
+        <thead><tr><th>Aspek</th><th>Bobot</th><th>Kriteria nilai penuh</th></tr></thead>
+        <tbody>
+          <tr><td>Kelengkapan data</td><td>30%</td><td>Lima permintaan tercatat dengan keempat kolom terisi, ditambah hasil Praktik C</td></tr>
+          <tr><td>Ketepatan pembacaan</td><td>30%</td><td>Metode, kode status, dan <code>Content-Type</code> sesuai dengan yang benar-benar tampak di panel, bukan hasil menduga</td></tr>
+          <tr><td>Bukti pengamatan</td><td>20%</td><td>Tangkapan layar terbaca dan bersesuaian dengan tabel yang dilaporkan</td></tr>
+          <tr><td>Penjelasan</td><td>20%</td><td>Paragraf penutup benar-benar menjelaskan sebab satu halaman membutuhkan banyak permintaan, ditulis dengan kalimat sendiri</td></tr>
+        </tbody>
+        </table>
+      </div>
+      <p><strong>Tugas latihan 2 &mdash; diagram alur dan daftar route:</strong></p>
+      <div class="table-scroll" tabindex="0">
+        <table>
+        <thead><tr><th>Aspek</th><th>Bobot</th><th>Kriteria nilai penuh</th></tr></thead>
+        <tbody>
+          <tr><td>Kelengkapan kotak dan arah</td><td>30%</td><td>Ketiga tempat muncul sebagai kotak tersendiri, tidak ada lapisan yang dilompati, dan panah baliknya tergambar</td></tr>
+          <tr><td>Keterangan panah</td><td>20%</td><td>Setiap panah menyebutkan apa yang dibawanya, bukan hanya menunjuk arah</td></tr>
+          <tr><td>Ketepatan metode HTTP</td><td>30%</td><td>Keempat metode dipilih sesuai maksudnya, dan alamat yang menunjuk satu data memuat penanda</td></tr>
+          <tr><td>Alasan dan keterbacaan</td><td>20%</td><td>Alasan tiap pilihan masuk akal, dan diagram dapat diikuti tanpa penjelasan tambahan</td></tr>
+        </tbody>
+        </table>
+      </div>
+      <p class="footer-note">Kedua tugas ini tidak menuntut satu baris kode pun, sebab yang dinilai adalah cara berpikir tentang perjalanan data &mdash; kemampuan yang akan dipakai berulang kali sepanjang semester, terutama saat mencari kesalahan. Ingat bahwa tugas mingguan menyumbang 20 persen nilai akhir, jadi tugas sekecil ini pun tetap terhitung.</p>
+    </section>
+
+    <section class="card">
+      <h2>12. Checkpoint Evaluasi Pertemuan 1</h2>
+      <p>Pertemuan 1 dianggap tuntas bila tiga hal berikut sudah dapat Anda lakukan. Ketiganya diperiksa pada 20 menit terakhir pertemuan dan semuanya sudah dibahas di materi ini, jadi daftar ini sekaligus berfungsi sebagai pemeriksaan diri sebelum pertemuan ditutup.</p>
+      <div class="grid two">
+        <div class="mini">
+          <div class="label">Target minimal pertemuan ini</div>
+          <ul>
+            <li>Memahami alur browser &rarr; server &rarr; database &rarr; browser sebagai satu perjalanan bolak-balik.</li>
+            <li>Berhasil menelusuri satu siklus request-response yang sungguhan di panel Network.</li>
+          </ul>
+        </div>
+        <div class="mini">
+          <div class="label">Bobot penilaian yang terkait</div>
+          <ul>
+            <li>Tugas mingguan pada Bab 11, 20 persen dari nilai akhir.</li>
+            <li>Kuis dan praktik singkat, 15 persen dari nilai akhir.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="table-scroll" tabindex="0">
+        <table>
+        <thead><tr><th>Yang diperiksa</th><th>Cara memastikan sendiri</th><th>Bila belum tercapai</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>Dapat menjelaskan alur browser &rarr; server &rarr; database &rarr; browser</td>
+            <td>Tutup materi ini, lalu ceritakan tujuh langkah pada Bab 4.5 dari ingatan memakai satu kasus nyata pilihan Anda.</td>
+            <td>Baca ulang Bab 4.5 beserta gambarnya, lalu ulangi tanpa melihat sampai ketujuh langkahnya utuh.</td>
+          </tr>
+          <tr>
+            <td>Dapat menunjukkan metode, alamat, dan kode status satu permintaan nyata</td>
+            <td>Buka panel Network pada halaman mana pun, klik satu baris, dan tunjuk ketiga hal itu dalam waktu kurang dari satu menit.</td>
+            <td>Ulangi Praktik B pada Bab 5.4, dan periksa daftar gejala pada Bab 5.7 bila panelnya kosong.</td>
+          </tr>
+          <tr>
+            <td>Dapat membedakan pekerjaan di browser dan pekerjaan di server</td>
+            <td>Sebutkan tiga hal yang hanya mungkin dikerjakan server, dan jelaskan mengapa ketiganya tidak dapat dikerjakan di browser.</td>
+            <td>Kembali ke Bab 2.1 dan Bab 2.2, terutama tabel pembagian tugas dan empat alasan di bawahnya.</td>
+          </tr>
+        </tbody>
+        </table>
+      </div>
+      <p class="footer-note">Ketiga butir ini adalah dasar bagi UTS praktik pada Pertemuan 8, yang menguji server Express yang terhubung ke MySQL. Materi Pertemuan 2 sampai 7 dibangun dengan asumsi ketiganya sudah terlewati, sehingga lebih baik menuntaskan bagian yang belum tercapai sekarang daripada menundanya.</p>
+    </section>
+
+    <section class="card">
+      <h2>13. Istilah Kunci Pertemuan 1</h2>
+      <p>Istilah di bawah ini akan dipakai terus-menerus sampai Pertemuan 16. Tidak perlu dihafal kata demi kata, tetapi Anda harus dapat menjelaskan tiap istilah dengan kalimat sendiri, sebab pertanyaan lisan pada checkpoint memakai istilah-istilah ini.</p>
+      <dl class="gloss">
+        <dt>Aplikasi web dinamis</dt>
+        <dd>Aplikasi yang halaman atau datanya disusun oleh program pada saat permintaan datang, umumnya dengan mengambil isinya dari database, sehingga tampilannya berubah mengikuti data tanpa ada berkas HTML yang disunting manusia.</dd>
+        <dt>Client</dt>
+        <dd>Pihak yang meminta. Sepanjang mata kuliah ini client hampir selalu berupa browser, dan client selalu yang memulai satu siklus.</dd>
+        <dt>Server</dt>
+        <dd>Pihak yang menerima permintaan, mengerjakannya, lalu mengirim jawaban. Server tidak pernah mengirim apa pun sebelum diminta.</dd>
+        <dt><code>localhost</code></dt>
+        <dd>Nama khusus yang selalu menunjuk komputer Anda sendiri. Saat pengembangan, server berjalan di komputer Anda dan diakses lewat nama ini, bukan lewat internet.</dd>
+        <dt>Port</dt>
+        <dd>Nomor yang membedakan beberapa program yang sama-sama melayani permintaan pada satu komputer. Server latihan mata kuliah ini memakai port <code>3000</code>.</dd>
+        <dt>Path</dt>
+        <dd>Bagian alamat sesudah host dan port, misalnya <code>/buku</code>. Path inilah yang dicocokkan Express dengan daftar route-nya.</dd>
+        <dt>HTTP</dt>
+        <dd>Aturan bersama yang mengatur bentuk permintaan dan jawaban antara browser dan server, sehingga keduanya saling paham meskipun dibuat oleh pihak yang berbeda.</dd>
+        <dt>Request</dt>
+        <dd>Pesan permintaan dari client, memuat metode, alamat, sekumpulan header, dan pada beberapa metode juga badan pesan.</dd>
+        <dt>Response</dt>
+        <dd>Pesan jawaban dari server, memuat kode status, sekumpulan header, dan biasanya badan pesan berisi HTML, JSON, gambar, atau berkas lain.</dd>
+        <dt>Metode HTTP</dt>
+        <dd>Penanda maksud sebuah permintaan: <code>GET</code> mengambil, <code>POST</code> menambah, <code>PUT</code> atau <code>PATCH</code> mengubah, dan <code>DELETE</code> menghapus.</dd>
+        <dt>Header</dt>
+        <dd>Baris-baris keterangan tambahan pada request atau response, misalnya <code>Content-Type</code> yang memberi tahu jenis isi yang dikirim.</dd>
+        <dt>Badan pesan (body)</dt>
+        <dd>Isi sesungguhnya dari sebuah pesan. Pada response berupa HTML atau data yang diminta, sedangkan pada <code>POST</code> berupa data yang dikirim pengguna.</dd>
+        <dt>Kode status</dt>
+        <dd>Angka tiga digit pada response yang menyatakan hasil permintaan: <code>2xx</code> berhasil, <code>3xx</code> dialihkan, <code>4xx</code> salah di sisi permintaan, dan <code>5xx</code> galat di sisi server.</dd>
+        <dt>Stateless</dt>
+        <dd>Sifat HTTP yang membuat setiap permintaan berdiri sendiri: server tidak dengan sendirinya mengingat permintaan sebelumnya dari pengguna yang sama.</dd>
+        <dt>Cookie</dt>
+        <dd>Data kecil yang disimpan browser atas perintah server dan dikirim ulang pada permintaan berikutnya, sehingga server dapat mengenali pengunjung yang sama.</dd>
+        <dt>Session</dt>
+        <dd>Catatan di sisi server tentang seorang pengguna yang sedang aktif, yang dikaitkan dengan cookie pada browser. Inilah cara fitur login bertahan antarhalaman, dibahas pada Pertemuan 12.</dd>
+        <dt>Node.js</dt>
+        <dd>Lingkungan yang membuat JavaScript dapat dijalankan di luar browser, sehingga bahasa yang sudah Anda kenal dapat dipakai untuk menulis program server.</dd>
+        <dt>npm</dt>
+        <dd>Pengelola paket yang datang bersama Node.js, dipakai untuk memasang pustaka seperti Express dan mysql2 serta mencatatnya pada berkas <code>package.json</code>.</dd>
+        <dt>Express</dt>
+        <dd>Pustaka di atas Node.js yang menyediakan cara ringkas untuk menerima permintaan, mencocokkan alamat dengan route, dan menyusun jawaban.</dd>
+        <dt>Route</dt>
+        <dd>Pasangan metode dan path beserta fungsi yang menanganinya, misalnya <code>app.get('/buku', ...)</code>. Satu path yang sama dengan metode berbeda adalah dua route yang berbeda.</dd>
+        <dt>Middleware</dt>
+        <dd>Fungsi yang dijalankan di antara masuknya permintaan dan dijalankannya route, misalnya untuk membaca data formulir atau memeriksa apakah pengguna sudah login. Dibahas pada Pertemuan 4.</dd>
+        <dt>MySQL</dt>
+        <dd>Sistem pengelola database relasional yang dipakai mata kuliah ini untuk menyimpan data secara tahan lama dalam bentuk tabel.</dd>
+        <dt>Tabel, baris, kolom</dt>
+        <dd>Susunan data pada database relasional: tabel adalah kumpulan data sejenis, satu baris adalah satu data, dan kolom adalah jenis keterangan yang dicatat untuk setiap baris.</dd>
+        <dt>SQL</dt>
+        <dd>Bahasa untuk berbicara kepada database, misalnya <code>SELECT</code> untuk mengambil dan <code>INSERT</code> untuk menambah data. Mata kuliah ini memakai SQL langsung sebelum mengenal ORM.</dd>
+        <dt>Query</dt>
+        <dd>Satu perintah SQL yang dikirim server kepada database beserta hasil yang dikembalikannya.</dd>
+        <dt>CRUD</dt>
+        <dd>Singkatan dari <em>create</em>, <em>read</em>, <em>update</em>, dan <em>delete</em>, yaitu empat perlakuan dasar terhadap data yang menjadi kerangka hampir semua aplikasi.</dd>
+        <dt>API</dt>
+        <dd>Alamat yang menjawab dengan data, bukan dengan halaman siap tampil. Praktik C memakai API publik untuk melihat bentuk jawaban semacam ini.</dd>
+        <dt>JSON</dt>
+        <dd>Format penulisan data berbasis teks yang menyerupai objek JavaScript, dipakai luas sebagai isi jawaban API. Dihasilkan oleh <code>res.json()</code>.</dd>
+        <dt>DevTools</dt>
+        <dd>Perangkat bawaan browser untuk memeriksa halaman dan lalu lintas jaringan. Panel Network di dalamnya adalah alat utama praktik hari ini.</dd>
+        <dt>Prepared statement</dt>
+        <dd>Cara menjalankan query dengan menaruh tanda <code>?</code> pada tempat nilai, lalu menyerahkan nilainya secara terpisah, sehingga masukan pengguna tidak pernah ikut dibaca sebagai perintah SQL.</dd>
+        <dt>SQL injection</dt>
+        <dd>Serangan yang memanfaatkan penyambungan masukan pengguna langsung ke dalam teks query, sehingga masukan itu berubah menjadi perintah. Dicegah dengan prepared statement, dibahas pada Pertemuan 13.</dd>
+        <dt>Berkas <code>.env</code></dt>
+        <dd>Berkas terpisah tempat menyimpan keterangan rahasia seperti kata sandi database, dibaca program melalui <code>process.env</code> dan tidak diikutsertakan saat kode dibagikan. Dibahas pada Pertemuan 11.</dd>
+      </dl>
+      <div class="tip">
+        <strong>Cara memakai daftar ini.</strong> Tutup kolom penjelasannya, lalu jelaskan sendiri setiap istilah dengan satu kalimat. Istilah yang membuat Anda tersendat menandakan bab mana yang perlu dibaca ulang &mdash; itu jauh lebih hemat waktu daripada membaca seluruh materi dari awal.
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>14. Referensi Praktis</h2>
+      <p>Empat sumber berikut adalah rujukan resmi untuk materi Pertemuan 1. Semuanya berbahasa Inggris, tetapi bagian yang perlu dibaca hari ini pendek dan banyak memakai gambar. Bacalah setelah praktik selesai, bukan sebelum, agar istilah di dalamnya sudah punya bentuk nyata di kepala Anda.</p>
+      <dl class="gloss">
+        <dt>MDN Web Docs &mdash; <code>developer.mozilla.org</code></dt>
+        <dd>Rujukan paling lengkap dan paling dapat dipercaya tentang cara kerja web. Yang relevan sekarang hanya dua bacaan pengantar: <em>How the web works</em> dan <em>An overview of HTTP</em>. Bagian daftar metode dan daftar kode status di dalamnya berguna dibuka kembali sepanjang semester, terutama saat mengerjakan Bab 3.2 dan 3.3.</dd>
+        <dt>Express &mdash; <code>expressjs.com</code></dt>
+        <dd>Dokumentasi resmi pustaka yang dipakai mulai Pertemuan 2. Bagian <em>Hello world</em> memuat program yang sama dengan kode pada Bab 6.1, dan bagian <em>Basic routing</em> menjelaskan pencocokan metode dan path. Abaikan dulu bagian lain, karena banyak di antaranya baru masuk akal setelah Pertemuan 4.</dd>
+        <dt>Node.js &mdash; <code>nodejs.org</code></dt>
+        <dd>Tempat mengunduh Node.js untuk persiapan Pertemuan 2. Pilih versi yang bertanda LTS, sebab versi itulah yang paling stabil dan paling cocok dipakai bersama-sama satu kelas. Halaman <em>About</em> di situs ini juga menjelaskan singkat mengapa JavaScript dapat berjalan di luar browser.</dd>
+        <dt>MySQL Documentation &mdash; <code>dev.mysql.com</code></dt>
+        <dd>Rujukan resmi database yang akan dipakai mulai Pertemuan 5. Untuk sekarang cukup lihat bagian pengantar tentang apa itu database relasional dan bentuk perintah <code>SELECT</code>, sekadar untuk mengenali bahwa SQL adalah bahasa tersendiri, bukan bagian dari JavaScript.</dd>
+      </dl>
+      <div class="tip">
+        <strong>Cara membaca dokumentasi teknis tanpa kewalahan.</strong> Jangan dibaca dari awal sampai akhir. Bawa satu pertanyaan spesifik, misalnya &ldquo;kode status apa yang tepat untuk data yang tidak ditemukan&rdquo;, lalu cari jawaban itu saja. Dokumentasi dirancang sebagai tempat mencari, bukan sebagai buku bacaan. Kebiasaan ini juga membuat Anda tidak bergantung pada AI untuk hal-hal yang sebenarnya sudah tertulis jelas di sumber resminya.
+      </div>
+      <p class="footer-note">Alamat di atas ditulis sebagai nama domain, bukan tautan langsung ke halaman tertentu, karena struktur halaman situs semacam ini berubah dari waktu ke waktu. Cari judul yang disebutkan di atas dari halaman utama masing-masing situs.</p>
+    </section>
+    <footer class="pagenum">
+      <span class="pagenum-seri">Materi Pertemuan 1</span>
+      <span class="pagenum-no">Halaman 1 dari 16</span>
+    </footer>
+  </div>
+</body>
+</html>
