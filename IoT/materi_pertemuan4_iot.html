@@ -343,14 +343,14 @@ void loop() {
 
     <section class="card">
       <h2>6. Praktik Terpandu: Buzzer, Servo, dan Relay Virtual</h2>
-      <p>Praktik pertemuan ini dikerjakan di simulator <strong>Wokwi</strong>, jadi tidak ada perangkat fisik yang perlu disiapkan. Praktiknya tiga dan saling bertumpuk: buzzer, lalu servo sehingga portal otomatis pada Bab 4 terbentuk seutuhnya, lalu relay virtual sebagai keluaran saklar. Kodenya memakai contoh pada Bab 5 dan tidak ditulis ulang di sini.</p>
+      <p>Praktik pertemuan ini dikerjakan di simulator <strong>Wokwi</strong>, jadi tidak ada perangkat fisik yang perlu disiapkan. Praktiknya tiga dan saling bertumpuk: buzzer, lalu servo sehingga portal otomatis pada Bab 4 terbentuk seutuhnya, lalu relay virtual sebagai keluaran saklar. Kode program setiap praktik disediakan langsung di bawah rangkaiannya, mengikuti komponen yang benar-benar terpasang pada praktik itu, sedangkan penjelasan baris per barisnya ada pada Bab 5.</p>
 
       <h3>6.1 Menyiapkan lingkungan kerja di simulator</h3>
       <ol class="step">
         <li>Buka <strong>wokwi.com</strong>, pilih <strong>New Project</strong>, lalu pilih board <strong>ESP32</strong>. Simulator berjalan di browser, tidak ada yang perlu diinstal.</li>
         <li>Kenali empat bagian: <strong>panel kode</strong> berisi <code>sketch.ino</code>, <strong>panel rangkaian</strong> di sisi kanan, tab <code>diagram.json</code> di atasnya, dan <strong>tombol jalankan</strong> segitiga hijau.</li>
         <li>Tekan tanda tambah (<strong>+</strong>) pada panel rangkaian untuk mengambil komponen. Untuk menyambung dua kaki, klik kaki pertama lalu kaki kedua.</li>
-        <li>Tambahkan pustaka sekali saja: buka tab <strong>Library Manager</strong>, tekan tombol tambah, lalu pilih <strong>ESP32Servo</strong> yang diperlukan baris <code>#include &lt;ESP32Servo.h&gt;</code> pada kode Bab 5.</li>
+        <li>Tambahkan pustaka sekali saja: buka tab <strong>Library Manager</strong>, tekan tombol tambah, lalu pilih <strong>ESP32Servo</strong> yang diperlukan baris <code>#include &lt;ESP32Servo.h&gt;</code> pada kode Bab 5. Pustaka ini baru terpakai mulai Praktik 2, tetapi memasangnya sekarang menghemat satu langkah nanti.</li>
       </ol>
       <div class="warn">
         <strong>Project baru hanya berisi board.</strong> Bila kode Bab 5 dijalankan pada project yang rangkaiannya kosong, GPIO 2 dan GPIO 18 tetap berganti keadaan tetapi tidak ada bunyi maupun gerakan, sehingga kode yang benar mudah dikira salah. Pasang rangkaian lebih dahulu.
@@ -409,11 +409,33 @@ void loop() {
   ]
 }</pre></div>
       </details>
+
+      <p><strong>Kode program Praktik 1.</strong> Hapus seluruh isi panel kode pada tab <code>sketch.ino</code>, lalu tempelkan kode di bawah secara utuh. Kode ini adalah contoh Bab 5 tanpa bagian servo, karena pada praktik ini yang terpasang baru tombol dan buzzer; pustaka <strong>ESP32Servo</strong> belum diperlukan. Pinnya mengikuti tabel Bagian 6.1, yaitu GPIO 15 untuk tombol dan GPIO 2 untuk buzzer.</p>
+      <div class="code"><pre>const int sensorPin = 15;
+const int buzzerPin = 2;
+
+void setup() {
+  pinMode(sensorPin, INPUT);
+  pinMode(buzzerPin, OUTPUT);
+}
+
+void loop() {
+  int sensorState = digitalRead(sensorPin);
+
+  if (sensorState == HIGH) {
+    digitalWrite(buzzerPin, HIGH);
+  } else {
+    digitalWrite(buzzerPin, LOW);
+  }
+
+  delay(200);
+}</pre></div>
+
       <ol class="step">
         <li>Buat project ESP32 baru, lalu pasang rangkaian seperti gambar di atas atau tempelkan <code>diagram.json</code> tadi.</li>
-        <li>Hapus seluruh isi panel kode, lalu tempelkan contoh kode Bab 5 apa adanya.</li>
+        <li>Hapus seluruh isi panel kode, lalu tempelkan kode program di atas apa adanya.</li>
         <li>Pastikan angka pada <code>sensorPin</code> dan <code>buzzerPin</code> sama dengan pin yang tersambung, yaitu 15 dan 2.</li>
-        <li>Tekan tombol jalankan, lalu tahan klik tetikus pada gambar tombol beberapa saat dan lepaskan. Amati kapan buzzer berbunyi dan kapan berhenti. Servo belum dipasang, jadi barisnya belum berpengaruh.</li>
+        <li>Tekan tombol jalankan, lalu tahan klik tetikus pada gambar tombol beberapa saat dan lepaskan. Amati kapan buzzer berbunyi dan kapan berhenti.</li>
         <li>Sebagai variasi, ubah <code>if (sensorState == HIGH)</code> menjadi <code>if (sensorState == LOW)</code>, jalankan kembali, lalu bandingkan hasilnya dengan pengamatan tadi dan kembalikan ke <code>HIGH</code>.</li>
       </ol>
       <p><strong>Hasil yang harus terlihat:</strong> buzzer diam selama tombol tidak ditekan, berbunyi terus-menerus selama klik ditahan, lalu diam begitu klik dilepaskan; tanda gelombang bunyi muncul di sekitar gambar buzzer sehingga keaktifannya terlihat walaupun suara browser dimatikan. Setelah kondisi diubah menjadi <code>LOW</code>, urutannya terbalik, dan itulah bukti bahwa bunyi ditentukan oleh kondisi di dalam <code>if</code>.</p>
@@ -464,10 +486,41 @@ void loop() {
   ]
 }</pre></div>
       </details>
+
+      <p><strong>Kode program Praktik 2.</strong> Ganti seluruh isi panel kode dengan kode di bawah. Isinya kode Praktik 1 ditambah tiga bagian servo: baris <code>#include</code>, objek <code>portalServo</code> beserta <code>attach()</code> di <code>setup()</code>, dan satu <code>portalServo.write()</code> pada masing-masing cabang <code>if-else</code>. Inilah contoh utuh yang dibahas baris per baris pada Bab 5.2, dan baris <code>#include</code> itulah yang memerlukan pustaka <strong>ESP32Servo</strong> dari Bagian 6.1.</p>
+      <div class="code"><pre>#include &lt;ESP32Servo.h&gt;
+
+const int sensorPin = 15;
+const int buzzerPin = 2;
+const int servoPin = 18;
+
+Servo portalServo;
+
+void setup() {
+  pinMode(sensorPin, INPUT);
+  pinMode(buzzerPin, OUTPUT);
+  portalServo.attach(servoPin);
+  portalServo.write(0);
+}
+
+void loop() {
+  int sensorState = digitalRead(sensorPin);
+
+  if (sensorState == HIGH) {
+    digitalWrite(buzzerPin, HIGH);
+    portalServo.write(90);
+  } else {
+    digitalWrite(buzzerPin, LOW);
+    portalServo.write(0);
+  }
+
+  delay(200);
+}</pre></div>
+
       <ol class="step">
         <li>Buka project Praktik 1, lalu tambahkan satu servo.</li>
         <li>Sambungkan kaki PWM ke <strong>GPIO 18</strong>, kaki V+ ke <strong>5V</strong>, dan kaki GND ke <strong>GND</strong>.</li>
-        <li>Pastikan kode Bab 5 masih utuh dan angka pada <code>servoPin</code> sama dengan pin kaki PWM, yaitu 18.</li>
+        <li>Tempelkan kode program di atas, lalu pastikan angka pada <code>servoPin</code> sama dengan pin kaki PWM, yaitu 18.</li>
         <li>Jalankan simulasi, catat posisi awal lengan servo, lalu tahan klik tetikus pada gambar tombol dan amati lengan servo bersama buzzer. Lepaskan klik dan amati sekali lagi.</li>
         <li>Sebagai variasi, ubah <code>portalServo.write(90)</code> menjadi <code>portalServo.write(45)</code>, jalankan kembali, lalu bandingkan seberapa jauh lengan berputar.</li>
       </ol>
@@ -520,10 +573,41 @@ void loop() {
   ]
 }</pre></div>
       </details>
+
+      <p><strong>Kode program Praktik 3.</strong> Ganti seluruh isi panel kode dengan kode di bawah. Isinya kode Praktik 2 dengan <code>buzzerPin</code> diganti <code>relayPin</code> pada ketiga barisnya, sesuai potongan Bab 5.4. Nomor pinnya tetap 2 dan susunan <code>if-else</code>-nya tidak berubah sedikit pun, karena yang ditukar hanya aktuator yang tersambung di GPIO 2.</p>
+      <div class="code"><pre>#include &lt;ESP32Servo.h&gt;
+
+const int sensorPin = 15;
+const int relayPin = 2;
+const int servoPin = 18;
+
+Servo portalServo;
+
+void setup() {
+  pinMode(sensorPin, INPUT);
+  pinMode(relayPin, OUTPUT);
+  portalServo.attach(servoPin);
+  portalServo.write(0);
+}
+
+void loop() {
+  int sensorState = digitalRead(sensorPin);
+
+  if (sensorState == HIGH) {
+    digitalWrite(relayPin, HIGH);
+    portalServo.write(90);
+  } else {
+    digitalWrite(relayPin, LOW);
+    portalServo.write(0);
+  }
+
+  delay(200);
+}</pre></div>
+
       <ol class="step">
         <li>Buka project Praktik 2, hapus kedua sambungan buzzer, lalu keluarkan buzzernya dari area rangkaian.</li>
         <li>Tambahkan satu modul relay, lalu sambungkan kaki IN ke <strong>GPIO 2</strong>, kaki VCC ke <strong>5V</strong>, dan kaki GND ke <strong>GND</strong>.</li>
-        <li>Pada panel kode, ganti <code>buzzerPin</code> menjadi <code>relayPin</code> di ketiga barisnya seperti potongan Bab 5.4. Nilainya tetap 2.</li>
+        <li>Tempelkan kode program di atas, atau ubah sendiri kode Praktik 2 dengan mengganti <code>buzzerPin</code> menjadi <code>relayPin</code> di ketiga barisnya seperti potongan Bab 5.4. Nilainya tetap 2.</li>
         <li>Jalankan simulasi, tahan klik tetikus pada gambar tombol dan amati modul relay serta lengan servo bersamaan, lalu lepaskan dan perhatikan apakah keduanya kembali ke keadaan awal.</li>
         <li>Sebagai variasi, ubah <code>delay(200)</code> pada akhir <code>loop()</code> menjadi <code>delay(2000)</code>, jalankan kembali, lalu bandingkan seberapa cepat relay merespons tombol.</li>
       </ol>

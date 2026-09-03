@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Materi Pertemuan 2 - Setup Proyek Node.js dan Express</title>
+  <link rel="stylesheet" href="assets/materi.css" />
+</head>
+<body>
+  <div class="wrap">
+    <section class="hero">
+      <span class="badge">Pertemuan 2</span>
+      <h1>Setup Proyek Node.js dan Express: Server Pertama di localhost</h1>
+      <p class="lead">Materi ini membahas pemasangan Node.js, inisialisasi proyek dengan npm, isi berkas <code>package.json</code>, pemasangan Express, struktur folder yang akan dituju, penulisan server pertama, serta routing dasar. Pada akhir pertemuan, sebuah server Express milik Anda sendiri sudah berjalan di <code>localhost</code> dan dapat dibuka dari browser.</p>
+      <div>
+        <span class="pill">Node.js</span><span class="pill">npm</span><span class="pill">package.json</span><span class="pill">Express</span><span class="pill">Struktur Folder</span><span class="pill">Routing Dasar</span><span class="pill">nodemon</span>
+      </div>
+      <div class="notice">
+        <strong>Berbeda dari Pertemuan 1, hari ini ada yang perlu dipasang.</strong> Node.js harus terpasang di komputer Anda sebelum praktik dimulai, dan pekerjaan hari ini banyak dilakukan di terminal, bukan hanya di browser. Bila Node.js belum terpasang, kerjakan Bab 2 lebih dahulu &mdash; bab-bab sesudahnya tidak dapat dijalankan tanpa itu. Database belum diperlukan hari ini; MySQL baru masuk pada Pertemuan 5.
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Capaian Pembelajaran Pertemuan 2</h2>
+      <div class="grid two">
+        <div class="mini">
+          <div class="label">Yang dipahami</div>
+          <ul>
+            <li>Peran Node.js sebagai lingkungan yang menjalankan JavaScript di luar browser.</li>
+            <li>Fungsi npm sebagai pengelola paket dan makna isi berkas <code>package.json</code>.</li>
+            <li>Kedudukan Express sebagai pustaka di atas Node.js, bukan sebagai pengganti Node.js.</li>
+            <li>Alasan sebuah proyek disusun dalam struktur folder tertentu, dan mengapa hari ini strukturnya masih sengaja dibuat sederhana.</li>
+            <li>Anatomi satu route: metode, path, dan fungsi penanganannya.</li>
+          </ul>
+        </div>
+        <div class="mini">
+          <div class="label">Yang dapat dilakukan</div>
+          <ul>
+            <li>Memasang Node.js dan memastikan pemasangannya berhasil melalui terminal.</li>
+            <li>Membuat proyek baru dengan <code>npm init</code> dan memasang Express dengan <code>npm install</code>.</li>
+            <li>Menulis dan menjalankan server Express pertama, lalu membukanya di <code>localhost</code>.</li>
+            <li>Membuat beberapa route dengan jawaban yang berbeda, termasuk penanganan alamat yang tidak dikenal.</li>
+            <li>Membaca pesan kesalahan di terminal dan menentukan sendiri langkah perbaikannya.</li>
+          </ul>
+        </div>
+      </div>
+      <p class="footer-note">Target pertemuan ini menurut roadmap mata kuliah: <strong>server Express sederhana berjalan di localhost</strong>. Semua bab di bawah disusun untuk sampai ke satu hasil itu.</p>
+    </section>
+
+    <section class="card">
+      <h2>1. Dari Konsep ke Alat: Apa yang Dipasang Hari Ini dan Mengapa</h2>
+      <p>Pertemuan 1 berhenti pada gambar tiga lapisan: browser, server, dan database. Sepanjang pertemuan itu Anda hanya mengamati lapisan pertama dari luar, memakai panel Network. Hari ini Anda mulai membangun lapisan kedua, yaitu servernya sendiri. Lapisan ketiga masih dibiarkan kosong sampai Pertemuan 5.</p>
+      <div class="svgbox" tabindex="0">
+        <svg viewBox="0 0 820 220" width="100%" role="img" aria-label="Tiga lapisan aplikasi web: lapisan browser sudah dikenal pada Pertemuan 1, lapisan server dibangun pada Pertemuan 2, dan lapisan database baru dimulai pada Pertemuan 5">
+          <rect x="30" y="30" width="230" height="150" rx="14" fill="#eef2ff" stroke="#4f46e5" stroke-width="2"/>
+          <text x="145" y="70" text-anchor="middle" font-size="20" font-weight="700">Browser</text>
+          <text x="145" y="100" text-anchor="middle" font-size="14" fill="#374151">HTML, CSS, JavaScript</text>
+          <text x="145" y="124" text-anchor="middle" font-size="14" fill="#374151">panel Network</text>
+          <text x="145" y="156" text-anchor="middle" font-size="14" font-weight="700" fill="#4f46e5">sudah dikenal (P1)</text>
+
+          <rect x="295" y="30" width="230" height="150" rx="14" fill="#dcfce7" stroke="#15803d" stroke-width="3"/>
+          <text x="410" y="70" text-anchor="middle" font-size="20" font-weight="700">Server</text>
+          <text x="410" y="100" text-anchor="middle" font-size="14" fill="#374151">Node.js + Express</text>
+          <text x="410" y="124" text-anchor="middle" font-size="14" fill="#374151">route dan response</text>
+          <text x="410" y="156" text-anchor="middle" font-size="14" font-weight="700" fill="#15803d">dibangun hari ini (P2)</text>
+
+          <rect x="560" y="30" width="230" height="150" rx="14" fill="#f3f4f6" stroke="#9ca3af" stroke-width="2" stroke-dasharray="7 5"/>
+          <text x="675" y="70" text-anchor="middle" font-size="20" font-weight="700" fill="#6b7280">Database</text>
+          <text x="675" y="100" text-anchor="middle" font-size="14" fill="#6b7280">MySQL, tabel dan query</text>
+          <text x="675" y="124" text-anchor="middle" font-size="14" fill="#6b7280">belum dipakai</text>
+          <text x="675" y="156" text-anchor="middle" font-size="14" font-weight="700" fill="#6b7280">mulai Pertemuan 5</text>
+        </svg>
+      </div>
+      <p>Karena itu, semua yang dipasang hari ini adalah perlengkapan untuk kotak tengah. Tiga nama berikut sering tertukar di awal, padahal ketiganya berbeda tingkatan, jadi bedakan sejak sekarang.</p>
+
+      <h3>1.1 Node.js: mesin yang menjalankan JavaScript di luar browser</h3>
+      <p>Selama Pemrograman Website 1, JavaScript Anda selalu dijalankan oleh browser. Node.js membuat JavaScript dapat dijalankan langsung oleh sistem operasi, tanpa browser sama sekali. Dengan begitu bahasa yang sudah Anda kuasai dapat dipakai untuk menulis program yang membuka port, menerima permintaan, membaca berkas, dan nanti berbicara kepada database &mdash; pekerjaan yang tidak boleh dan tidak dapat dilakukan JavaScript di dalam browser.</p>
+      <p>Node.js adalah <em>satu-satunya</em> dari tiga hal ini yang benar-benar dipasang ke komputer sebagai program. Dua lainnya datang menyertainya atau diunduh ke dalam folder proyek.</p>
+
+      <h3>1.2 npm: pengelola paket yang datang bersama Node.js</h3>
+      <p>npm dipasang otomatis saat Node.js dipasang, jadi Anda tidak perlu mengunduhnya sendiri. Tugasnya dua: mengunduh pustaka buatan orang lain ke dalam proyek Anda, dan mencatat pustaka apa saja yang dipakai beserta versinya. Catatan itulah yang membuat proyek Anda dapat dijalankan ulang di komputer lain tanpa perlu menebak-nebak apa yang harus dipasang.</p>
+
+      <h3>1.3 Express: pustaka yang membuat penulisan server menjadi ringkas</h3>
+      <p>Node.js sendiri sudah mampu melayani permintaan HTTP, tetapi kodenya panjang dan banyak pekerjaan berulang yang harus Anda tangani sendiri, misalnya membaca alamat yang diminta lalu mencocokkannya satu per satu. Express adalah pustaka di atas Node.js yang menyediakan cara ringkas untuk itu: satu baris <code>app.get('/buku', ...)</code> menggantikan belasan baris pemeriksaan manual.</p>
+      <div class="analogy">
+        <strong>Analogi:</strong> Node.js adalah mesin dan roda sebuah mobil, Express adalah kemudi dan pedalnya. Tanpa kemudi mobil itu tetap dapat berjalan, tetapi Anda harus menggerakkan rodanya langsung dengan tangan. Express tidak menambah tenaga apa pun; ia hanya membuat tenaga yang sudah ada menjadi mudah diarahkan.
+      </div>
+      <div class="table-scroll" tabindex="0">
+        <table>
+        <thead><tr><th>Alat</th><th>Perannya</th><th>Dipasang ke mana</th><th>Cara memeriksa</th></tr></thead>
+        <tbody>
+          <tr><td>Node.js</td><td>Menjalankan JavaScript di luar browser</td><td>Ke sistem operasi, satu kali untuk semua proyek</td><td><code>node -v</code></td></tr>
+          <tr><td>npm</td><td>Mengunduh dan mencatat pustaka</td><td>Ikut terpasang bersama Node.js</td><td><code>npm -v</code></td></tr>
+          <tr><td>Express</td><td>Menyederhanakan penulisan route dan response</td><td>Ke dalam folder proyek, terpisah untuk setiap proyek</td><td>Muncul di <code>package.json</code></td></tr>
+          <tr><td>nodemon</td><td>Menjalankan ulang server otomatis saat kode disimpan</td><td>Ke dalam folder proyek, hanya untuk pengembangan</td><td>Muncul di <code>devDependencies</code></td></tr>
+        </tbody>
+        </table>
+      </div>
+      <div class="tip">
+        <strong>Mengapa Express dipasang per proyek, bukan sekali untuk seluruh komputer?</strong> Karena setiap proyek boleh memakai versi yang berbeda. Proyek kuliah Anda tahun ini dapat memakai Express versi tertentu, sementara proyek lain memakai versi lain, tanpa keduanya saling mengganggu. Inilah sebabnya setiap proyek memiliki folder <code>node_modules</code> sendiri, seperti dijelaskan pada Bab 3.5.
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>2. Memasang Node.js dan Memeriksa Hasilnya</h2>
+      <p>Bab ini dikerjakan lebih dahulu bila Node.js belum ada di komputer Anda. Bila sudah ada, lompati langsung ke Bab 2.3 untuk memastikan versinya memadai.</p>
+
+      <h3>2.1 Mengunduh dan memasang</h3>
+      <ol class="step">
+        <li>Buka <strong>nodejs.org</strong> dari browser.</li>
+        <li>Pilih berkas unduhan yang bertanda <strong>LTS</strong>, bukan <em>Current</em>. LTS berarti <em>long term support</em>, yaitu versi yang paling stabil dan paling lama didukung. Versi <em>Current</em> memuat fitur terbaru, tetapi juga perubahan yang belum tentu didukung semua pustaka.</li>
+        <li>Jalankan pemasangnya dan terima pilihan bawaan. Tidak ada pilihan yang perlu diubah, dan npm sudah termasuk di dalamnya sehingga tidak perlu diunduh terpisah.</li>
+        <li>Pada Windows, biarkan pilihan yang menambahkan Node.js ke <em>PATH</em> tetap tercentang. Pilihan itulah yang membuat perintah <code>node</code> dapat dipanggil dari terminal mana pun.</li>
+        <li>Setelah pemasangan selesai, <strong>tutup semua terminal yang sedang terbuka</strong> lalu buka yang baru. Terminal hanya membaca daftar PATH saat pertama dibuka, sehingga terminal lama tidak akan mengenali perintah <code>node</code> meskipun pemasangannya sudah berhasil.</li>
+      </ol>
+      <div class="tip">
+        <strong>Satu kelas sebaiknya memakai versi mayor yang sama.</strong> Bila teman Anda memakai versi LTS yang sama, pesan kesalahan yang muncul juga serupa, sehingga saling membantu menjadi jauh lebih mudah. Catat angka versi Anda pada laporan tugas Bab 11.
+      </div>
+
+      <h3>2.2 Membuka terminal</h3>
+      <p>Terminal adalah jendela tempat perintah diketik. Sepanjang mata kuliah ini terminal dipakai untuk memasang pustaka, menjalankan server, dan membaca pesan kesalahan &mdash; jadi kebiasaan memakainya perlu dibentuk sejak hari ini.</p>
+      <div class="table-scroll" tabindex="0">
+        <table>
+        <thead><tr><th>Sistem operasi</th><th>Cara membuka</th><th>Nama yang muncul</th></tr></thead>
+        <tbody>
+          <tr><td>Windows</td><td>Tekan tombol Windows, ketik <code>powershell</code>, lalu Enter. Dapat juga melalui klik kanan di dalam folder proyek dan memilih <em>Open in Terminal</em>.</td><td>PowerShell atau Command Prompt</td></tr>
+          <tr><td>macOS</td><td>Tekan Cmd + Spasi, ketik <code>terminal</code>, lalu Enter.</td><td>Terminal</td></tr>
+          <tr><td>Linux</td><td>Tekan Ctrl + Alt + T, atau cari <em>Terminal</em> dari menu aplikasi.</td><td>Terminal</td></tr>
+        </tbody>
+        </table>
+      </div>
+      <p>Bila Anda memakai VS Code, terminal juga tersedia di dalamnya melalui menu <em>Terminal</em> lalu <em>New Terminal</em>, atau Ctrl + <code>`</code>. Cara ini paling praktis karena terminalnya otomatis berada di folder proyek yang sedang dibuka.</p>
+
+      <h3>2.3 Memeriksa hasil pemasangan</h3>
+      <p>Ketik dua perintah berikut satu per satu, masing-masing diakhiri Enter.</p>
+      <div class="code"><pre>node -v
+npm -v</pre></div>
+      <p>Keluaran yang benar berupa dua angka versi, misalnya seperti ini. Angka pada komputer Anda boleh berbeda, yang penting keduanya muncul.</p>
+      <div class="code"><pre>v22.14.0
+10.9.2</pre></div>
+      <p>Perhatikan bahwa versi npm selalu jauh lebih kecil daripada versi Node.js. Keduanya program yang berbeda dengan penomoran sendiri, jadi perbedaan itu normal dan bukan tanda ada yang salah.</p>
+
+      <h3>2.4 Perintah terminal minimum yang harus Anda kuasai hari ini</h3>
+      <p>Hanya lima hal berikut yang diperlukan sepanjang mata kuliah ini. Selebihnya dapat dipelajari saat dibutuhkan.</p>
+      <div class="table-scroll" tabindex="0">
+        <table>
+        <thead><tr><th>Perintah</th><th>Kegunaan</th><th>Catatan</th></tr></thead>
+        <tbody>
+          <tr><td><code>cd nama-folder</code></td><td>Masuk ke sebuah folder</td><td><code>cd ..</code> berarti keluar satu tingkat ke folder induk</td></tr>
+          <tr><td><code>mkdir nama-folder</code></td><td>Membuat folder baru</td><td>Sama pada ketiga sistem operasi</td></tr>
+          <tr><td><code>ls</code> atau <code>dir</code></td><td>Melihat isi folder yang sedang aktif</td><td><code>ls</code> pada macOS dan Linux, <code>dir</code> pada Command Prompt Windows; PowerShell menerima keduanya</td></tr>
+          <tr><td><code>Ctrl + C</code></td><td>Menghentikan program yang sedang berjalan</td><td>Ini cara menghentikan server, dibahas pada Bab 5.5</td></tr>
+          <tr><td>Tombol Tab</td><td>Melengkapi nama berkas atau folder secara otomatis</td><td>Menghindarkan salah ketik nama; biasakan memakainya</td></tr>
+        </tbody>
+        </table>
+      </div>
+      <div class="warn">
+        <strong>Perhatikan folder yang sedang aktif.</strong> Terminal selalu menjalankan perintah pada folder yang sedang aktif, yang namanya tertulis di kiri tempat Anda mengetik. Sebagian besar kegagalan pada praktik hari ini bukan disebabkan kode yang salah, melainkan perintah yang dijalankan dari folder yang salah &mdash; misalnya <code>node app.js</code> dijalankan dari folder induk, padahal <code>app.js</code> berada di dalam folder proyek.
+      </div>
+
+      <h3>2.5 Bila pemeriksaan gagal</h3>
+      <div class="table-scroll" tabindex="0">
+        <table>
+        <thead><tr><th>Yang muncul di terminal</th><th>Artinya</th><th>Yang harus dilakukan</th></tr></thead>
+        <tbody>
+          <tr><td><code>node: command not found</code> atau <code>'node' is not recognized...</code></td><td>Terminal tidak menemukan program <code>node</code></td><td>Tutup terminal lalu buka yang baru. Bila tetap muncul, Node.js belum benar-benar terpasang, jadi ulangi Bab 2.1.</td></tr>
+          <tr><td>Versi Node.js jauh lebih rendah daripada versi LTS terbaru</td><td>Ada Node.js versi lama yang sudah lebih dulu terpasang</td><td>Pasang versi LTS terbaru menimpa yang lama, lalu periksa ulang dengan <code>node -v</code>.</td></tr>
+          <tr><td><code>node -v</code> berhasil tetapi <code>npm -v</code> gagal</td><td>Pemasangan tidak lengkap</td><td>Jalankan ulang pemasang Node.js dan pilih perbaikan atau pemasangan ulang.</td></tr>
+          <tr><td>Muncul peringatan berwarna kuning saat perintah dijalankan</td><td>Peringatan, bukan galat</td><td>Boleh diabaikan selama angka versinya tetap muncul. Bedakan <em>warning</em> dari <em>error</em> sejak sekarang.</td></tr>
+        </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>3. Inisialisasi Proyek dengan npm</h2>
+      <p>Sebuah proyek Node.js bukan sekadar folder berisi berkas JavaScript. Yang membuatnya disebut proyek adalah adanya satu berkas catatan bernama <code>package.json</code>. Bab ini membuat folder proyek, membuat berkas catatan itu, lalu memasang Express ke dalamnya.</p>
+
+      <h3>3.1 Membuat folder proyek</h3>
+      <p>Buat folder di tempat yang mudah Anda temukan kembali, misalnya di dalam folder Documents. Hindari folder yang disinkronkan otomatis ke layanan penyimpanan awan, karena <code>node_modules</code> berisi ribuan berkas kecil yang membuat sinkronisasi menjadi sangat lambat.</p>
+      <div class="code"><pre>mkdir perpustakaan-app
+cd perpustakaan-app</pre></div>
+      <p>Gunakan nama folder tanpa spasi dan tanpa huruf kapital, dengan tanda hubung sebagai pemisah kata. Aturan ini bukan selera: nama yang mengandung spasi menyulitkan penulisan perintah di terminal, dan npm sendiri menolak nama proyek yang mengandung huruf kapital.</p>
+      <div class="tip">
+        <strong>Nama proyek sebaiknya sudah mengarah ke kasus proyek akhir Anda.</strong> Bila pada tugas Pertemuan 1 Anda memilih kasus inventaris barang, beri nama <code>inventaris-app</code> sekarang. Proyek yang dibuat hari ini akan terus dipakai dan ditumbuhkan sampai Pertemuan 16, jadi ini bukan latihan sekali pakai.
+      </div>
+
+      <h3>3.2 Menjalankan <code>npm init</code></h3>
+      <p>Dari dalam folder proyek, jalankan perintah berikut.</p>
+      <div class="code"><pre>npm init -y</pre></div>
+      <p>Tanda <code>-y</code> berarti <em>yes</em>, yakni menerima semua jawaban bawaan tanpa bertanya satu per satu. Bila dijalankan tanpa <code>-y</code>, npm akan menanyakan nama proyek, versi, deskripsi, dan beberapa hal lain; semuanya dapat diubah kapan saja sesudahnya, sehingga untuk sekarang <code>-y</code> sudah memadai.</p>
+      <p>Setelah perintah itu, sebuah berkas <code>package.json</code> muncul di folder proyek dengan isi seperti berikut.</p>
+      <div class="code"><pre>{
+  "name": "perpustakaan-app",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" &amp;&amp; exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": ""
+}</pre></div>
+
+      <h3>3.3 Membaca isi <code>package.json</code></h3>
+      <div class="table-scroll" tabindex="0">
+        <table>
+        <thead><tr><th>Bagian</th><th>Artinya</th><th>Perlu diubah?</th></tr></thead>
+        <tbody>
+          <tr><td><code>"name"</code></td><td>Nama proyek, diambil dari nama folder</td><td>Tidak, kecuali nama foldernya memang salah</td></tr>
+          <tr><td><code>"version"</code></td><td>Versi proyek Anda sendiri, bukan versi Node.js</td><td>Tidak untuk sekarang</td></tr>
+          <tr><td><code>"main"</code></td><td>Berkas utama proyek. Bawaannya <code>index.js</code>, sedangkan berkas kita bernama <code>app.js</code></td><td>Boleh diubah menjadi <code>app.js</code> agar konsisten</td></tr>
+          <tr><td><code>"scripts"</code></td><td>Daftar perintah pintas yang dapat dijalankan dengan <code>npm run</code></td><td>Ya, pada Bab 5.6 kita menambahkan skrip <code>dev</code></td></tr>
+          <tr><td><code>"dependencies"</code></td><td>Daftar pustaka yang dibutuhkan aplikasi agar dapat berjalan</td><td>Tidak diketik manual; terisi sendiri oleh <code>npm install</code></td></tr>
+          <tr><td><code>"devDependencies"</code></td><td>Daftar pustaka yang hanya dibutuhkan saat mengembangkan, tidak saat aplikasi dipakai</td><td>Terisi sendiri oleh <code>npm install --save-dev</code></td></tr>
+        </tbody>
+        </table>
+      </div>
+      <p>Perhatikan bahwa <code>dependencies</code> belum ada pada isi di atas. Bagian itu baru muncul setelah pustaka pertama dipasang, yaitu pada langkah berikutnya.</p>
+
+      <h3>3.4 Memasang Express</h3>
+      <div class="code"><pre>npm install express</pre></div>
+      <p>Perintah ini mengunduh Express dari internet, jadi pastikan komputer Anda tersambung ke jaringan saat menjalankannya. Prosesnya beberapa detik dan diakhiri baris ringkasan yang menyebutkan jumlah paket yang ditambahkan. Angka paketnya biasanya jauh lebih besar dari satu, karena Express sendiri memakai pustaka lain yang ikut terunduh.</p>
+      <p>Setelah selesai, <code>package.json</code> bertambah satu bagian:</p>
+      <div class="code"><pre>"dependencies": {
+  "express": "^5.1.0"
+}</pre></div>
+      <p>Tanda <code>^</code> di depan nomor versi berarti npm boleh memasang pembaruan kecil, tetapi tidak boleh berpindah ke versi mayor berikutnya. Angka versi pada komputer Anda mungkin berbeda dan itu tidak masalah.</p>
+      <div class="tip">
+        <strong>Perintah ini dijalankan dari dalam folder proyek.</strong> Bila <code>npm install express</code> dijalankan dari folder yang salah, npm akan membuat proyek baru di folder itu atau melapor bahwa tidak ada <code>package.json</code>. Sebelum menjalankannya, pastikan <code>ls</code> atau <code>dir</code> memperlihatkan berkas <code>package.json</code>.
+      </div>
+
+      <h3>3.5 Tiga hal baru di folder proyek</h3>
+      <div class="table-scroll" tabindex="0">
+        <table>
+        <thead><tr><th>Nama</th><th>Isinya</th><th>Dibuat oleh</th><th>Ikut dibagikan?</th></tr></thead>
+        <tbody>
+          <tr><td><code>package.json</code></td><td>Catatan nama proyek, skrip, dan daftar pustaka yang dipakai</td><td><code>npm init</code></td><td><strong>Ya</strong>, ini berkas terpenting dalam proyek</td></tr>
+          <tr><td><code>package-lock.json</code></td><td>Catatan versi persis setiap paket, sampai ke pustaka turunannya</td><td><code>npm install</code></td><td><strong>Ya</strong>, agar komputer lain memasang versi yang sama</td></tr>
+          <tr><td><code>node_modules/</code></td><td>Berkas asli seluruh pustaka yang diunduh, ribuan berkas kecil</td><td><code>npm install</code></td><td><strong>Tidak</strong>, dapat dibuat ulang kapan saja</td></tr>
+        </tbody>
+        </table>
+      </div>
+      <p>Folder <code>node_modules</code> tidak pernah disunting dengan tangan dan tidak pernah ikut dikumpulkan saat tugas dikirim. Alasannya sederhana: seluruh isinya dapat dibuat ulang dari <code>package.json</code> dengan satu perintah.</p>
+      <div class="code"><pre>npm install</pre></div>
+      <p>Perintah tanpa nama paket itu berarti &ldquo;pasang semua yang tercatat di <code>package.json</code>&rdquo;. Inilah perintah pertama yang dijalankan siapa pun ketika menerima proyek Node.js dari orang lain, termasuk ketika Anda memindahkan proyek sendiri ke komputer lain.</p>
+      <div class="warn">
+        <strong>Jangan pernah mengirimkan <code>node_modules</code> saat mengumpulkan tugas.</strong> Ukurannya bisa puluhan megabita untuk proyek sekecil ini, sedangkan isinya sama sekali tidak memuat pekerjaan Anda. Yang dinilai adalah kode Anda dan <code>package.json</code>. Bila Anda memakai Git, buat berkas bernama <code>.gitignore</code> berisi satu baris <code>node_modules</code> supaya folder itu tidak pernah terbawa. Kebiasaan yang sama akan dipakai lagi pada Pertemuan 11 untuk mengecualikan berkas <code>.env</code>.
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>4. Struktur Folder Proyek</h2>
+      <p>Roadmap mata kuliah ini menetapkan satu hal secara tegas: mahasiswa tidak boleh dibiarkan terlalu lama menulis seluruh kode dalam satu berkas. Karena itu struktur folder diperkenalkan sekarang, meskipun yang dipakai hari ini masih bentuk paling sederhananya.</p>
+
+      <h3>4.1 Hari ini: satu berkas saja, dan itu memang disengaja</h3>
+      <div class="code"><pre>perpustakaan-app/
+├── node_modules/
+├── package.json
+├── package-lock.json
+└── app.js</pre></div>
+      <p>Untuk pertemuan ini, seluruh kode server ditulis di <code>app.js</code>. Tujuannya agar perhatian Anda tertuju pada satu hal: bagaimana sebuah permintaan masuk dan sebuah jawaban keluar. Memecah kode ke banyak berkas terlalu dini justru menambah satu lapisan kebingungan baru, yaitu &ldquo;berkas mana yang memanggil berkas mana&rdquo;, sebelum yang pertama benar-benar dipahami.</p>
+
+      <h3>4.2 Struktur yang akan dituju</h3>
+      <p>Inilah bentuk yang akan dicapai proyek Anda secara bertahap. Bacalah kolom kanan untuk melihat kapan tiap bagian mulai dipakai &mdash; tidak ada yang perlu Anda buat sekarang.</p>
+      <div class="code"><pre>project/
+├── app.js
+├── routes/
+├── controllers/
+├── models/
+├── views/  atau  public/
+├── config/
+└── .env</pre></div>
+      <div class="table-scroll" tabindex="0">
+        <table>
+        <thead><tr><th>Bagian</th><th>Isinya nanti</th><th>Mulai dipakai</th></tr></thead>
+        <tbody>
+          <tr><td><code>app.js</code></td><td>Titik masuk aplikasi: membuat server, memasang middleware, menyalakan port</td><td>Hari ini</td></tr>
+          <tr><td><code>routes/</code></td><td>Daftar alamat dan metode, dipisah per kelompok memakai <code>express.Router()</code></td><td>Pertemuan 3</td></tr>
+          <tr><td><code>views/</code> atau <code>public/</code></td><td>Halaman yang dikirim ke browser, serta berkas CSS dan gambar</td><td>Pertemuan 4</td></tr>
+          <tr><td><code>models/</code></td><td>Kode yang berbicara kepada database, tempat query SQL berada</td><td>Pertemuan 7</td></tr>
+          <tr><td><code>controllers/</code></td><td>Isi logika tiap route, dipindahkan keluar dari <code>routes/</code></td><td>Pertemuan 11</td></tr>
+          <tr><td><code>config/</code> dan <code>.env</code></td><td>Pengaturan koneksi database dan keterangan rahasia seperti kata sandi</td><td>Pertemuan 11</td></tr>
+        </tbody>
+        </table>
+      </div>
+      <div class="analogy">
+        <strong>Analogi:</strong> struktur ini seperti pembagian ruang di sebuah kantor. <code>routes/</code> adalah meja resepsionis yang menentukan tamu diarahkan ke mana, <code>controllers/</code> adalah staf yang mengerjakan permintaannya, <code>models/</code> adalah petugas yang mengambil dan menyimpan dokumen di gudang arsip, dan <code>views/</code> adalah bentuk laporan yang akhirnya diserahkan kepada tamu. Hari ini keempat pekerjaan itu masih dilakukan satu orang di satu meja, dan itu wajar untuk kantor yang baru menerima satu tamu.
+      </div>
+      <p class="footer-note">Pemisahan ini tidak dilakukan agar terlihat rapi, melainkan agar kesalahan dapat dicari dengan cepat. Ketika aplikasi Anda punya belasan route dan sebuah data gagal tersimpan, Anda perlu tahu harus membuka berkas yang mana &mdash; dan pada kode satu berkas yang panjang, jawabannya selalu &ldquo;cari di seluruh berkas&rdquo;.</p>
+    </section>
+
+    <section class="card">
+      <h2>5. Server Pertama dengan Express</h2>
+
+      <h3>5.1 Kode lengkap <code>app.js</code></h3>
+      <p>Buat berkas baru bernama <code>app.js</code> di dalam folder proyek, lalu tulis kode berikut. Ketik sendiri, jangan disalin-tempel &mdash; pada tahap ini mengetik ulang adalah bagian dari belajarnya, dan salah ketik yang muncul justru melatih Anda membaca pesan kesalahan pada Bab 8.</p>
+      <div class="code"><pre>const express = require('express');
+const app = express();
+const PORT = 3000;
+
+app.get('/', (req, res) => {
+  res.send('&lt;h1&gt;Halo dari server Express&lt;/h1&gt;');
+});
+
+app.listen(PORT, () => {
+  console.log(`Server berjalan di http://localhost:${PORT}`);
+});</pre></div>
+
+      <h3>5.2 Penjelasan baris demi baris</h3>
+      <div class="table-scroll" tabindex="0">
+        <table>
+        <thead><tr><th>Baris</th><th>Yang terjadi</th></tr></thead>
+        <tbody>
+          <tr><td><code>const express = require('express');</code></td><td>Memuat pustaka Express dari <code>node_modules</code> ke dalam program. <code>require()</code> adalah cara Node.js memuat modul; inilah pengganti tag <code>&lt;script&gt;</code> yang Anda pakai di browser.</td></tr>
+          <tr><td><code>const app = express();</code></td><td>Membuat satu objek aplikasi. Objek <code>app</code> inilah yang menyimpan seluruh daftar route dan menjadi tempat semua pengaturan dipasang.</td></tr>
+          <tr><td><code>const PORT = 3000;</code></td><td>Menyimpan nomor port pada satu konstanta bernama, supaya angkanya tidak ditulis berulang di dua tempat. Bila nanti port diganti, hanya baris ini yang disunting.</td></tr>
+          <tr><td><code>app.get('/', ...)</code></td><td>Mendaftarkan satu route: bila datang permintaan dengan metode <code>GET</code> ke path <code>/</code>, jalankan fungsi ini. Path <code>/</code> berarti halaman pangkal, yaitu <code>http://localhost:3000</code> tanpa tambahan apa pun.</td></tr>
+          <tr><td><code>(req, res) =&gt; { ... }</code></td><td>Fungsi penangan, dijalankan Express setiap kali route itu cocok. <code>req</code> berisi seluruh keterangan permintaan yang masuk, <code>res</code> adalah alat untuk menyusun jawaban. Keduanya nama yang lazim untuk <em>request</em> dan <em>response</em> pada Pertemuan 1.</td></tr>
+          <tr><td><code>res.send('...')</code></td><td>Mengirim jawaban ke browser lalu menutup siklus. Express otomatis mengisi kode status <code>200</code> dan header <code>Content-Type: text/html</code> karena isinya berupa teks HTML.</td></tr>
+          <tr><td><code>app.listen(PORT, ...)</code></td><td>Menyalakan server dan membuatnya menunggu permintaan pada port 3000. Tanpa baris ini, seluruh route yang sudah didaftarkan tidak berguna karena tidak ada yang menunggu.</td></tr>
+          <tr><td><code>console.log(...)</code></td><td>Mencetak pesan ke <strong>terminal</strong>, bukan ke browser. Fungsi ini di dalam <code>app.listen</code> dijalankan satu kali saat server berhasil menyala, sehingga berguna sebagai penanda bahwa semuanya siap.</td></tr>
+        </tbody>
+        </table>
+      </div>
+      <div class="tip">
+        <strong>Perhatikan jenis tanda petik pada baris <code>console.log</code>.</strong> Yang dipakai di sana adalah tanda petik miring <code>`</code>, bukan tanda petik biasa. Tanda itu memungkinkan penyisipan nilai variabel memakai <code>${PORT}</code> di tengah teks. Bila Anda memakai tanda petik biasa, tulisan <code>${PORT}</code> akan tercetak apa adanya, bukan berganti menjadi angka 3000.
+      </div>
+
+      <h3>5.3 Menjalankan server</h3>
+      <p>Dari terminal, pada folder proyek yang sama, jalankan:</p>
+      <div class="code"><pre>node app.js</pre></div>
+      <p>Bila berhasil, terminal menampilkan satu baris lalu <strong>berhenti tanpa kembali ke tempat mengetik</strong>:</p>
+      <div class="code"><pre>Server berjalan di http://localhost:3000</pre></div>
+      <p>Sesudah itu buka browser dan kunjungi <code>http://localhost:3000</code>. Tulisan <strong>Halo dari server Express</strong> harus muncul sebagai judul besar. Inilah target Pertemuan 2 menurut roadmap, dan pada titik ini target itu sudah tercapai.</p>
+      <div class="warn">
+        <strong>Terminal yang tampak &ldquo;menggantung&rdquo; adalah tanda keberhasilan, bukan kegagalan.</strong> Sesudah baris itu tercetak, kursor tidak kembali dan perintah baru tidak dapat diketik. Itu memang perilaku yang benar: server sedang menunggu permintaan, dan ia harus terus berjalan selama Anda ingin situsnya dapat dibuka. Jangan menekan Ctrl + C lalu mengira ada yang salah. Bila Anda perlu terminal untuk perintah lain, buka jendela terminal kedua.
+      </div>
+
+      <h3>5.4 Apa yang sebenarnya baru saja terjadi</h3>
+      <p>Yang Anda lihat di browser adalah siklus request-response dari Pertemuan 1, kali ini dengan server milik Anda sendiri sebagai pihak yang menjawab.</p>
+      <div class="svgbox" tabindex="0">
+        <svg viewBox="0 0 780 250" width="100%" role="img" aria-label="Alur satu siklus: browser mengirim permintaan GET slash ke localhost port 3000, Express mencocokkan route, lalu mengirim balik response 200 berisi HTML">
+          <rect x="30" y="70" width="200" height="100" rx="14" fill="#eef2ff" stroke="#4f46e5" stroke-width="2"/>
+          <text x="130" y="110" text-anchor="middle" font-size="19" font-weight="700">Browser</text>
+          <text x="130" y="138" text-anchor="middle" font-size="13" fill="#374151">localhost:3000</text>
+
+          <rect x="440" y="70" width="290" height="100" rx="14" fill="#dcfce7" stroke="#15803d" stroke-width="2"/>
+          <text x="585" y="105" text-anchor="middle" font-size="19" font-weight="700">Express (app.js)</text>
+          <text x="585" y="132" text-anchor="middle" font-size="13" fill="#374151">app.get('/', ...)</text>
+          <text x="585" y="154" text-anchor="middle" font-size="13" fill="#374151">mendengar di port 3000</text>
+
+          <line x1="230" y1="100" x2="435" y2="100" stroke="#2563eb" stroke-width="3" marker-end="url(#ar2b)"/>
+          <text x="332" y="90" text-anchor="middle" font-size="13" font-weight="700" fill="#2563eb">1. GET /</text>
+          <line x1="435" y1="145" x2="230" y2="145" stroke="#6d28d9" stroke-width="3" marker-end="url(#ar2p)"/>
+          <text x="332" y="168" text-anchor="middle" font-size="13" font-weight="700" fill="#6d28d9">2. 200 OK + HTML</text>
+
+          <text x="380" y="222" text-anchor="middle" font-size="13" fill="#6b7280">Database belum ikut serta pada siklus ini</text>
+          <defs>
+            <marker id="ar2b" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0,0 L10,4 L0,8 z" fill="#2563eb"/></marker>
+            <marker id="ar2p" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0,0 L10,4 L0,8 z" fill="#6d28d9"/></marker>
+          </defs>
+        </svg>
+      </div>
+      <ol class="step">
+        <li>Anda mengetik <code>localhost:3000</code>, dan browser menyusun permintaan <code>GET /</code> ke port 3000 di komputer Anda sendiri.</li>
+        <li>Express menerima permintaan itu, lalu mencari route yang metode dan path-nya cocok.</li>
+        <li>Route <code>app.get('/')</code> cocok, sehingga fungsi penanganannya dijalankan.</li>
+        <li><code>res.send()</code> menyusun response berisi kode status <code>200</code>, header, dan badan pesan berupa HTML.</li>
+        <li>Browser menerima HTML itu dan menampilkannya sebagai judul besar.</li>
+      </ol>
+      <p>Buka panel Network seperti pada Pertemuan 1, lalu muat ulang halaman. Anda akan menemukan satu baris dengan alamat <code>localhost:3000</code>, metode <code>GET</code>, status <code>200</code>, dan <code>Content-Type: text/html</code>. Angka-angka yang pada Pertemuan 1 hanya Anda amati dari luar sekarang muncul karena kode yang Anda tulis sendiri.</p>
+      <div class="tip">
+        <strong>Jumlah barisnya kini jauh lebih sedikit.</strong> Pada Pertemuan 1, satu halaman menghasilkan puluhan permintaan karena situsnya memuat CSS, gambar, dan berkas JavaScript. Server Anda baru mengirim satu potong HTML tanpa berkas pendukung apa pun, jadi barisnya hanya satu atau dua. Bila muncul baris tambahan bernama <code>favicon.ico</code> dengan status <code>404</code>, itu wajar: browser otomatis mencari ikon situs, dan server Anda memang belum punya route untuk itu.
+      </div>
+
+      <h3>5.5 Menghentikan dan menjalankan ulang server</h3>
+      <p>Tekan <strong>Ctrl + C</strong> pada terminal tempat server berjalan. Kursor kembali dan server mati. Sesudah itu, memuat ulang <code>localhost:3000</code> di browser akan gagal, karena tidak ada lagi yang menunggu di port 3000.</p>
+      <div class="warn">
+        <strong>Setiap perubahan pada <code>app.js</code> tidak langsung berlaku.</strong> Node.js membaca berkas hanya sekali, yaitu saat dijalankan. Jadi bila Anda menyunting kode lalu memuat ulang browser, yang tampil masih versi lama. Server harus dihentikan dengan Ctrl + C lalu dijalankan lagi dengan <code>node app.js</code>. Lupa melakukan ini adalah penyebab kebingungan paling sering pada pertemuan ini &mdash; kode yang sudah benar tampak seperti tidak berpengaruh.
+      </div>
+
+      <h3>5.6 nodemon: menjalankan ulang server secara otomatis</h3>
+      <p>Menghentikan dan menjalankan ulang server setiap kali menyunting satu baris jelas melelahkan. nodemon mengerjakannya untuk Anda: ia mengawasi berkas proyek dan menjalankan ulang server setiap kali ada berkas yang disimpan.</p>
+      <div class="code"><pre>npm install --save-dev nodemon</pre></div>
+      <p>Tanda <code>--save-dev</code> menempatkan nodemon pada <code>devDependencies</code>, bukan <code>dependencies</code>. Bedanya penting: nodemon hanya berguna selama Anda mengembangkan aplikasi. Ketika aplikasi benar-benar dipakai orang, server dijalankan sekali dan tidak perlu diawasi, sehingga nodemon tidak perlu ikut dipasang di sana.</p>
+      <p>Selanjutnya buka <code>package.json</code> dan sunting bagian <code>scripts</code> menjadi seperti ini:</p>
+      <div class="code"><pre>"scripts": {
+  "start": "node app.js",
+  "dev": "nodemon app.js"
+}</pre></div>
+      <p>Sekarang server dijalankan dengan salah satu dari dua perintah berikut:</p>
+      <div class="code"><pre>npm run dev
+npm start</pre></div>
+      <p>Gunakan <code>npm run dev</code> selama praktik, dan <code>npm start</code> bila ingin menjalankannya seperti aplikasi biasa. Perhatikan bahwa <code>start</code> adalah nama khusus yang dikenali npm sehingga tidak memerlukan kata <code>run</code>, sedangkan nama lain seperti <code>dev</code> memerlukannya.</p>
+      <div class="tip">
+        <strong>Mengapa memakai skrip, bukan langsung mengetik <code>nodemon app.js</code>?</strong> Karena nodemon dipasang ke dalam proyek, bukan ke sistem operasi, sehingga perintah <code>nodemon</code> belum tentu dikenali terminal secara langsung. Ketika dipanggil lewat <code>npm run</code>, npm tahu harus mencarinya di dalam <code>node_modules</code> proyek ini. Alasan kedua: <code>package.json</code> lalu menjadi dokumentasi &mdash; siapa pun yang menerima proyek Anda dapat melihat cara menjalankannya tanpa bertanya.
+      </div>
+      <p>Setelah nodemon berjalan, ubah tulisan pada <code>res.send()</code> lalu simpan berkasnya. Terminal akan mencetak <code>[nodemon] restarting due to changes...</code> dan Anda cukup memuat ulang browser tanpa menyentuh terminal.</p>
+    </section>
+
+    <section class="card">
+      <h2>6. Routing Dasar</h2>
+      <p>Sebuah aplikasi nyata punya banyak alamat, bukan hanya satu. Routing adalah pekerjaan mencocokkan setiap alamat yang diminta dengan kode yang harus menanganinya. Ini keterampilan inti pertemuan ini, dan akan diperdalam pada Pertemuan 3.</p>
+
+      <h3>6.1 Anatomi satu route</h3>
+      <div class="svgbox" tabindex="0">
+        <svg viewBox="0 0 780 205" width="100%" role="img" aria-label="Anatomi satu route Express: app titik get adalah metode HTTP, tanda kutip garis miring buku adalah path, dan fungsi req res adalah fungsi penangan">
+          <text x="40" y="62" font-size="21" font-family="Consolas, monospace" font-weight="700" fill="#15803d">app.get(</text>
+          <text x="165" y="62" font-size="21" font-family="Consolas, monospace" font-weight="700" fill="#2563eb">'/buku'</text>
+          <text x="262" y="62" font-size="21" font-family="Consolas, monospace" font-weight="700">,</text>
+          <text x="300" y="62" font-size="21" font-family="Consolas, monospace" font-weight="700" fill="#6d28d9">(req, res) =&gt; { ... }</text>
+          <text x="610" y="62" font-size="21" font-family="Consolas, monospace" font-weight="700">)</text>
+
+          <line x1="90" y1="74" x2="90" y2="112" stroke="#15803d" stroke-width="2"/>
+          <text x="90" y="132" text-anchor="middle" font-size="14" font-weight="700" fill="#15803d">metode HTTP</text>
+          <text x="90" y="152" text-anchor="middle" font-size="12" fill="#374151">get, post, put, delete</text>
+
+          <line x1="209" y1="74" x2="209" y2="150" stroke="#2563eb" stroke-width="2"/>
+          <text x="209" y="170" text-anchor="middle" font-size="14" font-weight="700" fill="#2563eb">path</text>
+          <text x="209" y="190" text-anchor="middle" font-size="12" fill="#374151">alamat sesudah nomor port</text>
+
+          <line x1="430" y1="74" x2="430" y2="112" stroke="#6d28d9" stroke-width="2"/>
+          <text x="430" y="132" text-anchor="middle" font-size="14" font-weight="700" fill="#6d28d9">fungsi penangan</text>
+          <text x="430" y="152" text-anchor="middle" font-size="12" fill="#374151">dijalankan bila metode dan path cocok</text>
+        </svg>
+      </div>
+      <p>Sebuah route hanya dijalankan bila <strong>kedua</strong> bagian cocok: metodenya dan path-nya. Karena itu <code>GET /buku</code> dan <code>POST /buku</code> adalah dua route yang berbeda meskipun alamatnya sama persis &mdash; persis seperti yang Anda tuliskan pada tugas Pertemuan 1.</p>
+
+      <h3>6.2 Beberapa route dalam satu berkas</h3>
+      <p>Tambahkan route berikut ke <code>app.js</code>, diletakkan sesudah route <code>/</code> yang sudah ada dan sebelum <code>app.listen</code>.</p>
+      <div class="code"><pre>app.get('/tentang', (req, res) => {
+  res.send('&lt;h1&gt;Tentang Aplikasi&lt;/h1&gt;&lt;p&gt;Aplikasi perpustakaan sederhana.&lt;/p&gt;');
+});
+
+app.get('/buku', (req, res) => {
+  res.json([
+    { id: 1, judul: 'Laskar Pelangi', penulis: 'Andrea Hirata' },
+    { id: 2, judul: 'Bumi Manusia', penulis: 'Pramoedya Ananta Toer' }
+  ]);
+});
+
+app.get('/buku/:id', (req, res) => {
+  res.send(`Anda meminta buku dengan id ${req.params.id}`);
+});</pre></div>
+      <p>Simpan berkasnya, lalu buka keempat alamat berikut satu per satu di browser.</p>
+      <div class="table-scroll" tabindex="0">
+        <table>
+        <thead><tr><th>Alamat</th><th>Route yang menanganinya</th><th>Yang tampil di browser</th><th>Content-Type</th></tr></thead>
+        <tbody>
+          <tr><td><code>/</code></td><td><code>app.get('/')</code></td><td>Judul besar &ldquo;Halo dari server Express&rdquo;</td><td><code>text/html</code></td></tr>
+          <tr><td><code>/tentang</code></td><td><code>app.get('/tentang')</code></td><td>Judul dan satu paragraf</td><td><code>text/html</code></td></tr>
+          <tr><td><code>/buku</code></td><td><code>app.get('/buku')</code></td><td>Data dua buku dalam bentuk JSON</td><td><code>application/json</code></td></tr>
+          <tr><td><code>/buku/7</code></td><td><code>app.get('/buku/:id')</code></td><td>Tulisan &ldquo;Anda meminta buku dengan id 7&rdquo;</td><td><code>text/html</code></td></tr>
+        </tbody>
+        </table>
+      </div>
+
+      <h3>6.3 Tiga cara menyusun jawaban</h3>
+      <div class="table-scroll" tabindex="0">
+        <table>
+        <thead><tr><th>Perintah</th><th>Kegunaan</th><th>Yang diatur Express secara otomatis</th></tr></thead>
+        <tbody>
+          <tr><td><code>res.send('teks atau HTML')</code></td><td>Mengirim teks atau HTML ke browser</td><td>Status <code>200</code> dan <code>Content-Type: text/html</code></td></tr>
+          <tr><td><code>res.json(objek)</code></td><td>Mengirim data sebagai JSON, dipakai untuk API</td><td>Status <code>200</code> dan <code>Content-Type: application/json</code></td></tr>
+          <tr><td><code>res.status(404).send('...')</code></td><td>Mengirim jawaban dengan kode status yang Anda tentukan sendiri</td><td>Hanya <code>Content-Type</code>; statusnya Anda yang menetapkan</td></tr>
+        </tbody>
+        </table>
+      </div>
+      <p>Ketiganya menutup siklus. Satu route hanya boleh memanggil salah satunya <strong>satu kali</strong>; dua panggilan pada satu permintaan menghasilkan galat <code>Cannot set headers after they are sent to the client</code>, karena jawabannya sudah terkirim dan tidak dapat diubah lagi.</p>
+      <div class="tip">
+        <strong>Perhatikan perbedaan tampilan <code>/buku</code> dan <code>/tentang</code> di browser.</strong> Halaman <code>/tentang</code> tampil sebagai halaman biasa, sedangkan <code>/buku</code> tampil sebagai data mentah, kadang dengan tampilan khusus penampil JSON. Perbedaan itu bukan kebetulan: <code>res.json()</code> memberi tahu browser bahwa isinya data, bukan halaman. Inilah bentuk dasar sebuah API, yang menjadi topik utama Pertemuan 14.
+      </div>
+
+      <h3>6.4 Route parameter: satu route untuk banyak data</h3>
+      <p>Perhatikan <code>:id</code> pada <code>app.get('/buku/:id')</code>. Tanda titik dua menandai bagian alamat yang nilainya berubah-ubah. Satu route itu menangani <code>/buku/1</code>, <code>/buku/7</code>, <code>/buku/250</code>, dan seterusnya, sedangkan nilainya dibaca melalui <code>req.params.id</code>.</p>
+      <p>Tanpa route parameter, Anda harus menulis satu route untuk setiap buku &mdash; jelas tidak mungkin untuk data yang jumlahnya bertambah. Pada Pertemuan 7 nilai <code>req.params.id</code> inilah yang akan diserahkan ke query database sebagai penanda baris mana yang diambil, dan pada Pertemuan 10 dipakai untuk menentukan data mana yang diubah atau dihapus.</p>
+      <div class="warn">
+        <strong>Nilai dari <code>req.params</code> selalu berupa teks, bukan angka.</strong> Meskipun Anda membuka <code>/buku/7</code>, nilai <code>req.params.id</code> adalah teks <code>'7'</code>. Akibatnya perbandingan seperti <code>req.params.id === 7</code> menghasilkan salah. Selain itu, nilai itu datang dari pengguna dan boleh berisi apa saja, misalnya <code>/buku/abc</code>. Pemeriksaannya dibahas pada Pertemuan 9, dan cara menyerahkannya ke database dengan aman dibahas pada Pertemuan 13 &mdash; jangan pernah menyambungkannya langsung ke dalam teks query SQL.
+      </div>
+
+      <h3>6.5 Urutan route dan penanganan alamat yang tidak dikenal</h3>
+      <p>Express memeriksa route <strong>berurutan dari atas ke bawah</strong> dan berhenti pada yang pertama cocok. Karena itu, letakkan route yang lebih khusus di atas route yang lebih umum. Coba buka <code>localhost:3000/kontak</code> sekarang: yang muncul adalah tulisan <code>Cannot GET /kontak</code>, yaitu jawaban bawaan Express untuk alamat yang tidak punya route.</p>
+      <p>Jawaban bawaan itu berfungsi, tetapi tampilannya tidak layak dilihat pengguna. Tambahkan penangan berikut <strong>sesudah semua route lain</strong> dan tetap sebelum <code>app.listen</code>:</p>
+      <div class="code"><pre>app.use((req, res) => {
+  res.status(404).send('&lt;h1&gt;404 - Halaman tidak ditemukan&lt;/h1&gt;');
+});</pre></div>
+      <p>Perhatikan tiga hal. Pertama, <code>app.use</code> dipakai, bukan <code>app.get</code>, sehingga penangan ini menerima semua metode. Kedua, tidak ada path yang ditulis, sehingga ia cocok untuk semua alamat. Ketiga, dan yang paling penting, posisinya harus paling bawah &mdash; bila diletakkan di atas, ia akan menangkap semua permintaan lebih dulu dan seluruh route Anda yang lain menjadi tidak pernah tersentuh.</p>
+      <div class="analogy">
+        <strong>Analogi:</strong> daftar route seperti tumpukan formulir di meja resepsionis yang diperiksa dari lembar teratas. Penangan 404 adalah lembar terakhir yang berbunyi &ldquo;bila permintaan tamu tidak ada pada lembar mana pun di atas, katakan bahwa layanan itu tidak tersedia&rdquo;. Menaruh lembar itu di paling atas berarti setiap tamu ditolak sebelum permintaannya sempat dibaca.
+      </div>
+      <p class="footer-note">Fungsi yang dipasang dengan <code>app.use</code> disebut <strong>middleware</strong>, yaitu fungsi yang dijalankan di antara masuknya permintaan dan selesainya jawaban. Penangan 404 di atas adalah middleware pertama yang Anda tulis. Pembahasan penuhnya, termasuk <code>express.json()</code> dan <code>express.urlencoded()</code> untuk membaca data formulir, adalah materi Pertemuan 3.</p>
+    </section>
+
+    <section class="card">
+      <h2>7. Praktik Terpandu</h2>
+      <p>Praktik pertemuan ini terdiri dari empat bagian yang dikerjakan berurutan pada <strong>satu proyek yang sama</strong>. Bagian A sampai C membangun servernya, sedangkan bagian D memeriksa hasilnya dari sisi browser. Kode lengkap untuk setiap bagian sudah ada pada Bab 5 dan Bab 6, jadi bacalah bab tersebut berdampingan dengan bab ini.</p>
+
+      <h3>7.1 Praktik A: proyek baru dan server pertama</h3>
+      <ol class="step">
+        <li>Buka terminal, lalu masuk ke folder tempat Anda menyimpan tugas kuliah.</li>
+        <li>Jalankan <code>mkdir perpustakaan-app</code> lalu <code>cd perpustakaan-app</code>. Ganti namanya bila kasus proyek Anda berbeda.</li>
+        <li>Jalankan <code>npm init -y</code>, lalu buka <code>package.json</code> dan bacalah isinya sebelum melanjutkan.</li>
+        <li>Jalankan <code>npm install express</code>, lalu buka lagi <code>package.json</code> dan temukan bagian <code>dependencies</code> yang baru muncul.</li>
+        <li>Buat berkas <code>app.js</code>, ketik kode pada Bab 5.1, lalu simpan.</li>
+        <li>Jalankan <code>node app.js</code> dan pastikan baris <code>Server berjalan di http://localhost:3000</code> tercetak.</li>
+        <li>Buka <code>http://localhost:3000</code> di browser.</li>
+      </ol>
+      <p><strong>Hasil yang harus terlihat:</strong> tulisan &ldquo;Halo dari server Express&rdquo; sebagai judul besar di browser, dan terminal yang tetap menahan kursor karena server masih berjalan.</p>
+
+      <h3>7.2 Praktik B: menambah route dan menangani 404</h3>
+      <ol class="step">
+        <li>Hentikan server dengan Ctrl + C.</li>
+        <li>Tambahkan tiga route pada Bab 6.2, yaitu <code>/tentang</code>, <code>/buku</code>, dan <code>/buku/:id</code>.</li>
+        <li>Tambahkan penangan 404 pada Bab 6.5, dan pastikan letaknya paling bawah di antara seluruh route.</li>
+        <li>Jalankan ulang <code>node app.js</code>.</li>
+        <li>Buka kelima alamat ini satu per satu: <code>/</code>, <code>/tentang</code>, <code>/buku</code>, <code>/buku/7</code>, dan <code>/kontak</code>.</li>
+        <li>Ubah <code>/buku/7</code> menjadi <code>/buku/99</code> dan perhatikan bahwa angka pada tulisan yang tampil ikut berubah tanpa Anda menambah route baru.</li>
+      </ol>
+      <p><strong>Hasil yang harus terlihat:</strong> keempat alamat pertama menjawab sesuai tabel pada Bab 6.2, sedangkan <code>/kontak</code> menampilkan halaman 404 buatan Anda, bukan tulisan <code>Cannot GET /kontak</code>.</p>
+      <details>
+        <summary>Percobaan tambahan: pindahkan penangan 404 ke atas, lalu amati akibatnya</summary>
+        <p>Potong blok <code>app.use(...)</code> dan tempelkan tepat sesudah <code>const PORT = 3000;</code>, di atas semua route. Jalankan ulang server, lalu buka <code>/</code> dan <code>/buku</code>. Keduanya sekarang menampilkan halaman 404, meskipun kedua route itu masih ada di dalam kode.</p>
+        <p>Inilah bukti langsung bahwa Express memeriksa route dari atas ke bawah dan berhenti pada yang pertama cocok. Kembalikan penangan itu ke posisi paling bawah sebelum melanjutkan. Sengaja membuat kesalahan lalu mengamati akibatnya adalah cara tercepat memahami aturan urutan ini, dan Anda hanya perlu melakukannya sekali untuk mengingatnya selamanya.</p>
+      </details>
+
+      <h3>7.3 Praktik C: memasang nodemon</h3>
+      <ol class="step">
+        <li>Hentikan server, lalu jalankan <code>npm install --save-dev nodemon</code>.</li>
+        <li>Buka <code>package.json</code> dan sunting bagian <code>scripts</code> seperti pada Bab 5.6.</li>
+        <li>Jalankan <code>npm run dev</code>.</li>
+        <li>Tanpa menyentuh terminal, ubah tulisan di dalam <code>res.send()</code> pada route <code>/</code>, lalu simpan berkasnya.</li>
+        <li>Amati terminal: baris <code>[nodemon] restarting due to changes...</code> muncul dengan sendirinya.</li>
+        <li>Muat ulang browser dan pastikan tulisan yang baru sudah tampil.</li>
+      </ol>
+      <p><strong>Hasil yang harus terlihat:</strong> perubahan pada kode tampil di browser hanya dengan menyimpan berkas dan memuat ulang halaman, tanpa Ctrl + C dan tanpa menjalankan perintah apa pun lagi.</p>
+
+      <h3>7.4 Praktik D: memeriksa server sendiri dari panel Network</h3>
+      <p>Bagian ini menyambungkan pekerjaan hari ini dengan keterampilan Pertemuan 1. Biarkan server tetap berjalan.</p>
+      <ol class="step">
+        <li>Buka DevTools dengan F12, pilih tab <strong>Network</strong>, lalu muat ulang <code>localhost:3000</code>.</li>
+        <li>Klik baris teratas dan catat empat hal: Request URL, Request Method, Status Code, dan <code>Content-Type</code> pada bagian response headers.</li>
+        <li>Buka tab <strong>Response</strong> dan bandingkan isinya dengan teks di dalam <code>res.send()</code> pada kode Anda. Keduanya harus sama persis.</li>
+        <li>Buka <code>/buku</code> dan bandingkan <code>Content-Type</code>-nya dengan yang tadi. Nilainya berubah menjadi <code>application/json</code> karena route itu memakai <code>res.json()</code>.</li>
+        <li>Buka <code>/kontak</code> dan periksa kode statusnya. Nilainya harus <code>404</code>, bukan <code>200</code>, meskipun halamannya tampil dengan baik.</li>
+      </ol>
+      <p><strong>Hasil yang harus terlihat:</strong> Anda dapat menunjukkan bahwa setiap angka di panel Network berasal dari baris kode tertentu yang Anda tulis sendiri. Langkah kelima adalah yang terpenting: halaman yang tampil rapi tetapi berstatus <code>404</code> membuktikan bahwa kode status ditentukan oleh <code>res.status()</code>, bukan oleh tampil atau tidaknya halaman.</p>
+
+      <h3>7.5 Bila ada yang tidak berjalan</h3>
+      <div class="table-scroll" tabindex="0">
+        <table>
+        <thead><tr><th>Gejala</th><th>Penyebab yang paling sering</th><th>Yang harus diperiksa</th></tr></thead>
+        <tbody>
+          <tr><td>Browser melapor situs tidak dapat dijangkau</td><td>Server tidak sedang berjalan</td><td>Lihat terminal. Bila kursor sudah kembali, server sudah mati; jalankan ulang.</td></tr>
+          <tr><td><code>Cannot GET /tentang</code></td><td>Route itu belum ada, salah ketik, atau penangan 404 ada di atasnya</td><td>Cocokkan ejaan path pada kode dengan alamat di browser, lalu pastikan <code>app.use</code> berada paling bawah.</td></tr>
+          <tr><td>Perubahan kode tidak tampak di browser</td><td>Server belum dijalankan ulang</td><td>Hentikan dengan Ctrl + C lalu jalankan lagi, atau pakai <code>npm run dev</code>.</td></tr>
+          <tr><td>Halaman menampilkan versi lama meski server sudah dijalankan ulang</td><td>Browser memakai simpanannya sendiri</td><td>Muat ulang dengan Ctrl + Shift + R, atau centang <em>Disable cache</em> di panel Network.</td></tr>
+          <tr><td>Tulisan <code>${PORT}</code> tercetak apa adanya di terminal</td><td>Tanda petik yang dipakai salah</td><td>Pastikan baris <code>console.log</code> memakai tanda petik miring <code>`</code>, bukan tanda petik lurus.</td></tr>
+          <tr><td>Halaman tampil tetapi tulisannya bertag, misalnya <code>&lt;h1&gt;Halo&lt;/h1&gt;</code> terlihat mentah</td><td>Tag ditulis sebagai entitas, bukan sebagai karakter</td><td>Di dalam <code>app.js</code> tulis tag secara langsung sebagai <code>&lt;h1&gt;</code>. Penulisan berbentuk entitas pada materi ini hanya diperlukan agar kode dapat ditampilkan di halaman web ini.</td></tr>
+        </tbody>
+        </table>
+      </div>
+      <p>Empat pesan kesalahan yang paling sering muncul dibahas terpisah pada Bab 8, karena membacanya adalah keterampilan tersendiri yang diminta roadmap mata kuliah ini.</p>
+    </section>
+
+    <section class="card">
+      <h2>8. Membaca Pesan Kesalahan di Terminal</h2>
+      <p>Roadmap mata kuliah ini menyebut kemampuan membaca galat sebagai materi wajib, dengan alasan yang tegas: mahasiswa harus terbiasa membaca pesan kesalahan, bukan panik lalu mengganti kode sembarangan. Empat pesan berikut akan Anda jumpai berulang kali sepanjang semester.</p>
+      <div class="table-scroll" tabindex="0">
+        <table>
+        <thead><tr><th>Pesan di terminal</th><th>Artinya</th><th>Perbaikannya</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><code>Error: Cannot find module 'express'</code></td>
+            <td>Express belum terpasang di proyek ini, atau perintah dijalankan dari folder yang salah</td>
+            <td>Jalankan <code>npm install express</code> dari folder yang memuat <code>package.json</code>. Bila proyeknya baru dipindahkan dari komputer lain, jalankan <code>npm install</code> saja untuk memasang ulang semuanya.</td>
+          </tr>
+          <tr>
+            <td><code>Error: listen EADDRINUSE: address already in use :::3000</code></td>
+            <td>Port 3000 sudah dipakai program lain, biasanya server Anda sendiri yang masih hidup di terminal lain</td>
+            <td>Hentikan server yang lama dengan Ctrl + C pada terminal tempat ia berjalan. Bila terminal itu sudah tertutup, ubah <code>PORT</code> menjadi <code>3001</code> lalu jalankan lagi.</td>
+          </tr>
+          <tr>
+            <td><code>SyntaxError: missing ) after argument list</code></td>
+            <td>Ada tanda kurung, kurung kurawal, atau tanda petik yang belum tertutup</td>
+            <td>Perhatikan nomor baris pada baris pertama pesan galat. Kesalahannya berada di baris itu atau sedikit di atasnya. Periksa pasangan tanda kurung dari dalam ke luar.</td>
+          </tr>
+          <tr>
+            <td><code>Cannot set headers after they are sent to the client</code></td>
+            <td>Satu route memanggil <code>res.send</code> atau <code>res.json</code> lebih dari sekali</td>
+            <td>Pastikan setiap jalur di dalam fungsi penangan berakhir pada satu jawaban saja. Tambahkan <code>return</code> di depan pengiriman jawaban yang berada di dalam percabangan.</td>
+          </tr>
+        </tbody>
+        </table>
+      </div>
+      <div class="tip">
+        <strong>Cara membaca galat yang panjang.</strong> Pesan galat Node.js sering belasan baris karena memuat <em>stack trace</em>, yaitu daftar fungsi yang sedang berjalan saat galat terjadi. Yang perlu dibaca hanya dua hal: <strong>baris pertama</strong>, yang menyebutkan jenis galatnya, dan <strong>baris pertama yang memuat nama berkas Anda sendiri</strong> beserta nomor barisnya. Baris lain yang menyebut berkas di dalam <code>node_modules</code> hampir selalu dapat dilewati, karena kesalahannya jarang berada di pustaka orang lain.
+      </div>
+      <div class="warn">
+        <strong>Bedakan galat di terminal dari galat di browser.</strong> Bila terminal menampilkan pesan galat, berarti program server berhenti dan seluruh alamat menjadi tidak dapat dibuka. Bila terminal tenang tetapi browser menampilkan pesan aneh, berarti server berjalan baik dan masalahnya ada pada route atau pada jawaban yang dikirim. Menentukan dulu di sisi mana galatnya menghemat banyak waktu &mdash; ini penerapan langsung dari tabel gejala pada Pertemuan 1 Bab 4.5.
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>9. Menghubungkan Teori dan Praktik</h2>
+      <p>Setiap hal yang Anda kerjakan hari ini adalah wujud nyata dari yang Pertemuan 1 baru bisa ditunjukkan lewat pengamatan.</p>
+      <div class="grid two">
+        <div class="mini">
+          <div class="label">Konsep pada Pertemuan 1</div>
+          <ul>
+            <li>Server adalah pihak yang menjawab permintaan.</li>
+            <li>Satu siklus selalu dimulai oleh client.</li>
+            <li>Alamat terdiri dari protokol, host, port, dan path.</li>
+            <li>Metode HTTP menyatakan maksud permintaan.</li>
+            <li>Kode status menyatakan hasil permintaan.</li>
+            <li><code>Content-Type</code> memberi tahu jenis isi yang dikirim.</li>
+          </ul>
+        </div>
+        <div class="mini">
+          <div class="label">Wujudnya pada Pertemuan 2</div>
+          <ul>
+            <li><code>app.listen(3000)</code> membuat program Anda menjadi pihak itu.</li>
+            <li>Tidak ada yang tercetak di terminal sampai Anda membuka alamatnya di browser.</li>
+            <li><code>localhost</code> adalah host, <code>3000</code> adalah nilai <code>PORT</code>, dan <code>/buku</code> adalah path pada <code>app.get</code>.</li>
+            <li>Kata <code>get</code> pada <code>app.get</code> adalah metode itu sendiri.</li>
+            <li><code>res.status(404)</code> menetapkan angka yang Anda lihat di panel Network.</li>
+            <li>Pilihan antara <code>res.send</code> dan <code>res.json</code> menentukan nilainya.</li>
+          </ul>
+        </div>
+      </div>
+      <p class="footer-note">Perhatikan bahwa tidak satu pun konsep pada kolom kiri berubah ketika berpindah ke kolom kanan. Yang berubah hanya kedudukan Anda: pada Pertemuan 1 Anda mengamati siklus itu dari luar, sedangkan sekarang Anda yang menentukan jawabannya.</p>
+    </section>
+
+    <section class="card">
+      <h2>10. Kedudukan AI pada Pekerjaan Hari Ini</h2>
+      <p>Kode server pertama dan penulisan route adalah dua hal yang paling mudah dihasilkan AI, dan hasilnya biasanya benar. Justru karena itu, pertemuan ini adalah tempat terbaik untuk membiasakan cara memakainya yang tidak merugikan Anda sendiri.</p>
+      <div class="grid two">
+        <div class="mini">
+          <div class="label">Pemakaian yang membantu</div>
+          <ul>
+            <li>Menanyakan arti sebuah pesan kesalahan yang muncul di terminal.</li>
+            <li>Meminta contoh route tambahan sesudah Anda menulis route pertama sendiri.</li>
+            <li>Meminta penjelasan mengapa <code>--save-dev</code> berbeda dari pemasangan biasa.</li>
+            <li>Meminta pemeriksaan ulang atas kode yang sudah Anda tulis dan pahami.</li>
+          </ul>
+        </div>
+        <div class="mini">
+          <div class="label">Yang tetap harus dapat Anda jelaskan sendiri</div>
+          <ul>
+            <li>Fungsi setiap baris pada <code>app.js</code> milik Anda, termasuk mengapa <code>app.listen</code> ada di paling bawah.</li>
+            <li>Apa yang terjadi bila penangan 404 dipindahkan ke atas, beserta alasannya.</li>
+            <li>Mengapa <code>node_modules</code> tidak ikut dikumpulkan, sementara <code>package.json</code> wajib ikut.</li>
+            <li>Perbedaan <code>res.send</code> dan <code>res.json</code>, dan kapan masing-masing dipakai.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="warn">
+        <strong>Pola yang paling sering merugikan mahasiswa pada pertemuan ini:</strong> meminta AI membuat seluruh <code>app.js</code> sekaligus, mendapatkan kode yang berjalan mulus, lalu tidak pernah mengetahui bahwa urutan route itu penting sampai aplikasinya rusak di Pertemuan 9 dan tidak ada satu pun bagian yang benar-benar dipahami untuk dilacak. Bila Anda memakai AI hari ini, pakailah setelah kode Anda sendiri berjalan, bukan sebagai penggantinya.
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>11. Tugas Latihan Pertemuan 2</h2>
+      <p>Tugas pertemuan ini adalah <strong>server Express milik Anda sendiri dengan lima route</strong>, dikerjakan pada proyek yang sama dengan praktik Bab 7. Proyek ini akan terus dipakai sampai akhir semester, jadi kerjakan dengan nama dan kasus yang benar-benar Anda pilih.</p>
+
+      <h3>11.1 Deskripsi tugas</h3>
+      <p>Kembangkan proyek hasil praktik menjadi server dengan ketentuan berikut.</p>
+      <ol class="step">
+        <li>Nama folder proyek sesuai kasus pilihan Anda, misalnya <code>inventaris-app</code> atau <code>kegiatan-app</code>.</li>
+        <li>Berkas <code>package.json</code> memuat Express pada <code>dependencies</code>, nodemon pada <code>devDependencies</code>, serta skrip <code>start</code> dan <code>dev</code>.</li>
+        <li>Server berjalan pada port <strong>3000</strong> dan mencetak satu baris penanda ke terminal saat menyala.</li>
+        <li>Terdapat <strong>lima route</strong> dengan ketentuan: satu route <code>/</code> yang mengirim HTML berisi nama Anda dan nama kasus proyek; satu route yang mengirim HTML berisi keterangan singkat aplikasi; <strong>dua</strong> route yang mengirim data dengan <code>res.json()</code>, masing-masing memuat paling sedikit dua data contoh; dan satu route memakai parameter, yang memantulkan kembali nilai parameternya ke dalam jawaban.</li>
+        <li>Terdapat penangan 404 di posisi paling bawah, yang mengirim halaman dengan kode status <code>404</code>.</li>
+        <li>Path setiap route memakai kata yang sesuai kasus Anda, bukan <code>/buku</code>, kecuali kasus yang Anda pilih memang perpustakaan.</li>
+      </ol>
+      <p><strong>Yang dikumpulkan:</strong> berkas <code>app.js</code> dan <code>package.json</code> (tanpa <code>node_modules</code>), satu tangkapan layar terminal yang memperlihatkan server berjalan, dan tangkapan layar browser untuk tiga alamat &mdash; satu route HTML, satu route JSON, dan alamat yang menghasilkan 404. Sertakan pula angka <code>node -v</code> dan <code>npm -v</code> pada komputer Anda.</p>
+
+      <h3>11.2 Tujuan pembelajaran dari tugas</h3>
+      <ul>
+        <li>Membiasakan alur kerja lengkap sebuah proyek Node.js, dari folder kosong sampai server berjalan.</li>
+        <li>Melatih pembedaan antara jawaban berupa halaman dan jawaban berupa data.</li>
+        <li>Melatih penetapan kode status secara sadar, bukan menerima yang bawaan.</li>
+        <li>Memastikan proyek proyek akhir Anda sudah punya pangkal yang benar sejak Pertemuan 2.</li>
+      </ul>
+
+      <h3>11.3 Petunjuk pengerjaan</h3>
+      <p>Kerjakan dari proyek praktik Bab 7, jangan mulai dari folder baru. Ubah path dan isi jawaban route agar sesuai kasus Anda, lalu tambah satu route JSON lagi sampai jumlahnya lima.</p>
+      <details>
+        <summary>Contoh bentuk jawaban untuk kasus inventaris barang, sebagai acuan</summary>
+        <div class="table-scroll" tabindex="0">
+          <table>
+          <thead><tr><th>Path</th><th>Metode</th><th>Perintah jawaban</th><th>Isi jawaban</th></tr></thead>
+          <tbody>
+            <tr><td><code>/</code></td><td><code>GET</code></td><td><code>res.send</code></td><td>HTML berisi nama Anda dan judul aplikasi</td></tr>
+            <tr><td><code>/tentang</code></td><td><code>GET</code></td><td><code>res.send</code></td><td>HTML berisi keterangan singkat aplikasi</td></tr>
+            <tr><td><code>/barang</code></td><td><code>GET</code></td><td><code>res.json</code></td><td>Daftar tiga barang contoh</td></tr>
+            <tr><td><code>/kategori</code></td><td><code>GET</code></td><td><code>res.json</code></td><td>Daftar dua kategori contoh</td></tr>
+            <tr><td><code>/barang/:id</code></td><td><code>GET</code></td><td><code>res.send</code></td><td>Tulisan yang memuat nilai <code>req.params.id</code></td></tr>
+          </tbody>
+          </table>
+        </div>
+        <p>Data contoh masih ditulis langsung di dalam kode, dan itu memang yang diminta hari ini. Mulai Pertemuan 7, data yang sama akan diambil dari MySQL, sedangkan bentuk route-nya tidak berubah sama sekali &mdash; hanya isi fungsi penanganannya yang berganti. Karena itu route yang Anda susun sekarang bukan pekerjaan sekali pakai.</p>
+      </details>
+      <div class="tip">
+        <strong>Uji setiap route segera setelah ditulis, jangan menunggu kelimanya selesai.</strong> Dengan <code>npm run dev</code> berjalan, siklus tulis-simpan-muat ulang hanya butuh beberapa detik. Bila kelima route ditulis sekaligus lalu muncul galat, Anda harus mencari kesalahannya di lima tempat sekaligus; bila diuji satu per satu, kesalahan selalu berada di route yang baru saja Anda tulis.
+      </div>
+      <div class="warn">
+        <strong>Pastikan <code>node_modules</code> tidak ikut terkirim.</strong> Kumpulkan hanya <code>app.js</code>, <code>package.json</code>, dan <code>package-lock.json</code>. Bila tugas dikumpulkan sebagai arsip, periksa dulu ukurannya: arsip yang melebihi beberapa ratus kilobita hampir pasti masih memuat <code>node_modules</code>.
+      </div>
+
+      <h3>11.4 Rubrik penilaian tugas</h3>
+      <p>Bacalah kolom kriteria nilai penuh sebelum mulai mengerjakan, bukan sesudah selesai.</p>
+      <div class="table-scroll" tabindex="0">
+        <table>
+        <thead><tr><th>Aspek</th><th>Bobot</th><th>Kriteria nilai penuh</th></tr></thead>
+        <tbody>
+          <tr><td>Proyek terinisialisasi dengan benar</td><td>20%</td><td><code>package.json</code> memuat Express pada <code>dependencies</code>, nodemon pada <code>devDependencies</code>, serta skrip <code>start</code> dan <code>dev</code> yang keduanya benar-benar dapat dijalankan.</td></tr>
+          <tr><td>Server berjalan</td><td>25%</td><td>Server menyala pada port 3000 tanpa galat, mencetak penanda ke terminal, dan alamatnya dapat dibuka dari browser.</td></tr>
+          <tr><td>Kelengkapan dan ketepatan route</td><td>30%</td><td>Kelima route ada dan menjawab sesuai ketentuan, dua di antaranya memakai <code>res.json()</code>, satu memakai parameter yang nilainya benar-benar terbaca, dan penangan 404 berada di posisi paling bawah.</td></tr>
+          <tr><td>Kerapian kode</td><td>10%</td><td>Nomor port disimpan pada konstanta bernama, nama path menggambarkan isinya, indentasi konsisten, dan tidak ada baris sisa percobaan yang dibiarkan tertinggal.</td></tr>
+          <tr><td>Penjelasan hasil</td><td>15%</td><td>Anda dapat menjelaskan fungsi setiap baris pada <code>app.js</code>, alasan posisi penangan 404, serta perbedaan <code>res.send</code> dan <code>res.json</code> beserta akibatnya pada <code>Content-Type</code>.</td></tr>
+        </tbody>
+        </table>
+      </div>
+      <p class="footer-note">Tugas mingguan seperti tugas ini berbobot 20 persen dari nilai akhir mata kuliah. Aspek terakhir diperiksa lewat tanya jawab singkat, sejalan dengan komponen presentasi dan audit kode yang berbobot 10 persen.</p>
+    </section>
+
+    <section class="card">
+      <h2>12. Ringkasan Materi</h2>
+      <ul>
+        <li>Node.js menjalankan JavaScript di luar browser, npm mengelola pustaka, dan Express menyederhanakan penulisan server. Hanya Node.js yang dipasang ke sistem operasi.</li>
+        <li><code>npm init</code> membuat <code>package.json</code>, yaitu berkas yang membuat sebuah folder menjadi proyek Node.js dan mencatat pustaka serta skrip yang dipakai.</li>
+        <li><code>npm install</code> mengunduh pustaka ke <code>node_modules</code>. Folder itu tidak pernah ikut dibagikan, karena seluruh isinya dapat dibuat ulang dari <code>package.json</code>.</li>
+        <li>Struktur folder lengkap diperkenalkan sekarang tetapi dibangun bertahap; hari ini cukup satu berkas <code>app.js</code>.</li>
+        <li>Satu route terdiri dari tiga bagian: metode, path, dan fungsi penangan yang menerima <code>req</code> dan <code>res</code>.</li>
+        <li><code>res.send</code> mengirim halaman, <code>res.json</code> mengirim data, dan <code>res.status</code> menetapkan kode status. Setiap permintaan dijawab tepat satu kali.</li>
+        <li>Express memeriksa route dari atas ke bawah, sehingga penangan 404 harus berada paling bawah.</li>
+        <li>Node.js membaca kode hanya saat dijalankan, sehingga setiap perubahan menuntut server dijalankan ulang. nodemon melakukannya otomatis.</li>
+      </ul>
+      <p class="footer-note">Fokus Pertemuan 2: inisialisasi proyek dengan npm, struktur folder, <code>package.json</code>, pemasangan Express, server pertama, dan routing dasar &mdash; dengan hasil berupa server Express yang berjalan di <code>localhost</code>. Pertemuan 3 memperdalam routing dengan <code>express.Router()</code>, membahas middleware secara utuh termasuk <code>express.json()</code> dan <code>express.urlencoded()</code>, serta menambahkan pencatatan sederhana atas setiap permintaan yang masuk.</p>
+    </section>
+
+    <section class="card">
+      <h2>13. Latihan Pemahaman</h2>
+      <h3>13.1 Cek cepat</h3>
+      <p>Jawab dulu tanpa membuka materi, baru kemudian cocokkan.</p>
+      <ol class="step">
+        <li>Dari Node.js, npm, dan Express, mana yang dipasang ke sistem operasi dan mana yang dipasang ke dalam folder proyek?</li>
+        <li>Perintah apa yang membuat berkas <code>package.json</code>, dan perintah apa yang membuat folder <code>node_modules</code>?</li>
+        <li>Mengapa <code>node_modules</code> tidak perlu ikut dikumpulkan bersama tugas?</li>
+        <li>Sebutkan tiga bagian yang menyusun satu route Express.</li>
+        <li>Apa perbedaan hasil <code>res.send()</code> dan <code>res.json()</code> pada header <code>Content-Type</code>?</li>
+        <li>Mengapa penangan 404 harus diletakkan di bawah semua route lain?</li>
+        <li>Anda mengubah <code>app.js</code> lalu memuat ulang browser, tetapi tampilannya tidak berubah. Apa penyebab yang paling mungkin?</li>
+      </ol>
+      <details>
+        <summary>Buka kunci jawaban cek cepat</summary>
+        <ol>
+          <li>Node.js dipasang ke sistem operasi, dan npm ikut terpasang bersamanya. Express dipasang ke dalam folder proyek, terpisah untuk setiap proyek, sehingga tiap proyek boleh memakai versi yang berbeda.</li>
+          <li><code>npm init</code> membuat <code>package.json</code>, sedangkan <code>npm install</code> membuat <code>node_modules</code> sekaligus <code>package-lock.json</code>.</li>
+          <li>Karena seluruh isinya bukan pekerjaan Anda dan dapat dibuat ulang kapan saja dengan satu perintah <code>npm install</code> berdasarkan catatan di <code>package.json</code>.</li>
+          <li>Metode HTTP, path, dan fungsi penangan yang menerima <code>req</code> dan <code>res</code>.</li>
+          <li><code>res.send()</code> menghasilkan <code>text/html</code>, sedangkan <code>res.json()</code> menghasilkan <code>application/json</code>. Perbedaan itulah yang memberi tahu browser apakah isinya halaman atau data.</li>
+          <li>Karena Express memeriksa route berurutan dari atas ke bawah dan berhenti pada yang pertama cocok. Penangan 404 cocok untuk semua alamat, jadi bila diletakkan di atas ia akan menangkap semua permintaan dan route lain tidak pernah tercapai.</li>
+          <li>Server belum dijalankan ulang. Node.js membaca berkas hanya sekali saat dijalankan, sehingga perubahan baru berlaku setelah Ctrl + C lalu <code>node app.js</code>, atau langsung memakai <code>npm run dev</code>.</li>
+        </ol>
+      </details>
+
+      <h3>13.2 Pertanyaan reflektif</h3>
+      <ol class="step">
+        <li>Mengapa nodemon ditempatkan pada <code>devDependencies</code> dan bukan pada <code>dependencies</code>? Apa akibatnya bila keliru ditempatkan?</li>
+        <li>Pada satu proyek, dua route boleh memakai path yang sama persis. Dalam keadaan apa hal itu benar, dan dalam keadaan apa hal itu menjadi kesalahan?</li>
+        <li>Bila route parameter tidak ada, apa yang harus dilakukan untuk melayani seratus data yang berbeda? Jelaskan mengapa cara itu tidak dapat dipertahankan.</li>
+        <li>Terminal Anda tenang tanpa pesan galat, tetapi browser menampilkan <code>Cannot GET /barang</code>. Berdasarkan Bab 8, di sisi mana masalahnya, dan apa dua kemungkinan penyebabnya?</li>
+        <li>Sebuah halaman tampil rapi di browser tetapi kode statusnya <code>404</code>. Apakah itu keliru? Jelaskan alasannya.</li>
+      </ol>
+      <div class="analogy">
+        <strong>Analogi penutup:</strong> hari ini Anda tidak sekadar menjalankan program orang lain, tetapi membuka sebuah loket dan menentukan sendiri layanan apa yang tersedia di setiap jendelanya. Pertemuan 1 mengajarkan cara membaca formulir yang lewat di depan loket; Pertemuan 2 menempatkan Anda di belakangnya.
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>14. Checkpoint Evaluasi Pertemuan 2</h2>
+      <p>Pertemuan 2 dianggap tuntas bila butir-butir berikut dapat Anda lakukan sendiri tanpa menyalin ulang contoh kode. Daftar ini diperiksa pada 20 menit terakhir pertemuan dan sekaligus dapat Anda pakai sebagai pemeriksaan diri.</p>
+      <div class="grid two">
+        <div class="mini">
+          <div class="label">Target minimal pertemuan ini</div>
+          <ul>
+            <li>Server Express milik Anda sendiri berjalan di <code>localhost</code> dan dapat dibuka dari browser.</li>
+            <li>Anda dapat menambah route baru tanpa melihat contoh.</li>
+            <li>Anda dapat membaca pesan galat di terminal dan menentukan langkah perbaikannya.</li>
+          </ul>
+        </div>
+        <div class="mini">
+          <div class="label">Bobot penilaian yang terkait</div>
+          <ul>
+            <li>Tugas mingguan pada Bab 11, 20 persen dari nilai akhir.</li>
+            <li>Kuis dan praktik singkat, 15 persen dari nilai akhir.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="table-scroll" tabindex="0">
+        <table>
+        <thead><tr><th>Yang diperiksa</th><th>Cara memastikan sendiri</th><th>Bila belum tercapai</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>Node.js dan npm terpasang dengan benar</td>
+            <td>Jalankan <code>node -v</code> dan <code>npm -v</code> pada terminal yang baru dibuka. Keduanya harus mengeluarkan angka versi.</td>
+            <td>Ulangi Bab 2.1 dan periksa tabel gejala pada Bab 2.5.</td>
+          </tr>
+          <tr>
+            <td>Proyek terinisialisasi dan Express terpasang</td>
+            <td>Buka <code>package.json</code> dan pastikan Express tercantum pada <code>dependencies</code>. Jalankan <code>npm install</code> di komputer lain atau folder salinan, dan pastikan proyeknya tetap dapat berjalan.</td>
+            <td>Baca ulang Bab 3.2 sampai 3.5, terutama tabel tiga berkas baru.</td>
+          </tr>
+          <tr>
+            <td>Server berjalan dan dapat dibuka di browser</td>
+            <td>Jalankan <code>npm run dev</code>, lalu buka <code>http://localhost:3000</code>. Halaman harus tampil dan terminal harus tetap menahan kursor.</td>
+            <td>Baca ulang Bab 5.3 dan 5.5, lalu cocokkan gejalanya dengan tabel pada Bab 7.5.</td>
+          </tr>
+          <tr>
+            <td>Anda dapat menambah route sendiri</td>
+            <td>Tutup materi ini, lalu tambahkan satu route baru dengan path pilihan sendiri yang menjawab memakai <code>res.json()</code>, dan pastikan alamatnya dapat dibuka.</td>
+            <td>Baca ulang Bab 6.1 dan 6.2, terutama gambar anatomi route.</td>
+          </tr>
+          <tr>
+            <td>Anda dapat menjelaskan setiap baris pada <code>app.js</code></td>
+            <td>Tutup kode Anda, lalu sebutkan fungsi <code>require</code>, <code>express()</code>, <code>app.get</code>, <code>res.send</code>, dan <code>app.listen</code> dengan kalimat sendiri, termasuk alasan urutannya.</td>
+            <td>Baca ulang tabel penjelasan baris demi baris pada Bab 5.2.</td>
+          </tr>
+          <tr>
+            <td>Anda dapat membaca pesan galat dan memperbaikinya</td>
+            <td>Buat kesalahan dengan sengaja: hapus satu tanda kurung tutup, jalankan server, lalu temukan nomor barisnya dari pesan galat dan perbaiki. Ulangi dengan menjalankan dua server sekaligus pada port yang sama.</td>
+            <td>Baca ulang Bab 8, terutama cara membaca <em>stack trace</em> yang panjang.</td>
+          </tr>
+        </tbody>
+        </table>
+      </div>
+      <p class="footer-note">Kemampuan pada pertemuan ini menjadi dasar milestone pertama mata kuliah, yaitu M1 pada Pertemuan 3 berupa server dengan beberapa route dan middleware. Milestone berikutnya adalah M2 pada Pertemuan 7 berupa data dari MySQL yang tampil di browser, M3 pada Pertemuan 10 berupa CRUD lengkap, dan M4 pada Pertemuan 12 berupa sistem login yang berjalan. Proyek yang Anda buat hari ini adalah proyek yang sama yang akan dinilai pada UTS praktik Pertemuan 8.</p>
+    </section>
+
+    <section class="card">
+      <h2>15. Istilah Kunci Pertemuan 2</h2>
+      <p>Istilah pada Pertemuan 1 tetap berlaku dan tidak diulang di sini. Yang berikut adalah istilah baru yang muncul hari ini.</p>
+      <dl class="gloss">
+        <dt>Terminal</dt>
+        <dd>Jendela tempat perintah diketik untuk dijalankan sistem operasi. Dipakai sepanjang mata kuliah ini untuk memasang pustaka, menjalankan server, dan membaca pesan kesalahan.</dd>
+        <dt>PATH</dt>
+        <dd>Daftar folder yang ditelusuri terminal saat mencari program yang namanya Anda ketik. Node.js perlu terdaftar di dalamnya agar perintah <code>node</code> dikenali dari folder mana pun.</dd>
+        <dt>LTS</dt>
+        <dd>Singkatan dari <em>long term support</em>, yaitu versi yang paling stabil dan paling lama didukung. Versi inilah yang dipilih untuk pemakaian di kelas.</dd>
+        <dt>Paket (package)</dt>
+        <dd>Pustaka buatan orang lain yang dapat dipasang ke dalam proyek, misalnya Express dan nodemon.</dd>
+        <dt><code>package.json</code></dt>
+        <dd>Berkas catatan proyek: memuat nama, versi, daftar pustaka yang dipakai, dan daftar skrip. Berkas inilah yang membuat sebuah folder disebut proyek Node.js, dan ia wajib ikut dikumpulkan.</dd>
+        <dt><code>package-lock.json</code></dt>
+        <dd>Catatan versi persis setiap paket beserta seluruh pustaka turunannya, sehingga proyek yang dipasang di komputer lain memakai versi yang benar-benar sama.</dd>
+        <dt><code>node_modules</code></dt>
+        <dd>Folder tempat seluruh paket yang diunduh disimpan. Tidak pernah disunting dengan tangan dan tidak pernah ikut dibagikan, karena dapat dibuat ulang dengan <code>npm install</code>.</dd>
+        <dt><code>dependencies</code></dt>
+        <dd>Daftar pustaka yang dibutuhkan aplikasi agar dapat berjalan, misalnya Express.</dd>
+        <dt><code>devDependencies</code></dt>
+        <dd>Daftar pustaka yang hanya dibutuhkan selama pengembangan dan tidak diperlukan saat aplikasi dipakai, misalnya nodemon. Diisi dengan tanda <code>--save-dev</code>.</dd>
+        <dt>Skrip npm</dt>
+        <dd>Perintah pintas yang dicatat pada bagian <code>scripts</code> di <code>package.json</code> lalu dijalankan dengan <code>npm run</code>. Nama <code>start</code> dikenali khusus sehingga tidak memerlukan kata <code>run</code>.</dd>
+        <dt>Modul</dt>
+        <dd>Satu berkas atau satu paket yang dapat dimuat ke dalam program lain. Pada Node.js pemuatan itu dilakukan dengan <code>require()</code>.</dd>
+        <dt><code>require()</code></dt>
+        <dd>Cara Node.js memuat modul ke dalam program. Inilah pengganti tag <code>&lt;script&gt;</code> yang dipakai di browser.</dd>
+        <dt>Objek <code>app</code></dt>
+        <dd>Hasil pemanggilan <code>express()</code>, yaitu objek aplikasi yang menyimpan seluruh daftar route dan menjadi tempat semua pengaturan dipasang.</dd>
+        <dt><code>app.get()</code></dt>
+        <dd>Perintah untuk mendaftarkan satu route bermetode <code>GET</code>, dengan path dan fungsi penangan sebagai isinya.</dd>
+        <dt><code>app.listen()</code></dt>
+        <dd>Perintah yang menyalakan server dan membuatnya menunggu permintaan pada port tertentu. Diletakkan paling bawah, sesudah semua route didaftarkan.</dd>
+        <dt><code>app.use()</code></dt>
+        <dd>Perintah untuk memasang middleware, yaitu fungsi yang dijalankan tanpa terikat pada satu metode atau satu path tertentu. Dipakai hari ini untuk penangan 404.</dd>
+        <dt>Fungsi penangan (handler)</dt>
+        <dd>Fungsi yang dijalankan Express ketika sebuah route cocok. Menerima dua nilai: <code>req</code> berisi keterangan permintaan, dan <code>res</code> sebagai alat menyusun jawaban.</dd>
+        <dt><code>res.send()</code></dt>
+        <dd>Mengirim teks atau HTML sebagai jawaban, dengan status <code>200</code> dan <code>Content-Type: text/html</code> secara otomatis.</dd>
+        <dt><code>res.json()</code></dt>
+        <dd>Mengirim data sebagai JSON, dengan <code>Content-Type: application/json</code> secara otomatis. Bentuk dasar sebuah API.</dd>
+        <dt><code>res.status()</code></dt>
+        <dd>Menetapkan kode status jawaban secara sadar, misalnya <code>res.status(404)</code>, menggantikan nilai bawaan <code>200</code>.</dd>
+        <dt>Route parameter</dt>
+        <dd>Bagian path yang nilainya berubah-ubah, ditandai titik dua seperti <code>:id</code>, dan dibaca melalui <code>req.params</code>. Nilainya selalu berupa teks.</dd>
+        <dt>nodemon</dt>
+        <dd>Alat pengembangan yang mengawasi berkas proyek dan menjalankan ulang server otomatis setiap kali ada berkas yang disimpan.</dd>
+        <dt>Stack trace</dt>
+        <dd>Daftar fungsi yang sedang berjalan saat sebuah galat terjadi, tercetak di bawah pesan galat. Yang perlu dibaca hanya baris pertama dan baris pertama yang menyebut berkas Anda sendiri.</dd>
+        <dt><code>EADDRINUSE</code></dt>
+        <dd>Kode galat yang berarti port yang diminta sudah dipakai program lain, biasanya server sendiri yang masih berjalan di terminal lain.</dd>
+        <dt><code>.gitignore</code></dt>
+        <dd>Berkas daftar nama yang tidak ikut disertakan saat proyek dibagikan melalui Git. Minimal memuat <code>node_modules</code>, dan mulai Pertemuan 11 juga memuat <code>.env</code>.</dd>
+      </dl>
+      <div class="tip">
+        <strong>Cara memakai daftar ini.</strong> Tutup kolom penjelasannya, lalu jelaskan sendiri setiap istilah dengan satu kalimat. Istilah yang membuat Anda tersendat menunjukkan bab mana yang perlu dibaca ulang &mdash; jauh lebih hemat waktu daripada membaca seluruh materi dari awal.
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>16. Referensi Praktis</h2>
+      <p>Empat sumber berikut adalah rujukan resmi untuk materi Pertemuan 2. Bacalah setelah praktik selesai, bukan sebelum, agar istilah di dalamnya sudah punya bentuk nyata di kepala Anda.</p>
+      <dl class="gloss">
+        <dt>Express &mdash; <code>expressjs.com</code></dt>
+        <dd>Dokumentasi resmi pustaka yang dipakai hari ini. Bagian <em>Installation</em> memuat perintah yang sama dengan Bab 3.4, bagian <em>Hello world</em> memuat program yang sama dengan Bab 5.1, dan bagian <em>Basic routing</em> menjelaskan pencocokan metode dan path pada Bab 6. Bagian <em>Using middleware</em> boleh dilihat sekilas, tetapi pembahasannya baru masuk pada Pertemuan 3.</dd>
+        <dt>Node.js &mdash; <code>nodejs.org</code></dt>
+        <dd>Tempat mengunduh versi LTS untuk Bab 2.1. Bagian <em>Learn</em> di situs ini memuat pengantar singkat tentang cara Node.js menjalankan berkas JavaScript, yang berguna untuk memahami mengapa server harus dijalankan ulang setiap kali kodenya berubah.</dd>
+        <dt>npm Docs &mdash; <code>docs.npmjs.com</code></dt>
+        <dd>Rujukan resmi untuk perintah <code>npm init</code>, <code>npm install</code>, dan <code>npm run</code>, serta penjelasan lengkap setiap bagian <code>package.json</code>. Bagian tentang perbedaan <code>dependencies</code> dan <code>devDependencies</code> menjawab langsung pertanyaan reflektif pertama pada Bab 13.2.</dd>
+        <dt>MDN Web Docs &mdash; <code>developer.mozilla.org</code></dt>
+        <dd>Tetap menjadi rujukan untuk sisi HTTP-nya, terutama daftar metode dan daftar kode status. Berguna saat Anda menentukan status yang tepat pada <code>res.status()</code>, dan akan sering dibuka lagi mulai Pertemuan 9 ketika data benar-benar disimpan dan diubah.</dd>
+      </dl>
+      <div class="tip">
+        <strong>Cara membaca dokumentasi teknis tanpa kewalahan.</strong> Jangan dibaca dari awal sampai akhir. Bawa satu pertanyaan spesifik, misalnya &ldquo;apa beda <code>npm install</code> dengan dan tanpa nama paket&rdquo;, lalu cari jawaban itu saja. Dokumentasi dirancang sebagai tempat mencari, bukan sebagai buku bacaan.
+      </div>
+      <p class="footer-note">Alamat di atas ditulis sebagai nama domain, bukan tautan langsung ke halaman tertentu, karena struktur halaman situs semacam ini berubah dari waktu ke waktu. Cari judul yang disebutkan di atas dari halaman utama masing-masing situs.</p>
+    </section>
+    <footer class="pagenum">
+      <span class="pagenum-seri">Materi Pertemuan 2</span>
+      <span class="pagenum-no">Halaman 2 dari 16</span>
+    </footer>
+  </div>
+</body>
+</html>

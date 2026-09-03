@@ -196,7 +196,7 @@
       </div>
 
       <h3>5.2 Menyiapkan lingkungan kerja di simulator</h3>
-      <p>Seluruh praktik pertemuan ini dikerjakan di simulator <strong>Wokwi</strong>, alat yang sama seperti pada Pertemuan 2 tentang dasar ESP32 dan GPIO, sehingga tidak ada perangkat fisik yang perlu disiapkan. Ada dua rangkaian yang dibangun: potensiometer agar rentang nilai analog terlihat utuh, lalu smart light dengan modul LDR. Kode untuk keduanya sama, yaitu contoh pada Bab 6, jadi bacalah bab ini dan Bab 6 secara berdampingan.</p>
+      <p>Seluruh praktik pertemuan ini dikerjakan di simulator <strong>Wokwi</strong>, alat yang sama seperti pada Pertemuan 2 tentang dasar ESP32 dan GPIO, sehingga tidak ada perangkat fisik yang perlu disiapkan. Ada dua rangkaian yang dibangun: potensiometer agar rentang nilai analog terlihat utuh, lalu smart light dengan modul LDR. Susunan kode keduanya sama dan penjelasan baris per barisnya ada pada Bab 6; yang berbeda hanya nama variabel pin dan label yang dicetak ke Serial Monitor, karena keduanya mengikuti sensor yang benar-benar terpasang. Karena itu, bacalah bab ini dan Bab 6 secara berdampingan.</p>
       <div class="tip">
         <strong>Tidak ada yang perlu diinstal.</strong> Wokwi berjalan langsung di browser. Bedanya dengan pertemuan sebelumnya, kali ini <strong>Serial Monitor</strong> ikut dipakai karena yang diamati bukan hanya LED, melainkan juga angka hasil pembacaan sensor.
       </div>
@@ -214,7 +214,7 @@
           <tr><th>Komponen</th><th>Kaki ke ESP32</th><th>Pin ESP32</th><th>Nama di program</th></tr>
         </thead>
         <tbody>
-          <tr><td>Potensiometer (Praktik 1)</td><td><code>SIG</code>, <code>VCC</code>, <code>GND</code></td><td>GPIO 34</td><td><code>ldrPin</code></td></tr>
+          <tr><td>Potensiometer (Praktik 1)</td><td><code>SIG</code>, <code>VCC</code>, <code>GND</code></td><td>GPIO 34</td><td><code>potPin</code></td></tr>
           <tr><td>Modul LDR (Praktik 2)</td><td><code>AO</code>, <code>VCC</code>, <code>GND</code></td><td>GPIO 34</td><td><code>ldrPin</code></td></tr>
           <tr><td>LED dengan resistor 220 Ω</td><td>kaki panjang ke resistor, kaki pendek ke <code>GND</code></td><td>GPIO 2</td><td><code>ledPin</code></td></tr>
         </tbody>
@@ -225,7 +225,7 @@
       </div>
 
       <h3>5.3 Praktik 1: Potensiometer sebagai sumber nilai analog</h3>
-      <p>Praktik pertama sengaja memakai potensiometer, bukan LDR. Posisi knob dapat Anda ubah dari ujung terkecil sampai ujung terbesar, sehingga seluruh rentang angka yang dihasilkan <code>analogRead()</code> terlihat utuh dan pilihan threshold lebih mudah ditentukan. Rangkaian LED dan kodenya sama dengan praktik berikutnya; yang berbeda hanya sumber sinyal pada pin analog.</p>
+      <p>Praktik pertama sengaja memakai potensiometer, bukan LDR. Posisi knob dapat Anda ubah dari ujung terkecil sampai ujung terbesar, sehingga seluruh rentang angka yang dihasilkan <code>analogRead()</code> terlihat utuh dan pilihan threshold lebih mudah ditentukan. Rangkaian LED dan susunan kodenya sama dengan praktik berikutnya; yang berbeda hanya sumber sinyal pada pin analog, serta nama variabel dan label cetak yang mengikuti sensornya.</p>
       <p><strong>Komponen yang perlu ditambahkan:</strong> satu potensiometer, satu LED, dan satu resistor bernilai 220 Ω. Ketiganya diambil dari daftar komponen pada panel rangkaian.</p>
       <div class="svgbox" tabindex="0">
         <svg viewBox="0 25 700 300" width="100%" role="img" aria-label="Rangkaian potensiometer: kaki VCC ke pin 3V3 ESP32, kaki tengah SIG ke GPIO 34, kaki GND ke pin GND, sedangkan LED dari GPIO 2 melalui resistor 220 ohm lalu kaki pendeknya ke pin GND">
@@ -282,21 +282,47 @@
 }</pre></div>
         <p>Bila panel rangkaian justru menjadi kosong, biasanya ada tanda kurung atau koma yang ikut terhapus.</p>
       </details>
+
+      <p><strong>Kode program Praktik 1.</strong> Hapus seluruh isi panel kode pada tab <code>sketch.ino</code>, lalu tempelkan kode di bawah secara utuh. Nama variabel dan label cetaknya mengikuti komponen yang benar-benar terpasang, yaitu potensiometer, sedangkan pinnya sesuai tabel di atas: GPIO 34 untuk kaki SIG dan GPIO 2 untuk LED. Susunan programnya sama dengan contoh Bab 6, jadi penjelasan baris per baris pada Bab 6.2 berlaku juga di sini.</p>
+      <div class="code"><pre>const int potPin = 34;
+const int ledPin = 2;
+int threshold = 2000;
+
+void setup() {
+  Serial.begin(115200);
+  pinMode(ledPin, OUTPUT);
+}
+
+void loop() {
+  int sensorValue = analogRead(potPin);
+
+  Serial.print("Nilai potensiometer: ");
+  Serial.println(sensorValue);
+
+  if (sensorValue < threshold) {
+    digitalWrite(ledPin, HIGH);
+  } else {
+    digitalWrite(ledPin, LOW);
+  }
+
+  delay(500);
+}</pre></div>
+
       <ol class="step">
         <li>Buat satu project ESP32 baru, lalu pasang rangkaian seperti gambar di atas atau tempelkan <code>diagram.json</code> yang tersedia.</li>
-        <li>Hapus seluruh isi panel kode, lalu tempelkan contoh kode dari Bab 6 apa adanya.</li>
-        <li>Periksa bahwa <code>const int ldrPin = 34;</code> menunjuk pin yang tersambung ke kaki SIG dan <code>const int ledPin = 2;</code> menunjuk pin yang tersambung ke resistor. Nama <code>ldrPin</code> tetap dibiarkan walaupun yang terpasang potensiometer, karena pin yang dibaca sama.</li>
+        <li>Hapus seluruh isi panel kode, lalu tempelkan kode program di atas apa adanya.</li>
+        <li>Periksa bahwa <code>const int potPin = 34;</code> menunjuk pin yang tersambung ke kaki SIG dan <code>const int ledPin = 2;</code> menunjuk pin yang tersambung ke resistor.</li>
         <li>Jalankan simulasi, biarkan beberapa detik, lalu baca angka di Serial Monitor tanpa menyentuh knob.</li>
         <li>Geser knob perlahan dari satu ujung ke ujung yang lain dengan menahan klik tetikus. Catat angka terkecil dan angka terbesar yang muncul, lalu perhatikan pada posisi knob mana LED berpindah keadaan.</li>
         <li>Hentikan simulasi, ubah <code>int threshold = 2000;</code> menjadi <code>int threshold = 1000;</code>, jalankan kembali, lalu geser knob seperti tadi dan bandingkan posisi peralihan LED dengan pengamatan sebelumnya.</li>
       </ol>
-      <p><strong>Hasil yang harus terlihat:</strong> Serial Monitor menampilkan baris <code>Nilai LDR:</code> diikuti angkanya, terbit berulang. Angka itu bergerak halus mengikuti knob, dari sekitar 0 pada satu ujung sampai mendekati 4095 pada ujung yang lain, bukan melompat antara dua nilai saja. LED menyala selama angka itu berada di bawah 2000 dan mati begitu angkanya melewati batas tersebut, sehingga titik peralihan LED dapat ditemukan berulang kali pada posisi knob yang hampir sama. Setelah threshold menjadi 1000, angka untuk posisi knob yang sama tidak berubah, tetapi LED baru menyala pada posisi knob yang lebih rendah.</p>
+      <p><strong>Hasil yang harus terlihat:</strong> Serial Monitor menampilkan baris <code>Nilai potensiometer:</code> diikuti angkanya, terbit berulang. Angka itu bergerak halus mengikuti knob, dari sekitar 0 pada satu ujung sampai mendekati 4095 pada ujung yang lain, bukan melompat antara dua nilai saja. LED menyala selama angka itu berada di bawah 2000 dan mati begitu angkanya melewati batas tersebut, sehingga titik peralihan LED dapat ditemukan berulang kali pada posisi knob yang hampir sama. Setelah threshold menjadi 1000, angka untuk posisi knob yang sama tidak berubah, tetapi LED baru menyala pada posisi knob yang lebih rendah.</p>
       <div class="warn">
         <strong>Angka yang tidak berubah hampir selalu soal sambungan, bukan soal kode.</strong> Bila angka di Serial Monitor mentok di 0 atau di nilai tertinggi walaupun knob digeser, periksa tiga hal: VCC ke 3V3, GND ke GND, dan kaki yang masuk ke GPIO 34 adalah kaki tengah SIG. Pin analog yang tidak tersambung ke apa pun tetap menghasilkan angka, sehingga mudah dikira pembacaan sensor.
       </div>
 
       <h3>5.4 Langkah praktik</h3>
-      <p>Praktik kedua adalah smart light itu sendiri. Sumber sinyal pada GPIO 34 diganti dari potensiometer menjadi modul LDR, sedangkan pin LED dan kodenya tidak berubah, sehingga terlihat bahwa satu program yang sama dapat dipakai untuk sensor berbeda. Bedanya, nilai sensor kini tidak Anda tentukan lewat knob, melainkan melalui tingkat cahaya yang diterima sensor.</p>
+      <p>Praktik kedua adalah smart light itu sendiri. Sumber sinyal pada GPIO 34 diganti dari potensiometer menjadi modul LDR, sedangkan pin LED dan susunan kodenya tidak berubah, sehingga terlihat bahwa satu pola program yang sama dapat dipakai untuk sensor berbeda. Yang disesuaikan hanya nama variabel pin dan label cetaknya, dari <code>potPin</code> menjadi <code>ldrPin</code>, dan itu sekadar penamaan agar kode mudah dibaca, bukan perubahan cara kerja. Bedanya, nilai sensor kini tidak Anda tentukan lewat knob, melainkan melalui tingkat cahaya yang diterima sensor.</p>
       <p><strong>Komponen yang perlu ditambahkan:</strong> satu modul LDR. LED dan resistor 220 Ω dari Praktik 1 dipakai kembali apa adanya, sedangkan potensiometernya dilepas karena GPIO 34 hanya boleh menerima satu sumber sinyal.</p>
       <div class="svgbox" tabindex="0">
         <svg viewBox="0 25 700 300" width="100%" role="img" aria-label="Rangkaian smart light: kaki VCC modul LDR ke pin 3V3 ESP32, keluaran AO ke GPIO 34, kaki GND ke pin GND, keluaran DO tidak dipakai; LED dari GPIO 2 melalui resistor 220 ohm lalu kaki pendeknya ke pin GND">
@@ -368,7 +394,7 @@
       <ol class="step">
         <li>Buka project Praktik 1, lepas potensiometer dari GPIO 34, lalu tambahkan modul LDR dari daftar komponen. Bila Anda ingin menyimpan hasil Praktik 1 apa adanya, buat project baru dan tempelkan <code>diagram.json</code> di atas.</li>
         <li>Sambungkan <strong>VCC ke 3V3</strong>, <strong>GND ke GND</strong>, dan <strong>AO ke GPIO 34</strong>. Pastikan hanya satu kabel yang masuk ke GPIO 34.</li>
-        <li>Pastikan panel kode memuat contoh kode Bab 6, lalu cocokkan kembali <code>ldrPin</code> dan <code>ledPin</code> dengan pin yang benar-benar tersambung.</li>
+        <li>Ganti isi panel kode dengan contoh kode Bab 6. Dibandingkan kode Praktik 1, yang berbeda hanya nama variabel pin dan label cetaknya, sedangkan urutan perintahnya sama. Cocokkan kembali <code>ldrPin</code> dan <code>ledPin</code> dengan pin yang benar-benar tersambung.</li>
         <li>Jalankan simulasi, lalu klik gambar modul LDR untuk memunculkan penggeser tingkat cahaya.</li>
         <li>Turunkan cahaya sampai LED menyala, lalu naikkan kembali sampai LED mati. Catat angka yang tercetak di Serial Monitor pada kedua kondisi itu.</li>
         <li>Bandingkan kedua angka tadi dengan <code>int threshold = 2000;</code>. Hentikan simulasi, ganti angka itu dengan nilai di antara kedua catatan Anda, jalankan kembali, lalu turunkan dan naikkan lagi cahaya virtual untuk memastikan titik peralihan LED ikut bergeser.</li>
